@@ -45,12 +45,12 @@ jobs:
 
       - name: Deploy updated database to production
         env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
         run: vercel deploy --prod --yes --token="${{ secrets.TOKEN_GASOLINERA }}"
 
       - name: Clean up old deployments to save Vercel storage
         env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
         run: vercel rm gasolineraplus --safe --yes --token="${{ secrets.TOKEN_GASOLINERA }}" || true
