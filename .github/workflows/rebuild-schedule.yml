@@ -8,6 +8,9 @@ on:
     - cron: '0 3 * * *' # diario, 03:00 UTC
   workflow_dispatch: {} # permite lanzarlo también a mano desde GitHub
 
+permissions:
+  contents: write
+
 jobs:
   rebuild-and-deploy:
     runs-on: ubuntu-latest
