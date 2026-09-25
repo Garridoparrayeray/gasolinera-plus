@@ -79,6 +79,24 @@ node tests/ui-battery.mjs       # la app en móvil y escritorio, incluido el mod
 
 El workflow `.github/workflows/tests.yml` los ejecuta en cada push a una rama distinta de `main`.
 
+## App nativa (Android e iOS)
+
+La misma web empaquetada con [Capacitor 8](https://capacitorjs.com/) (MIT, gratis). `scripts/build-www.mjs` renderiza `api/shell.php` por CLI con `GP_NATIVE=1` (sin analytics ni service worker) a `www/index.html` y copia `js/`, `vendor/` (Leaflet, markercluster, heat, Chart.js y las fuentes, ya sin CDN), `icons/`, `runners/` y los datos offline. Dentro de la app la API se llama en absoluto contra `https://gasolineraplus.vercel.app` (`js/native.js`), que responde con `Access-Control-Allow-Origin: *`.
+
+Piezas nativas: botón atrás de Android, compartir nativo, "Cómo llegar" abre Google Maps, ubicación con el proveedor fused (`@capacitor/geolocation`), avisos de bajada de precio en segundo plano (`@capacitor/background-runner` + `runners/alerts.js`, cada 12 h), refresco diario de `stations-lite.json` y aviso de versión nueva contra la última Release de GitHub.
+
+```
+npm ci
+npm run sync:android                       # genera www/ y lo copia al proyecto Android
+cd android && ./gradlew assembleDebug      # JAVA_HOME = JDK 21 (el de Android Studio vale)
+```
+
+**Firma y publicación.** El APK de release se firma con la clave de `android/keystore.properties` (fuera de git) o, en CI, con los secretos `ANDROID_KEYSTORE_BASE64` y `ANDROID_KEYSTORE_PASSWORD`. Un tag `vX.Y.Z` lanza `.github/workflows/build-apps.yml`, que publica `gasolinera-plus.apk` en una Release (los tags con guion, como `v2.0.0-beta.1`, salen como prerelease). La versión sale de `package.json` (`versionCode` = major·10000 + minor·100 + patch). **Si se pierde la clave, las actualizaciones no se pueden instalar encima y los usuarios perderían sus datos locales.**
+
+**iOS.** El proyecto (`ios/`, Swift Package Manager) compila en el runner macOS de CI sin firmar. Distribuirlo exige la cuenta de Apple Developer (99 €/año); mientras tanto en iPhone se usa la web instalada en la pantalla de inicio.
+
+**Pruebas en el emulador.** `GP_API_BASE=http://localhost:8021 npm run sync:android` apunta la app al servidor local (solo en builds debug se permite HTTP a `localhost`); después `node tests/android-e2e.mjs` la instala limpia, le da permisos, simula el GPS y la prueba por CDP dentro de la WebView.
+
 ## Despliegue
 
 `vercel.json` (mismo patrón que bizkaibus+: `api/shell.php` debe existir físicamente dentro de `api/` desde el primer commit, o el deploy falla con "pattern doesn't match any Serverless Functions"). El cron de `.github/workflows/rebuild-schedule.yml` ejecuta `--mode=daily`, comitea `data/gasolinera.sqlite` si cambió, y despliega con `vercel deploy --prod`; necesita los secrets `TOKEN_GASOLINERA` (token de Vercel), `TEAM_ID` y `PROJECT_ID` configurados en el repo de GitHub.

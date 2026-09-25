@@ -1,0 +1,30 @@
+{
+  "appId": "app.vercel.gasolineraplus",
+  "appName": "Gasolinera+",
+  "webDir": "www",
+  "appendUserAgent": "GasolineraPlus/2 (+https://gasolineraplus.vercel.app)",
+  "backgroundColor": "#f7f5f0",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "never",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "plugins": {
+    "BackgroundRunner": {
+      "label": "app.vercel.gasolineraplus.alerts",
+      "src": "runners/alerts.js",
+      "event": "checkPrices",
+      "repeat": true,
+      "interval": 720,
+      "autoStart": true
+    },
+    "LocalNotifications": {
+      "iconColor": "#8A5A00"
+    }
+  }
+}

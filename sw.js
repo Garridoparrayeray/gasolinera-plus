@@ -1,14 +1,28 @@
 importScripts('/js/alerts-store.js');
 
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v7';
 const CACHE_NAME = 'gasolinera-shell-' + CACHE_VERSION;
 const API_CACHE_NAME = 'gasolinera-api-' + CACHE_VERSION;
 const SHELL_FILES = [
     '/',
     '/style.css',
+    '/js/native.js',
+    '/js/background.js',
     '/js/api.js',
     '/js/alerts-store.js',
     '/js/app.js',
+    '/vendor/fonts/fonts.css',
+    '/vendor/fonts/inter-latin-standard-normal.woff2',
+    '/vendor/fonts/inter-latin-ext-standard-normal.woff2',
+    '/vendor/fonts/bricolage-grotesque-latin-standard-normal.woff2',
+    '/vendor/fonts/bricolage-grotesque-latin-ext-standard-normal.woff2',
+    '/vendor/leaflet/leaflet.css',
+    '/vendor/leaflet/leaflet.js',
+    '/vendor/markercluster/MarkerCluster.css',
+    '/vendor/markercluster/MarkerCluster.Default.css',
+    '/vendor/markercluster/leaflet.markercluster.js',
+    '/vendor/leaflet-heat/leaflet-heat.js',
+    '/vendor/chartjs/chart.umd.js',
     '/manifest.json',
     '/icons/icon-192.png',
     '/icons/icon-512.png',
@@ -34,7 +48,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    const isCDN = url.hostname === 'unpkg.com' || url.hostname === 'cdn.jsdelivr.net' || url.hostname.endsWith('tile.openstreetmap.org');
+    const isCDN = url.hostname.endsWith('tile.openstreetmap.org');
 
     if (event.request.method !== 'GET') {
         return;

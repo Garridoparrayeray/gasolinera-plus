@@ -3,8 +3,11 @@ const OfflineEngine = (() => {
 
     async function loadData() {
         if (!stationsCache) {
-            const res = await fetch('/data/stations-lite.json');
-            const payload = await res.json();
+            let payload = await GPNative.cachedOfflineStations();
+            if (!payload) {
+                const res = await fetch('/data/stations-lite.json');
+                payload = await res.json();
+            }
             if (Array.isArray(payload)) {
                 stationsCache = payload;
             } else {
@@ -224,7 +227,7 @@ const Api = (() => {
     async function request(path, signal) {
         let response;
         try {
-            response = await fetch('/api' + path, { credentials: 'same-origin', signal });
+            response = await fetch(GPNative.apiBase() + '/api' + path, { credentials: 'same-origin', signal });
         } catch (e) {
             if (e.name === 'AbortError') {
                 throw e;

@@ -8,6 +8,7 @@ class Response
     {
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
+        header('Access-Control-Allow-Origin: *');
         if ($status >= 200 && $status < 300) {
             header('Cache-Control: public, max-age=300, s-maxage=900, stale-while-revalidate=3600');
         } else {

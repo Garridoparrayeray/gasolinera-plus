@@ -31,14 +31,19 @@ export async function launch(port) {
         throw new Error('no se pudo conectar con el navegador');
     }
 
-    const ws = new WebSocket(targets.find((t) => t.type === 'page').webSocketDebuggerUrl);
+    const session = await attach(targets.find((t) => t.type === 'page').webSocketDebuggerUrl, () => browser.kill());
+    return session;
+}
+
+export async function attach(wsUrl, onFinish = () => {}, base = BASE) {
+    const ws = new WebSocket(wsUrl);
     await new Promise((resolve) => { ws.onopen = resolve; });
 
     let nextId = 0;
     const pending = new Map();
     const problems = [];
     const results = [];
-    const session = { where: '', problems, results, base: BASE };
+    const session = { where: '', problems, results, base };
 
     ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
@@ -55,18 +60,27 @@ export async function launch(port) {
             }
             let origin = '';
             if (details.url) {
-                origin = ` @ ${details.url.replace(BASE, '')}:${details.lineNumber}`;
+                origin = ` @ ${details.url.replace(session.base, '')}:${details.lineNumber}`;
             }
             problems.push(`[${session.where}] EXCEPCION ${text}${origin}`);
         }
         if (message.method === 'Runtime.consoleAPICalled' && message.params.type === 'error') {
-            const arg = message.params.args[0] || {};
-            problems.push(`[${session.where}] console.error ${String(arg.value || arg.description || '').slice(0, 160)}`);
+            const parts = message.params.args.map((arg) => {
+                if (arg.preview && arg.preview.properties) {
+                    return '{' + arg.preview.properties.map((p) => `${p.name}: ${p.value}`).join(', ') + '}';
+                }
+                return String(arg.value || arg.description || '');
+            });
+            const text = parts.join(' ');
+            if (!session.ignoreConsole || !session.ignoreConsole.test(text)) {
+                problems.push(`[${session.where}] console.error ${text.slice(0, 240)}`);
+            }
         }
         if (message.method === 'Network.responseReceived') {
             const { status, url } = message.params.response;
-            if (status >= 400 && !/favicon|_vercel/.test(url) && !session.allowHttpErrors) {
-                problems.push(`[${session.where}] HTTP ${status} ${url.replace(BASE, '')}`);
+            const ignored = session.ignoreHttp && session.ignoreHttp.test(url);
+            if (status >= 400 && !/favicon|_vercel/.test(url) && !session.allowHttpErrors && !ignored) {
+                problems.push(`[${session.where}] HTTP ${status} ${url.replace(session.base, '')}`);
             }
         }
         if (message.method === 'Network.loadingFailed') {
@@ -99,7 +113,7 @@ export async function launch(port) {
     };
 
     session.go = async (url, wait = 2500) => {
-        await session.send('Page.navigate', { url: BASE + url });
+        await session.send('Page.navigate', { url: session.base + url });
         await sleep(wait);
     };
 
@@ -131,7 +145,7 @@ export async function launch(port) {
     session.skip = (name, why) => results.push(`SKIP ${name} — ${why}`);
 
     session.setGeolocation = async (lat, lon) => {
-        await session.send('Browser.grantPermissions', { origin: BASE, permissions: ['geolocation'] });
+        await session.send('Browser.grantPermissions', { origin: session.base, permissions: ['geolocation'] });
         await session.send('Emulation.setGeolocationOverride', { latitude: lat, longitude: lon, accuracy: 10 });
     };
 
@@ -146,7 +160,7 @@ export async function launch(port) {
             console.log(' -', problem);
         }
         ws.close();
-        browser.kill();
+        onFinish();
         let code = 0;
         if (bad || unique.length) {
             code = 1;

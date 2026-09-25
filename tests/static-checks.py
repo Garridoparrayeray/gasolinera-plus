@@ -56,7 +56,7 @@ print(f'php lint: {len(php_files)} archivos, {php_bad} con error')
 if php_bad:
     failures.append('errores de sintaxis PHP')
 
-js_files = own_files('js/*.js') + own_files('scripts/*.mjs') + own_files('tools/**/*.mjs') + own_files('tests/*.mjs') + [ROOT + 'sw.js']
+js_files = own_files('js/*.js') + own_files('runners/*.js') + own_files('scripts/*.mjs') + own_files('tools/**/*.mjs') + own_files('tests/*.mjs') + [ROOT + 'sw.js']
 for path in js_files:
     result = subprocess.run(['node', '--check', path], capture_output=True, text=True)
     if result.returncode == 0:
@@ -73,7 +73,7 @@ def blank_keep_lines(match):
     return '""' + '\n' * match.group(0).count('\n')
 
 
-for path in own_files('js/*.js') + own_files('api/**/*.php') + own_files('scripts/*.php') + own_files('scripts/*.mjs') + own_files('tools/**/*.mjs') + own_files('tests/*.mjs') + [ROOT + 'sw.js']:
+for path in own_files('js/*.js') + own_files('runners/*.js') + own_files('api/**/*.php') + own_files('scripts/*.php') + own_files('scripts/*.mjs') + own_files('tools/**/*.mjs') + own_files('tests/*.mjs') + [ROOT + 'sw.js']:
     with open(path, encoding='utf-8') as handle:
         source = handle.read()
     code = literal.sub(blank_keep_lines, source)

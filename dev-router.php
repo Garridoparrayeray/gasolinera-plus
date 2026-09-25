@@ -7,6 +7,17 @@ if ($uri === '/api/shell.php') {
     return true;
 }
 
+if (preg_match('#^/data/[\w.-]+\.(json|bin)$#', $uri) && is_file(__DIR__ . $uri)) {
+    header('Access-Control-Allow-Origin: *');
+    if (str_ends_with($uri, '.json')) {
+        header('Content-Type: application/json; charset=utf-8');
+    } else {
+        header('Content-Type: application/octet-stream');
+    }
+    readfile(__DIR__ . $uri);
+    return true;
+}
+
 if ($uri !== '/' && is_file(__DIR__ . $uri)) {
     return false;
 }

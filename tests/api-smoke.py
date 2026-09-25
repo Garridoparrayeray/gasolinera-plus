@@ -145,6 +145,10 @@ code, headers, _ = fetch(f'/api/stations/near?lat={BILBAO[0]}&lon={BILBAO[1]}')
 cache_control = headers.get('Cache-Control') or headers.get('cache-control') or ''
 check('max-age' in cache_control, f'near: sin Cache-Control ({cache_control!r})')
 
+code, headers, _ = fetch(f'/api/stations/near?lat={BILBAO[0]}&lon={BILBAO[1]}', {'Origin': 'https://localhost'})
+allow_origin = headers.get('Access-Control-Allow-Origin') or headers.get('access-control-allow-origin') or ''
+check(allow_origin in ('*', 'https://localhost'), f'CORS: la app nativa (https://localhost) no puede leer la API ({allow_origin!r})')
+
 print(f'{count} peticiones, {len(fails)} fallos, {len(skips)} omitidas')
 for skipped in skips:
     print(' SKIP', skipped)

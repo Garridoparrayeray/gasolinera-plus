@@ -1,4 +1,5 @@
 <?php
+$isNative = getenv('GP_NATIVE') === '1';
 $ogTitle = 'Gasolinera+';
 $ogDescription = 'Precios de gasolina y diésel cerca de ti, actualizados a diario.';
 $ogUrl = 'https://gasolineraplus.vercel.app/';
@@ -70,14 +71,17 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <meta name="theme-color" content="#8A5A00">
     <link rel="apple-touch-icon" href="/icons/icon-maskable-192.png">
     <link rel="icon" href="/icons/icon-192.png">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin="">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" crossorigin="">
+    <link rel="stylesheet" href="/vendor/fonts/fonts.css">
+    <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+    <link rel="stylesheet" href="/vendor/markercluster/MarkerCluster.css">
+    <link rel="stylesheet" href="/vendor/markercluster/MarkerCluster.Default.css">
     <link rel="stylesheet" href="/style.css">
+<?php if (!$isNative): ?>
     <script>
       window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
     </script>
     <script defer src="/_vercel/insights/script.js"></script>
+<?php endif; ?>
 </head>
 <body>
 
@@ -112,6 +116,8 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 </button>
             </span>
         </header>
+
+        <p id="update-banner" role="status" hidden>Hay una versión nueva de Gasolinera+ (<span id="update-version"></span>). <a id="update-link" href="#">Descargar e instalar</a></p>
 
         <p id="offline-banner" role="status" hidden>Estás en modo local sin conexión: precios del último día sincronizado, sin histórico ni tendencias. Cuando te conectes otra vez a internet se actualizarán automáticamente.</p>
 
@@ -318,6 +324,18 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             </div>
         </section>
 
+<?php if (!$isNative): ?>
+        <section id="get-app" aria-labelledby="get-app-title">
+            <h3 id="get-app-title">Gasolinera+ como app</h3>
+            <p>Instálala para usarla sin navegador, con rutas, tu garaje y tus viajes.</p>
+            <div id="get-app-actions">
+                <a id="get-app-android" class="pill" href="https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest/download/gasolinera-plus.apk" rel="noopener">Descargar para Android</a>
+                <button id="get-app-ios" type="button" class="pill">Instalar en iPhone</button>
+            </div>
+            <p id="get-app-ios-help" hidden>En Safari, pulsa <strong>Compartir</strong> y después <strong>Añadir a pantalla de inicio</strong>. Se abrirá como una app, a pantalla completa.</p>
+        </section>
+<?php endif; ?>
+
         <footer id="dev-footer">
             <p>Hecho por Yeray Garrido</p>
             <p>
@@ -392,17 +410,21 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
 
     <p id="toast" hidden></p>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin=""></script>
-    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js" crossorigin=""></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" crossorigin=""></script>
+    <script src="/vendor/leaflet/leaflet.js"></script>
+    <script src="/vendor/markercluster/leaflet.markercluster.js"></script>
+    <script src="/vendor/leaflet-heat/leaflet-heat.js"></script>
+    <script src="/vendor/chartjs/chart.umd.js"></script>
+    <script src="/js/native.js"></script>
+    <script src="/js/background.js"></script>
     <script src="/js/alerts-store.js"></script>
     <script src="/js/api.js"></script>
     <script src="/js/app.js"></script>
+<?php if (!$isNative): ?>
     <script>
-        if ('serviceWorker' in navigator) {
+        if ('serviceWorker' in navigator && !window.Capacitor) {
             window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
         }
     </script>
+<?php endif; ?>
 </body>
 </html>

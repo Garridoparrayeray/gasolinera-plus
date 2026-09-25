@@ -37,6 +37,10 @@ for (const size of sizes.filter((x) => !sizeFilter || sizeFilter.includes(x.n)))
     check(`${tag} sin scroll horizontal`, (await ev('document.documentElement.scrollWidth - document.documentElement.clientWidth')) <= 0);
     check(`${tag} paginador sin NaN`, !(await ev("document.getElementById('pagination-status').textContent")).includes('NaN'));
     check(`${tag} media nacional cargada`, await waitFor("/\\d/.test(document.getElementById('national-gasoleo-a').textContent)", 6000));
+    check(`${tag} sin librerias de CDN`, (await ev("[...document.scripts, ...document.querySelectorAll('link[rel=stylesheet]')].every(n => !/unpkg|jsdelivr|googleapis/.test(n.src || n.href))")) === true);
+    check(`${tag} seccion para instalar la app`, (await ev("!document.getElementById('get-app').hidden && !document.getElementById('get-app-android').hidden")) === true);
+    await ev("document.getElementById('get-app-ios').click()");
+    check(`${tag} instrucciones de iPhone al pulsar`, (await ev("!document.getElementById('get-app-ios-help').hidden")) === true);
 
     s.where = `${tag}/buscar`;
     check(`${tag} buscar "bilbao" da resultados`, await search('bilbao'));

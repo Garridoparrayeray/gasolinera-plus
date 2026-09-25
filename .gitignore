@@ -8,3 +8,9 @@ Thumbs.db
 *.keystore
 *.jks
 signing-key-info.txt
+
+node_modules/
+www/
+keystore.properties
+*.apk
+*.aab

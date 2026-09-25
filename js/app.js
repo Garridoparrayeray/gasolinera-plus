@@ -232,6 +232,7 @@
         }
         updateFavoritesCount();
         AlertsStore.set('favorites', state.favoritesList).catch(() => {});
+        GPBackground.syncAlerts(state.favoritesList, null).catch(() => {});
     }
 
     function isFavorite(ideess) {
@@ -318,12 +319,12 @@
     }
 
     function requestGeolocation() {
-        if (!('geolocation' in navigator)) {
+        if (!GPNative.hasGeolocation()) {
             el.geoFallback.hidden = false;
             showSearchPrompt();
             return;
         }
-        navigator.geolocation.getCurrentPosition(
+        GPNative.getPosition({ timeout: 10000, maximumAge: 5 * 60 * 1000 }).then(
             (position) => {
                 state.userLat = position.coords.latitude;
                 state.userLon = position.coords.longitude;
@@ -347,8 +348,7 @@
                 if (state.stationsMode !== 'search' || state.stationsQuery.length < 2) {
                     showSearchPrompt();
                 }
-            },
-            { timeout: 10000, maximumAge: 60000 }
+            }
         );
     }
 
@@ -370,7 +370,7 @@
     
     
     async function initGeolocationFlow() {
-        if (!('geolocation' in navigator)) {
+        if (!GPNative.hasGeolocation()) {
             el.geoFallback.hidden = false;
             return;
         }
@@ -392,25 +392,18 @@
             return;
         }
 
-        if ('permissions' in navigator) {
-            try {
-                const status = await navigator.permissions.query({ name: 'geolocation' });
-                if (status.state === 'granted') {
-                    requestGeolocation();
-                    return;
-                }
-                if (status.state === 'denied') {
-                    el.geoFallback.hidden = false;
-                    updateGeoToggle();
-                    if (state.stationsMode !== 'search') {
-                        showSearchPrompt();
-                    }
-                    return;
-                }
-            } catch (e) {
-                el.geoAsk.showModal();
-                return;
+        const permission = await GPNative.locationPermission();
+        if (permission === 'granted') {
+            requestGeolocation();
+            return;
+        }
+        if (permission === 'denied') {
+            el.geoFallback.hidden = false;
+            updateGeoToggle();
+            if (state.stationsMode !== 'search') {
+                showSearchPrompt();
             }
+            return;
         }
         el.geoAsk.showModal();
     }
@@ -1652,17 +1645,15 @@
     });
 
     const btnShare = document.getElementById('modal-share');
-    if (btnShare) {
-        if (navigator.share) {
-            btnShare.hidden = false;
-            btnShare.addEventListener('click', () => {
-                navigator.share({
-                    title: el.modalRotulo.textContent,
-                    text: `Mira los precios en ${el.modalRotulo.textContent}`,
-                    url: window.location.href
-                }).catch(err => console.log('Error sharing:', err));
-            });
-        }
+    if (GPNative.canShare()) {
+        btnShare.hidden = false;
+        btnShare.addEventListener('click', () => {
+            GPNative.share({
+                title: el.modalRotulo.textContent,
+                text: `Mira los precios en ${el.modalRotulo.textContent}`,
+                path: window.location.pathname,
+            }).catch(() => {});
+        });
     }
 
     el.stationModal.addEventListener('click', (e) => {
@@ -1711,7 +1702,26 @@
         alertsNote.hidden = message === '';
     }
 
+    async function enableNativeAlerts() {
+        const LocalNotifications = GPNative.plugin('LocalNotifications');
+        if (!LocalNotifications) {
+            return 'Esta versión de la app no puede mostrar notificaciones.';
+        }
+        const permission = await LocalNotifications.requestPermissions();
+        if (permission.display !== 'granted') {
+            return 'Has bloqueado las notificaciones de Gasolinera+. Actívalas en los ajustes del móvil.';
+        }
+        await AlertsStore.set('favorites', state.favoritesList);
+        await AlertsStore.set('enabled', true);
+        await GPBackground.syncAlerts(state.favoritesList, true);
+        await checkAndNotifyDrops();
+        return '';
+    }
+
     async function enableAlerts() {
+        if (GPNative.isNative()) {
+            return enableNativeAlerts();
+        }
         if (!('Notification' in window) || !('serviceWorker' in navigator)) {
             return 'Este navegador no admite notificaciones.';
         }
@@ -1735,8 +1745,14 @@
     }
 
     async function checkAndNotifyDrops() {
-        const drops = await AlertsStore.checkPrices();
-        if (!drops.length || typeof Notification === 'undefined' || Notification.permission !== 'granted') {
+        if (await GPBackground.checkNow()) {
+            return;
+        }
+        const drops = await AlertsStore.checkPrices(GPNative.apiBase());
+        if (!drops.length) {
+            return;
+        }
+        if (typeof Notification === 'undefined' || Notification.permission !== 'granted') {
             return;
         }
         const registration = await navigator.serviceWorker.ready;
@@ -1748,6 +1764,10 @@
 
     async function disableAlerts() {
         await AlertsStore.set('enabled', false);
+        if (GPNative.isNative()) {
+            await GPBackground.syncAlerts(state.favoritesList, false);
+            return;
+        }
         try {
             const registration = await navigator.serviceWorker.ready;
             if ('periodicSync' in registration) await registration.periodicSync.unregister('price-drop-check');
@@ -1773,7 +1793,11 @@
 
     AlertsStore.set('favorites', state.favoritesList).catch(() => {});
     AlertsStore.get('enabled').then((enabled) => {
-        alertsToggle.checked = enabled === true && typeof Notification !== 'undefined' && Notification.permission === 'granted';
+        let permitted = typeof Notification !== 'undefined' && Notification.permission === 'granted';
+        if (GPNative.isNative()) {
+            permitted = true;
+        }
+        alertsToggle.checked = enabled === true && permitted;
         if (alertsToggle.checked) {
             checkAndNotifyDrops().catch(() => {});
         }
@@ -1825,7 +1849,16 @@
         }
     });
 
+    function showUpdateBanner(version, url) {
+        document.getElementById('update-version').textContent = version;
+        const link = document.getElementById('update-link');
+        link.href = url;
+        document.getElementById('update-banner').hidden = false;
+    }
+
     restoreFuelPreference();
+    GPNative.refreshOfflineData();
+    GPNative.checkForUpdate(showUpdateBanner);
     initGeolocationFlow();
     handleDeepLink();
     updateCompareCount();

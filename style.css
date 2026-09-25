@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap');
-
 :root {
     
     --bg: #f7f5f0;
@@ -68,6 +66,17 @@ header {
     font-size: 0.82rem;
     font-weight: 600;
 }
+
+#update-banner {
+    margin: 0 0 12px;
+    padding: 10px 14px;
+    border-radius: 4px;
+    background: var(--status-down);
+    color: white;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+#update-banner a { color: white; }
 
 #alerts-toggle-wrap {
     display: flex;
@@ -639,6 +648,18 @@ dialog::backdrop { background: rgba(34, 29, 18, 0.5); }
     flex-shrink: 0;
 }
 #view-list, #view-map, #view-stats { margin-bottom: 24px; }
+
+#get-app {
+    margin: 0 0 16px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--primary-tint);
+}
+#get-app h3 { margin: 0 0 6px; font-size: 1rem; }
+#get-app p { margin: 0 0 10px; font-size: 0.85rem; color: var(--text-secondary); }
+#get-app-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+#get-app-ios-help { margin: 0; }
 
 @media (max-width: 680px) {
     body { padding-top: 0; }

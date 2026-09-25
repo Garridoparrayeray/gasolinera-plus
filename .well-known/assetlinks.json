@@ -8,4 +8,13 @@
       "8F:0E:B9:3B:34:9C:5D:3A:C7:CE:22:C9:1A:5C:15:50:75:BD:99:47:2F:AE:05:5E:48:02:BE:67:08:A1:F8:32"
     ]
   }
+}, {
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.vercel.gasolineraplus",
+    "sha256_cert_fingerprints": [
+      "B4:B0:22:F5:C3:B0:AB:C4:1F:E2:D0:7F:D4:34:68:12:72:5E:ED:81:99:76:8A:2D:23:40:9A:E7:07:7B:42:8C"
+    ]
+  }
 }]
