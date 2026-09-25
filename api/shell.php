@@ -206,11 +206,24 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             </select>
         </div>
 
-        <div id="view-toggle" role="tablist">
-            <button id="view-list-btn" type="button" role="tab" aria-selected="true">Lista</button>
-            <button id="view-map-btn" type="button" role="tab" aria-selected="false">Mapa</button>
-            <button id="view-stats-btn" type="button" role="tab" aria-selected="false">Estadísticas</button>
-        </div>
+        <nav id="view-toggle" role="tablist" aria-label="Secciones">
+            <button id="view-list-btn" type="button" role="tab" aria-selected="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+                <span>Lista</span>
+            </button>
+            <button id="view-map-btn" type="button" role="tab" aria-selected="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+                <span>Mapa</span>
+            </button>
+            <button id="view-garage-btn" type="button" role="tab" aria-selected="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14v-5l-2-5H7l-2 5v5z"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/></svg>
+                <span>Mi coche</span>
+            </button>
+            <button id="view-stats-btn" type="button" role="tab" aria-selected="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/></svg>
+                <span>Estadísticas</span>
+            </button>
+        </nav>
 
         <p id="geo-fallback" hidden>
             No hemos podido acceder a tu ubicación. Puedes buscar por municipio o dirección arriba, o
@@ -242,6 +255,74 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 </div>
             </div>
             <p id="map-note" hidden></p>
+        </section>
+
+        <section id="view-garage" hidden>
+            <div id="garage-empty" class="garage-card">
+                <h3>Tu garaje</h3>
+                <p>Añade tu coche para conocer tu consumo real, cuánto gastas al mes y hasta dónde llegas con lo que queda en el depósito. Todo se guarda solo en este dispositivo.</p>
+                <button id="garage-add-first" type="button" class="pill pill--primary">Añadir mi coche</button>
+            </div>
+            <div id="garage-main" hidden>
+                <div id="garage-vehicles" role="tablist" aria-label="Tus coches"></div>
+                <div class="garage-card" id="garage-vehicle-card">
+                    <div class="garage-vehicle-head">
+                        <div>
+                            <strong id="garage-vehicle-name"></strong>
+                            <small id="garage-vehicle-fuel"></small>
+                        </div>
+                        <button id="garage-edit" type="button" class="pill">Editar</button>
+                    </div>
+                    <div id="garage-tank">
+                        <div id="garage-tank-bar"><span id="garage-tank-fill"></span></div>
+                        <p id="garage-tank-text"></p>
+                    </div>
+                    <div class="garage-tiles">
+                        <div><small>Consumo medio</small><strong id="garage-consumption">—</strong><small id="garage-consumption-source"></small></div>
+                        <div><small>Coste por km</small><strong id="garage-cost-km">—</strong></div>
+                        <div><small>Gasto este mes</small><strong id="garage-month-spend">—</strong></div>
+                        <div><small>Cuentakilómetros</small><strong id="garage-odometer-value">—</strong></div>
+                    </div>
+                    <div class="garage-actions">
+                        <button id="garage-refuel" type="button" class="pill pill--primary">Anotar repostaje</button>
+                        <button id="garage-odometer" type="button" class="pill">Actualizar km</button>
+                    </div>
+                </div>
+                <div class="garage-card">
+                    <h3>Consumo real</h3>
+                    <canvas id="garage-consumption-chart" height="160"></canvas>
+                    <p id="garage-consumption-note" class="garage-note"></p>
+                </div>
+                <div class="garage-card">
+                    <h3>Gasto por mes</h3>
+                    <canvas id="garage-spend-chart" height="160"></canvas>
+                </div>
+                <div class="garage-card">
+                    <h3>Lo que pagas frente a la media</h3>
+                    <canvas id="garage-price-chart" height="160"></canvas>
+                    <p id="garage-savings" class="garage-note"></p>
+                </div>
+                <div class="garage-card">
+                    <h3>Repostajes</h3>
+                    <p id="garage-refuels-empty" class="garage-note">Todavía no has anotado ningún repostaje. Anota los llenos con los km del cuentakilómetros para calcular tu consumo real.</p>
+                    <ul id="garage-refuels"></ul>
+                </div>
+                <div class="garage-card" id="garage-trips-card" hidden>
+                    <h3>Viajes</h3>
+                    <div id="garage-trips"></div>
+                </div>
+                <div class="garage-card">
+                    <h3>Copia de seguridad</h3>
+                    <p class="garage-note">Tus coches, repostajes y viajes solo existen en este dispositivo. Guarda una copia de vez en cuando por si cambias de móvil.</p>
+                    <label class="garage-check"><input type="checkbox" id="backup-include-trips" checked> Incluir los recorridos de los viajes</label>
+                    <div class="garage-actions">
+                        <button id="backup-export" type="button" class="pill">Exportar copia</button>
+                        <button id="backup-import-btn" type="button" class="pill">Importar copia</button>
+                        <input id="backup-import" type="file" accept="application/json,.json" hidden>
+                    </div>
+                    <p id="backup-note" class="garage-note" hidden></p>
+                </div>
+            </div>
         </section>
 
         <section id="view-stats" hidden>
@@ -385,8 +466,62 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         <div id="modal-actions">
             <a id="modal-directions" class="pill" target="_blank" rel="noopener">Cómo llegar</a>
             <button id="modal-compare-toggle" type="button" class="pill">Añadir a comparar</button>
+            <button id="modal-refuel" type="button" class="pill">Repostar aquí</button>
         </div>
     </dialog>
+
+    <dialog id="vehicle-dialog">
+        <form id="vehicle-form" method="dialog">
+            <h3 id="vehicle-dialog-title">Tu coche</h3>
+            <label>Nombre <input id="vehicle-name" type="text" maxlength="40" required placeholder="Por ejemplo, el Golf de casa"></label>
+            <label>Carburante <select id="vehicle-fuel" required></select></label>
+            <label><span id="vehicle-tank-label">Capacidad del depósito (L)</span> <input id="vehicle-tank" type="number" min="5" max="300" step="1" required></label>
+            <label><span id="vehicle-homologated-label">Consumo homologado (L/100 km)</span> <input id="vehicle-homologated" type="number" min="1" max="40" step="0.1" required></label>
+            <label>Kilómetros actuales <input id="vehicle-odometer" type="number" min="0" step="1" required></label>
+            <p id="vehicle-error" class="form-error" hidden></p>
+            <div class="dialog-actions">
+                <button id="vehicle-delete" type="button" class="pill pill--danger" hidden>Borrar coche</button>
+                <button id="vehicle-cancel" type="button" class="pill">Cancelar</button>
+                <button id="vehicle-save" type="submit" class="pill pill--primary">Guardar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="refuel-dialog">
+        <form id="refuel-form" method="dialog">
+            <h3>Anotar repostaje</h3>
+            <p id="refuel-station" class="garage-note" hidden></p>
+            <label>Fecha y hora <input id="refuel-date" type="datetime-local" required></label>
+            <label>Kilómetros del cuentakilómetros <input id="refuel-odometer" type="number" min="0" step="1" required></label>
+            <div class="form-row">
+                <label><span id="refuel-liters-label">Litros</span> <input id="refuel-liters" type="number" min="0.1" step="0.01" required></label>
+                <label><span id="refuel-price-label">Precio (€/L)</span> <input id="refuel-price" type="number" min="0.1" step="0.001" required></label>
+            </div>
+            <label>Total pagado (€) <input id="refuel-total" type="number" min="0.1" step="0.01" required></label>
+            <label class="garage-check"><input id="refuel-full" type="checkbox" checked> He llenado el depósito</label>
+            <label class="garage-check"><input id="refuel-missed" type="checkbox"> Me salté anotar algún repostaje antes de este</label>
+            <p id="refuel-error" class="form-error" hidden></p>
+            <div class="dialog-actions">
+                <button id="refuel-delete" type="button" class="pill pill--danger" hidden>Borrar</button>
+                <button id="refuel-cancel" type="button" class="pill">Cancelar</button>
+                <button id="refuel-save" type="submit" class="pill pill--primary">Guardar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="odometer-dialog">
+        <form id="odometer-form" method="dialog">
+            <h3>Kilómetros actuales</h3>
+            <p class="garage-note">Mira el cuentakilómetros del coche. Sirve para estimar cuánto queda en el depósito.</p>
+            <label>Kilómetros <input id="odometer-value" type="number" min="0" step="1" required></label>
+            <p id="odometer-error" class="form-error" hidden></p>
+            <div class="dialog-actions">
+                <button id="odometer-cancel" type="button" class="pill">Cancelar</button>
+                <button type="submit" class="pill pill--primary">Guardar</button>
+            </div>
+        </form>
+    </dialog>
+
 
     <dialog id="favorites-panel">
         <button id="favorites-close" class="btn-icon" type="button" aria-label="Cerrar">
@@ -419,6 +554,10 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <script src="/js/alerts-store.js"></script>
     <script src="/js/api.js"></script>
     <script src="/js/app.js"></script>
+    <script src="/js/fuel-math.js"></script>
+    <script src="/js/garage-store.js"></script>
+    <script src="/js/backup.js"></script>
+    <script src="/js/garage.js"></script>
 <?php if (!$isNative): ?>
     <script>
         if ('serviceWorker' in navigator && !window.Capacitor) {

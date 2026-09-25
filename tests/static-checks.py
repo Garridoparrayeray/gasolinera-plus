@@ -30,7 +30,7 @@ js_sources = ''
 for path in own_files('js/*.js'):
     with open(path, encoding='utf-8') as handle:
         js_sources += handle.read()
-ids_js = set(re.findall(r"getElementById\('([^']+)'\)", js_sources))
+ids_js = set(re.findall(r"(?:getElementById|\$)\('([^'#.\s]+)'\)", js_sources))
 shell = read('api/shell.php')
 ids_html = set(re.findall(r'id="([^"]+)"', shell))
 missing_ids = sorted(ids_js - ids_html)
@@ -76,6 +76,10 @@ def blank_keep_lines(match):
 for path in own_files('js/*.js') + own_files('runners/*.js') + own_files('api/**/*.php') + own_files('scripts/*.php') + own_files('scripts/*.mjs') + own_files('tools/**/*.mjs') + own_files('tests/*.mjs') + [ROOT + 'sw.js']:
     with open(path, encoding='utf-8') as handle:
         source = handle.read()
+    interpolations = ' '.join(re.findall(r'\$\{([^{}]*)\}', source))
+    if ternary.search(interpolations):
+        print(f'TERNARIO dentro de una plantilla en {path.replace(ROOT, "")}')
+        failures.append('operador ternario en ' + os.path.basename(path))
     code = literal.sub(blank_keep_lines, source)
     original_lines = source.split('\n')
     for number, line in enumerate(code.split('\n'), 1):

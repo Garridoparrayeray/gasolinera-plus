@@ -33,12 +33,7 @@
         filterRadius: document.getElementById('filter-radius'),
         filterSort: document.getElementById('filter-sort'),
         filterOpen: document.getElementById('filter-open'),
-        viewListBtn: document.getElementById('view-list-btn'),
-        viewMapBtn: document.getElementById('view-map-btn'),
-        viewStatsBtn: document.getElementById('view-stats-btn'),
         viewList: document.getElementById('view-list'),
-        viewMap: document.getElementById('view-map'),
-        viewStats: document.getElementById('view-stats'),
         stationsList: document.getElementById('stations-list'),
         stationsEmpty: document.getElementById('stations-empty'),
         stationsGeocodedNote: document.getElementById('stations-geocoded-note'),
@@ -71,6 +66,7 @@
         modalDirections: document.getElementById('modal-directions'),
         modalCompareToggle: document.getElementById('modal-compare-toggle'),
         modalFavoriteToggle: document.getElementById('modal-favorite-toggle'),
+        modalRefuel: document.getElementById('modal-refuel'),
         compareOpen: document.getElementById('compare-open'),
         compareCount: document.getElementById('compare-count'),
         comparePanel: document.getElementById('compare-panel'),
@@ -979,14 +975,25 @@
         }).addTo(state.map);
     }
 
+    const VIEWS = ['list', 'map', 'route', 'garage', 'stats'];
+
     function switchView(view) {
+        if (!VIEWS.includes(view) || !document.getElementById('view-' + view)) {
+            view = 'list';
+        }
         state.currentView = view;
-        el.viewList.hidden = view !== 'list';
-        el.viewMap.hidden = view !== 'map';
-        el.viewStats.hidden = view !== 'stats';
-        el.viewListBtn.setAttribute('aria-selected', String(view === 'list'));
-        el.viewMapBtn.setAttribute('aria-selected', String(view === 'map'));
-        el.viewStatsBtn.setAttribute('aria-selected', String(view === 'stats'));
+        document.documentElement.dataset.view = view;
+        for (const name of VIEWS) {
+            const section = document.getElementById('view-' + name);
+            const button = document.getElementById('view-' + name + '-btn');
+            if (section) {
+                section.hidden = name !== view;
+            }
+            if (button) {
+                button.setAttribute('aria-selected', String(name === view));
+            }
+        }
+        document.dispatchEvent(new CustomEvent('gp:view', { detail: view }));
         if (view === 'map') {
             refreshMapMarkers();
         }
@@ -1368,14 +1375,29 @@
             }
         };
 
+        el.modalRefuel.onclick = () => {
+            el.stationModal.close();
+            document.dispatchEvent(new CustomEvent('gp:refuel-here', { detail: station }));
+        };
+
         el.modalCompareToggle.textContent = compareToggleLabel(ideess);
         el.modalCompareToggle.onclick = () => {
             if (isInCompareList(ideess)) {
                 removeFromCompare(ideess);
-                el.modalCompareToggle.textContent = compareToggleLabel(ideess);
+                el.modalRefuel.onclick = () => {
+            el.stationModal.close();
+            document.dispatchEvent(new CustomEvent('gp:refuel-here', { detail: station }));
+        };
+
+        el.modalCompareToggle.textContent = compareToggleLabel(ideess);
             } else {
                 addToCompare(ideess, station.rotulo, station.direccion);
-                el.modalCompareToggle.textContent = compareToggleLabel(ideess);
+                el.modalRefuel.onclick = () => {
+            el.stationModal.close();
+            document.dispatchEvent(new CustomEvent('gp:refuel-here', { detail: station }));
+        };
+
+        el.modalCompareToggle.textContent = compareToggleLabel(ideess);
                 showToast(`${station.rotulo} añadida a comparar`);
                 setTimeout(() => el.stationModal.close(), 900);
             }
@@ -1604,9 +1626,12 @@
     el.legalPanel.addEventListener('click', (e) => {
         if (e.target === el.legalPanel) el.legalPanel.close();
     });
-    el.viewListBtn.addEventListener('click', () => switchView('list'));
-    el.viewMapBtn.addEventListener('click', () => switchView('map'));
-    el.viewStatsBtn.addEventListener('click', () => switchView('stats'));
+    for (const name of VIEWS) {
+        const button = document.getElementById('view-' + name + '-btn');
+        if (button) {
+            button.addEventListener('click', () => switchView(name));
+        }
+    }
     el.heatmapToggle.addEventListener('click', toggleHeatmap);
     el.locateMe.addEventListener('click', locateOnMap);
 
@@ -1826,7 +1851,9 @@
         const stationId = params.get('station');
         if (stationId) openStationModal(stationId);
         const view = params.get('view');
-        if (view === 'map' || view === 'stats') switchView(view);
+        if (view && VIEWS.includes(view)) {
+            switchView(view);
+        }
         if (params.get('panel') === 'favorites') openFavoritesPanel();
         const query = (params.get('q') || '').trim();
         if (query.length >= 2) {
@@ -1855,6 +1882,33 @@
         link.href = url;
         document.getElementById('update-banner').hidden = false;
     }
+
+    function useVehicleFuel(fuel) {
+        if (![...el.filterFuel.options].some((option) => option.value === fuel) || el.filterFuel.value === fuel) {
+            return;
+        }
+        el.filterFuel.value = fuel;
+        el.filterFuel.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    document.addEventListener('gp:vehicle-active', (event) => useVehicleFuel(event.detail.fuel));
+
+    window.GP = {
+        showToast,
+        switchView,
+        currentView: () => state.currentView,
+        openStationModal,
+        userPosition: () => {
+            if (state.userLat === null) {
+                return null;
+            }
+            return { lat: state.userLat, lon: state.userLon };
+        },
+        ensureMap: () => {
+            ensureMap();
+            return state.map;
+        },
+    };
 
     restoreFuelPreference();
     GPNative.refreshOfflineData();
