@@ -215,7 +215,11 @@ export function parsePrimitiveBlock(data, handlers) {
                 kinds.dense = true;
                 const [ds, de] = g.bytesRange();
                 if (handlers.dense) {
-                    handlers.dense(decodeDense(data, ds, de, granularity, latOffset, lonOffset));
+                    let tagKey = -1;
+                    if (handlers.denseTagKey) {
+                        tagKey = strings.indexOf(handlers.denseTagKey);
+                    }
+                    handlers.dense(decodeDense(data, ds, de, granularity, latOffset, lonOffset, strings, tagKey));
                 }
             } else if (field === 3 && wire === 2) {
                 kinds.ways = true;
@@ -240,11 +244,12 @@ export function parsePrimitiveBlock(data, handlers) {
     return kinds;
 }
 
-function decodeDense(data, start, end, granularity, latOffset, lonOffset) {
+function decodeDense(data, start, end, granularity, latOffset, lonOffset, strings, tagKey) {
     const p = new Proto(data, start, end);
     let ids = null;
     let lats = null;
     let lons = null;
+    let keysVals = null;
     while (p.pos < p.end) {
         const { field, wire } = p.key();
         if (field === 1 && wire === 2) {
@@ -256,6 +261,8 @@ function decodeDense(data, start, end, granularity, latOffset, lonOffset) {
         } else if (field === 9 && wire === 2) {
             const [s, e] = p.bytesRange();
             lons = p.packedDelta(s, e);
+        } else if (field === 10 && wire === 2) {
+            keysVals = p.bytesRange();
         } else {
             p.skip(wire);
         }
@@ -267,7 +274,32 @@ function decodeDense(data, start, end, granularity, latOffset, lonOffset) {
         latDeg[i] = 1e-9 * (latOffset + granularity * lats[i]);
         lonDeg[i] = 1e-9 * (lonOffset + granularity * lons[i]);
     }
-    return { ids, lat: latDeg, lon: lonDeg };
+    const tagged = [];
+    if (tagKey !== -1 && keysVals) {
+        const kv = [];
+        p.packedVarints(keysVals[0], keysVals[1], kv);
+        let cursor = 0;
+        for (let i = 0; i < count && cursor < kv.length; i++) {
+            let tags = null;
+            let hasKey = false;
+            const startPair = cursor;
+            while (cursor < kv.length && kv[cursor] !== 0) {
+                if (kv[cursor] === tagKey) {
+                    hasKey = true;
+                }
+                cursor += 2;
+            }
+            if (hasKey) {
+                tags = {};
+                for (let k = startPair; k < cursor; k += 2) {
+                    tags[strings[kv[k]]] = strings[kv[k + 1]];
+                }
+                tagged.push({ index: i, tags });
+            }
+            cursor++;
+        }
+    }
+    return { ids, lat: latDeg, lon: lonDeg, tagged };
 }
 
 function decodeWay(data, start, end, strings, requiredKey) {

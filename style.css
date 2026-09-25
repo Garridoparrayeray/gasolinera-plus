@@ -856,3 +856,93 @@ html[data-view="route"] #filter-sort { display: none; }
     #view-toggle button[aria-selected="true"] { background: var(--primary-tint); color: var(--primary); }
     #toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
 }
+
+#view-route { margin-bottom: 24px; }
+#route-form { position: relative; }
+.route-field { position: relative; margin-bottom: 6px; }
+.route-field label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; }
+.route-input { display: flex; gap: 8px; }
+.route-input input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-family: inherit;
+    font-size: 0.92rem;
+    color: var(--text);
+}
+.route-label-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 8px; }
+.route-label-row label { margin-bottom: 4px; }
+#route-swap { width: 32px; height: 32px; margin-bottom: 4px; }
+.route-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+}
+.route-suggestions li button {
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    font-family: inherit;
+    font-size: 0.87rem;
+    color: var(--text);
+    cursor: pointer;
+}
+.route-suggestions li:last-child button { border-bottom: none; }
+.route-suggestions li button small { display: block; color: var(--text-secondary); font-size: 0.76rem; margin-top: 2px; }
+.route-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+.route-options label { font-size: 0.8rem; font-weight: 600; }
+.route-options select {
+    display: block;
+    width: 100%;
+    margin-top: 4px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: inherit;
+    background: var(--bg);
+    color: var(--text);
+}
+#route-submit { width: 100%; padding: 11px; font-size: 0.9rem; }
+#route-progress { height: 6px; border-radius: 999px; background: var(--primary-tint); overflow: hidden; margin-top: 8px; }
+#route-progress-bar { display: block; height: 100%; width: 0; background: var(--primary); transition: width 0.2s ease; }
+#route-map-wrap { margin-bottom: 12px; }
+#route-map { height: 50vh; height: 50dvh; min-height: 320px; border-radius: 8px; border: 1px solid var(--border); }
+#route-tank-row { margin-bottom: 10px; }
+#route-tank-row label { font-size: 0.85rem; }
+#route-tank { width: 100%; accent-color: var(--primary); }
+#route-refuel-advice { font-size: 0.9rem; line-height: 1.45; margin: 0 0 10px; }
+#route-stations { list-style: none; margin: 0; padding: 0; }
+.route-station { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; }
+.route-station + .route-station { border-top: 1px solid var(--border); }
+.route-station__main { flex: 1; min-width: 0; cursor: pointer; }
+.route-station__main strong { display: block; font-size: 0.9rem; }
+.route-station__main small { display: block; font-size: 0.76rem; color: var(--text-secondary); margin-top: 2px; }
+.route-station__side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.route-station__price { font-weight: 800; font-size: 0.95rem; }
+.route-station--cheapest .route-station__main strong::after {
+    content: 'la más barata';
+    margin-left: 6px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: white;
+    background: var(--status-down);
+    padding: 2px 6px;
+    border-radius: 999px;
+    vertical-align: middle;
+}

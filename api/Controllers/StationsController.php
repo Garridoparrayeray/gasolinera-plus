@@ -422,6 +422,22 @@ class StationsController
         Response::json(['carburante' => $fuel, 'buckets' => $out]);
     }
 
+    public function resolvePlace(Request $request): void
+    {
+        $q = trim((string)$request->query('q', ''));
+        $length = mb_strlen($q);
+        if ($length < 3 || $length > 120) {
+            Response::error('Escribe un lugar o una dirección', 422);
+            return;
+        }
+        $place = PlaceGeocoder::resolve($q);
+        if ($place === null) {
+            Response::error('No se ha encontrado ese lugar', 404);
+            return;
+        }
+        Response::json(['lat' => $place['lat'], 'lon' => $place['lon'], 'label' => $q]);
+    }
+
     public function zoneComparison(Request $request, array $params): void
     {
         $fuel = $this->normalizeFuel($request->query('fuel'));

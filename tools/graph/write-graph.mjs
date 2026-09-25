@@ -171,7 +171,7 @@ export function writeGraph(graph, outDir) {
         mainSegTo[i] = globalIndex[segTo[s]];
     });
 
-    rmSync(outDir, { recursive: true, force: true });
+    rmSync(join(outDir, 'tiles'), { recursive: true, force: true });
     mkdirSync(join(outDir, 'tiles'), { recursive: true });
 
     const main = new Writer();
@@ -192,7 +192,8 @@ export function writeGraph(graph, outDir) {
     main.push(mainGeomLat);
     main.push(mainGeomLon);
     const mainBytes = main.bytes();
-    writeFileSync(join(outDir, 'main.bin'), mainBytes);
+    const mainGzipped = gzipSync(mainBytes, { level: 9 });
+    writeFileSync(join(outDir, 'main.bin.gz'), mainGzipped);
 
     const tiles = new Map();
     for (let s = 0; s < segCount; s++) {
@@ -273,14 +274,14 @@ export function writeGraph(graph, outDir) {
         w.push(tLat);
         w.push(tLon);
         const bytes = w.bytes();
-        writeFileSync(join(outDir, 'tiles', `${key}.bin`), bytes);
-        const gz = gzipSync(bytes).length;
-        tileIndex[key] = bytes.length;
+        const gzipped = gzipSync(bytes, { level: 9 });
+        writeFileSync(join(outDir, 'tiles', `${key}.bin.gz`), gzipped);
+        tileIndex[key] = gzipped.length;
         tileBytesTotal += bytes.length;
-        tileGzipTotal += gz;
+        tileGzipTotal += gzipped.length;
     }
 
-    const mainGzip = gzipSync(mainBytes).length;
+    const mainGzip = mainGzipped.length;
     const manifest = {
         version: FORMAT_VERSION,
         builtAt: new Date().toISOString(),
@@ -291,7 +292,8 @@ export function writeGraph(graph, outDir) {
         totalNodes: totalCount,
         mainEdges: edgeCount,
         mainSegments: mainSegIds.length,
-        mainBytes: mainBytes.length,
+        mainBytes: mainGzipped.length,
+        mainRawBytes: mainBytes.length,
         tiles: tileIndex,
     };
     writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(manifest));

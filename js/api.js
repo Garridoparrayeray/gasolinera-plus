@@ -332,6 +332,7 @@ const Api = (() => {
                 throw e;
             }
         },
+        resolvePlace: async (q) => request('/places/resolve?q=' + encodeURIComponent(q)),
         zoneComparison: async (ideess, fuel) => request('/stations/' + encodeURIComponent(ideess) + '/zone-comparison?fuel=' + fuel),
         nationalStats: async (fuel, from, to, group = 'day') => request('/stats/national?fuel=' + fuel + '&from=' + from + '&to=' + to + '&group=' + group),
         statsByFuel: async (from, to, group = 'day') => request('/stats/by-fuel?from=' + from + '&to=' + to + '&group=' + group),

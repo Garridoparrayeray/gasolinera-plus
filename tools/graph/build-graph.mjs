@@ -1,14 +1,27 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { decodeBlob, parsePrimitiveBlock, readBlobs } from './pbf.mjs';
 import { writeGraph } from './write-graph.mjs';
 
-const input = process.argv[2];
-const outDir = process.argv[3];
-if (!input || !outDir) {
-    console.error('uso: node build-graph.mjs <espana.osm.pbf> <carpeta-salida>');
+const args = process.argv.slice(2);
+const inputs = [];
+let outDir = null;
+let stationsPath = null;
+for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--out') {
+        outDir = args[++i];
+    } else if (args[i] === '--stations') {
+        stationsPath = args[++i];
+    } else {
+        inputs.push(args[i]);
+    }
+}
+if (!inputs.length || !outDir) {
+    console.error('uso: node build-graph.mjs --out <carpeta> [--stations stations-lite.json] <extracto.osm.pbf>...');
     process.exit(1);
 }
+
+const PLACE_KINDS = { city: 0, town: 1, village: 2, suburb: 3, quarter: 4, neighbourhood: 5, hamlet: 6 };
 
 const MAIN_CLASSES = ['motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary', 'secondary_link', 'tertiary', 'tertiary_link'];
 const DETAIL_CLASSES = ['unclassified', 'residential', 'living_street', 'road'];
@@ -143,9 +156,10 @@ const wayToll = new GrowArray(Uint8Array);
 const wayRefStart = new GrowArray(Uint32Array);
 const wayRefCount = new GrowArray(Uint32Array);
 const refIds = new GrowArray(Float64Array, 1 << 24);
-const nodeBlocks = [];
+const nodeBlocks = inputs.map(() => []);
 
-for (const { type, blob, offset, size } of readBlobs(input)) {
+for (let fileIndex = 0; fileIndex < inputs.length; fileIndex++) {
+for (const { type, blob, offset, size } of readBlobs(inputs[fileIndex])) {
     if (type !== 'OSMData') {
         continue;
     }
@@ -173,11 +187,12 @@ for (const { type, blob, offset, size } of readBlobs(input)) {
         },
     });
     if (kinds.dense) {
-        nodeBlocks.push({ offset, size });
+        nodeBlocks[fileIndex].push({ offset, size });
     }
 }
+}
 const wayCount = wayClass.length;
-log(`${wayCount} vías, ${refIds.length} referencias a nodos, ${nodeBlocks.length} bloques de nodos`);
+log(`${wayCount} vías, ${refIds.length} referencias a nodos, ${nodeBlocks.reduce((n, b) => n + b.length, 0)} bloques de nodos`);
 
 log('nodos únicos y cruces');
 const sortedRefs = Float64Array.from(refIds.view()).sort();
@@ -197,6 +212,20 @@ for (let i = 0; i < sortedRefs.length; i++) {
 const ids = uniqueIds.view();
 const uses = useCount.view();
 const nodeCount = ids.length;
+
+function lowerBound(id) {
+    let lo = 0;
+    let hi = nodeCount;
+    while (lo < hi) {
+        const mid = (lo + hi) >>> 1;
+        if (ids[mid] < id) {
+            lo = mid + 1;
+        } else {
+            hi = mid;
+        }
+    }
+    return lo;
+}
 
 function indexOfId(id) {
     let lo = 0;
@@ -234,31 +263,49 @@ for (let w = 0; w < wayCount; w++) {
 }
 log(`${nodeCount} nodos usados`);
 
-log('pasada 2: coordenadas');
+log('pasada 2: coordenadas y lugares');
 const nodeLat = new Float64Array(nodeCount);
 const nodeLon = new Float64Array(nodeCount);
 const found = new Uint8Array(nodeCount);
-let cursor = 0;
-for (const { blob } of readBlobs(input, nodeBlocks)) {
-    parsePrimitiveBlock(decodeBlob(blob), {
-        dense: (dense) => {
-            const blockIds = dense.ids;
-            if (blockIds.length && cursor < nodeCount && ids[cursor] > blockIds[0]) {
-                cursor = Math.max(0, indexOfId(blockIds[0]));
-            }
-            for (let i = 0; i < blockIds.length; i++) {
-                const id = blockIds[i];
-                while (cursor < nodeCount && ids[cursor] < id) {
-                    cursor++;
+const places = [];
+for (let fileIndex = 0; fileIndex < inputs.length; fileIndex++) {
+    for (const { blob } of readBlobs(inputs[fileIndex], nodeBlocks[fileIndex])) {
+        parsePrimitiveBlock(decodeBlob(blob), {
+            denseTagKey: 'place',
+            dense: (dense) => {
+                const blockIds = dense.ids;
+                if (!blockIds.length) {
+                    return;
                 }
-                if (cursor < nodeCount && ids[cursor] === id) {
-                    nodeLat[cursor] = dense.lat[i];
-                    nodeLon[cursor] = dense.lon[i];
-                    found[cursor] = 1;
+                let cursor = lowerBound(blockIds[0]);
+                for (let i = 0; i < blockIds.length; i++) {
+                    const id = blockIds[i];
+                    if (i > 0 && id < blockIds[i - 1]) {
+                        cursor = lowerBound(id);
+                    }
+                    while (cursor < nodeCount && ids[cursor] < id) {
+                        cursor++;
+                    }
+                    if (cursor < nodeCount && ids[cursor] === id) {
+                        nodeLat[cursor] = dense.lat[i];
+                        nodeLon[cursor] = dense.lon[i];
+                        found[cursor] = 1;
+                    }
                 }
-            }
-        },
-    });
+                for (const { index, tags } of dense.tagged) {
+                    const kind = PLACE_KINDS[tags.place];
+                    if (kind === undefined || !tags.name) {
+                        continue;
+                    }
+                    let alt = '';
+                    if (tags['name:es'] && tags['name:es'] !== tags.name) {
+                        alt = tags['name:es'];
+                    }
+                    places.push([tags.name, +dense.lat[index].toFixed(5), +dense.lon[index].toFixed(5), kind, alt]);
+                }
+            },
+        });
+    }
 }
 let missing = 0;
 for (let i = 0; i < nodeCount; i++) {
@@ -432,7 +479,53 @@ for (let s = 0; s < segCount; s++) {
     }
 }
 
+function provinceLookup() {
+    if (!stationsPath) {
+        return () => '';
+    }
+    const payload = JSON.parse(readFileSync(stationsPath, 'utf8'));
+    let stations = payload.stations;
+    if (Array.isArray(payload)) {
+        stations = payload;
+    }
+    const grid = new Map();
+    for (const station of stations) {
+        const key = `${Math.floor(station.lat * 10)}_${Math.floor(station.lon * 10)}`;
+        if (!grid.has(key)) {
+            grid.set(key, []);
+        }
+        grid.get(key).push(station);
+    }
+    return (lat, lon) => {
+        const cy = Math.floor(lat * 10);
+        const cx = Math.floor(lon * 10);
+        let best = null;
+        let bestDistance = Infinity;
+        for (let dy = -3; dy <= 3; dy++) {
+            for (let dx = -3; dx <= 3; dx++) {
+                for (const station of grid.get(`${cy + dy}_${cx + dx}`) || []) {
+                    const d = haversine(lat, lon, station.lat, station.lon);
+                    if (d < bestDistance) {
+                        bestDistance = d;
+                        best = station;
+                    }
+                }
+            }
+        }
+        if (!best) {
+            return '';
+        }
+        return best.provincia;
+    };
+}
+
 mkdirSync(outDir, { recursive: true });
+const provinceOf = provinceLookup();
+const placeRows = places.map(([name, lat, lon, kind, alt]) => [name, lat, lon, kind, provinceOf(lat, lon), alt]);
+placeRows.sort((a, b) => a[3] - b[3] || a[0].localeCompare(b[0], 'es'));
+writeFileSync(join(outDir, 'places.json'), JSON.stringify({ generatedAt: new Date().toISOString(), places: placeRows }));
+log(`${placeRows.length} lugares con nombre`);
+
 const graph = {
     CLASSES, MAIN_CLASS_COUNT, TILE_DEG,
     junctionCount, keepNode, parent: null,

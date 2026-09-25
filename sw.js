@@ -1,6 +1,6 @@
 importScripts('/js/alerts-store.js');
 
-const CACHE_VERSION = 'v8';
+const CACHE_VERSION = 'v9';
 const CACHE_NAME = 'gasolinera-shell-' + CACHE_VERSION;
 const API_CACHE_NAME = 'gasolinera-api-' + CACHE_VERSION;
 const SHELL_FILES = [
@@ -15,6 +15,9 @@ const SHELL_FILES = [
     '/js/garage-store.js',
     '/js/backup.js',
     '/js/garage.js',
+    '/js/router-core.js',
+    '/js/router-worker.js',
+    '/js/route.js',
     '/vendor/fonts/fonts.css',
     '/vendor/fonts/inter-latin-standard-normal.woff2',
     '/vendor/fonts/inter-latin-ext-standard-normal.woff2',

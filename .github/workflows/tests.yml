@@ -58,6 +58,11 @@ jobs:
           CHROME_PATH: google-chrome
         run: node tests/ui-garage.mjs
 
+      - name: UI rutas
+        env:
+          CHROME_PATH: google-chrome
+        run: node tests/ui-route.mjs
+
       - name: Server log (on failure)
         if: failure()
         run: cat "$RUNNER_TEMP/php-server.log" || true

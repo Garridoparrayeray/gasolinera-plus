@@ -324,6 +324,7 @@
             (position) => {
                 state.userLat = position.coords.latitude;
                 state.userLon = position.coords.longitude;
+                document.dispatchEvent(new CustomEvent('gp:location', { detail: { lat: state.userLat, lon: state.userLon } }));
                 saveLocationPref('on');
                 closeGeoAsk();
                 el.geoFallback.hidden = true;

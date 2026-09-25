@@ -46,7 +46,6 @@ const copies = [
     'manifest.json',
     'privacidad.html',
     'data/stations-lite.json',
-    'data/places.json',
     'data/road-graph',
 ];
 

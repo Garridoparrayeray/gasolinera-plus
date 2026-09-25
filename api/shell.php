@@ -215,6 +215,10 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
                 <span>Mapa</span>
             </button>
+            <button id="view-route-btn" type="button" role="tab" aria-selected="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h8.5a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H16"/></svg>
+                <span>Ruta</span>
+            </button>
             <button id="view-garage-btn" type="button" role="tab" aria-selected="false">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14v-5l-2-5H7l-2 5v5z"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/></svg>
                 <span>Mi coche</span>
@@ -255,6 +259,89 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 </div>
             </div>
             <p id="map-note" hidden></p>
+        </section>
+
+        <section id="view-route" hidden>
+            <div class="garage-card" id="route-form-card">
+                <h3>Ruta con gasolineras</h3>
+                <form id="route-form" autocomplete="off">
+                    <div class="route-field">
+                        <label for="route-from">Desde</label>
+                        <div class="route-input">
+                            <input id="route-from" type="search" placeholder="Tu ubicación, pueblo o calle" autocomplete="off">
+                            <button id="route-from-here" type="button" class="pill">Mi ubicación</button>
+                        </div>
+                        <ul id="route-from-suggestions" class="route-suggestions" hidden></ul>
+                    </div>
+                    <div class="route-field">
+                        <div class="route-label-row">
+                            <label for="route-to">Hasta</label>
+                            <button id="route-swap" type="button" class="btn-icon" aria-label="Intercambiar origen y destino">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 4 7 20"/><polyline points="3 8 7 4 11 8"/><polyline points="17 20 17 4"/><polyline points="13 16 17 20 21 16"/></svg>
+                            </button>
+                        </div>
+                        <div class="route-input">
+                            <input id="route-to" type="search" placeholder="Pueblo, ciudad o calle" autocomplete="off">
+                        </div>
+                        <ul id="route-to-suggestions" class="route-suggestions" hidden></ul>
+                    </div>
+                    <div class="route-options">
+                        <label>Desvío máximo
+                            <select id="route-detour">
+                                <option value="1">1 km</option>
+                                <option value="2" selected>2 km</option>
+                                <option value="5">5 km</option>
+                            </select>
+                        </label>
+                        <label>Ordenar
+                            <select id="route-sort">
+                                <option value="along">Por el camino</option>
+                                <option value="price">Más barata</option>
+                            </select>
+                        </label>
+                    </div>
+                    <button id="route-submit" type="submit" class="pill pill--primary">Calcular ruta</button>
+                    <p id="route-status" class="garage-note" role="status"></p>
+                    <div id="route-progress" hidden><span id="route-progress-bar"></span></div>
+                </form>
+            </div>
+
+            <div id="route-map-wrap">
+                <div id="route-map"></div>
+                <p class="garage-note">Toca el mapa para elegir el destino. Rutas calculadas en tu dispositivo con datos de © OpenStreetMap, sin tráfico en tiempo real.</p>
+            </div>
+
+            <div id="route-result" hidden>
+                <div class="garage-card">
+                    <div class="garage-tiles">
+                        <div><small>Distancia</small><strong id="route-distance">—</strong></div>
+                        <div><small>Tiempo estimado</small><strong id="route-duration">—</strong></div>
+                        <div><small>Coste estimado</small><strong id="route-cost">—</strong><small id="route-cost-note"></small></div>
+                        <div><small>Gasolineras en ruta</small><strong id="route-count">—</strong></div>
+                    </div>
+                    <p id="route-toll" class="garage-note" hidden>La ruta incluye tramos de peaje.</p>
+                    <div class="garage-actions">
+                        <button id="route-navigate" type="button" class="pill pill--primary">Iniciar en Google Maps</button>
+                        <button id="route-clear-stop" type="button" class="pill" hidden>Quitar la parada</button>
+                    </div>
+                </div>
+
+                <div class="garage-card" id="route-refuel-card">
+                    <h3>Dónde repostar</h3>
+                    <div id="route-tank-row">
+                        <label for="route-tank">Depósito ahora: <strong id="route-tank-value">50 %</strong></label>
+                        <input id="route-tank" type="range" min="0" max="100" step="5" value="50">
+                    </div>
+                    <p id="route-refuel-advice"></p>
+                    <button id="route-refuel-go" type="button" class="pill pill--primary" hidden>Parar en esta gasolinera</button>
+                </div>
+
+                <div class="garage-card">
+                    <h3>Gasolineras del camino</h3>
+                    <ul id="route-stations"></ul>
+                    <p id="route-stations-empty" class="garage-note" hidden>No hay gasolineras con ese carburante a esa distancia de la ruta. Prueba con un desvío mayor.</p>
+                </div>
+            </div>
         </section>
 
         <section id="view-garage" hidden>
@@ -558,6 +645,8 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <script src="/js/garage-store.js"></script>
     <script src="/js/backup.js"></script>
     <script src="/js/garage.js"></script>
+    <script src="/js/router-core.js"></script>
+    <script src="/js/route.js"></script>
 <?php if (!$isNative): ?>
     <script>
         if ('serviceWorker' in navigator && !window.Capacitor) {

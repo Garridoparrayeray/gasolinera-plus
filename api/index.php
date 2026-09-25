@@ -35,6 +35,7 @@ $router->get('/stats/price-distribution', [$stations, 'priceDistribution']);
 $router->get('/stations/{ideess}', [$stations, 'show']);
 $router->get('/stations/{ideess}/history', [$stations, 'history']);
 $router->get('/stations/{ideess}/zone-comparison', [$stations, 'zoneComparison']);
+$router->get('/places/resolve', [$stations, 'resolvePlace']);
 
 try {
     $router->dispatch($request);
