@@ -1,20 +1,27 @@
 (function () {
     'use strict';
 
-    const FUEL_LABELS = AlertsStore.FUEL_LABELS;
+    const fuelLabel = AlertsStore.labelFor;
+    const priceText = AlertsStore.priceText;
 
     const TREND_SYMBOL = { up: '▲', down: '▼', same: '=' };
 
     const PAGE_SIZE = 10;
+    const FUEL_PREF_KEY = 'gasolinera_fuel';
+
+    function localIso(date) {
+        const pad = (value) => String(value).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
 
     function todayIso() {
-        return new Date().toISOString().slice(0, 10);
+        return localIso(new Date());
     }
 
     function daysAgoIso(n) {
         const d = new Date();
         d.setDate(d.getDate() - n);
-        return d.toISOString().slice(0, 10);
+        return localIso(d);
     }
 
     const el = {
@@ -51,6 +58,7 @@
         heatmapToggle: document.getElementById('heatmap-toggle'),
         locateMe: document.getElementById('locate-me'),
         map: document.getElementById('map'),
+        mapNote: document.getElementById('map-note'),
         stationModal: document.getElementById('station-modal'),
         modalClose: document.getElementById('modal-close'),
         modalRotulo: document.getElementById('modal-rotulo'),
@@ -114,6 +122,9 @@
         stationsLoading: false,
         currentView: 'list',
         mapReady: false,
+        mapCentered: false,
+        bboxTimer: null,
+        bboxController: null,
         map: null,
         markerLayer: null,
         heatLayer: null,
@@ -309,7 +320,7 @@
     function requestGeolocation() {
         if (!('geolocation' in navigator)) {
             el.geoFallback.hidden = false;
-            performSearch('');
+            showSearchPrompt();
             return;
         }
         navigator.geolocation.getCurrentPosition(
@@ -320,7 +331,11 @@
                 closeGeoAsk();
                 el.geoFallback.hidden = true;
                 updateGeoToggle();
-                loadNearby();
+                if (state.stationsMode === 'search' && state.stationsQuery.length >= 2) {
+                    performSearch(state.stationsQuery);
+                } else {
+                    loadNearby();
+                }
                 if (state.currentView === 'map') {
                     locateOnMap();
                 }
@@ -329,10 +344,25 @@
                 closeGeoAsk();
                 el.geoFallback.hidden = false;
                 updateGeoToggle();
-                performSearch('');
+                if (state.stationsMode !== 'search' || state.stationsQuery.length < 2) {
+                    showSearchPrompt();
+                }
             },
-            { timeout: 8000 }
+            { timeout: 10000, maximumAge: 60000 }
         );
+    }
+
+    function showSearchPrompt() {
+        state.stationsMode = 'search';
+        state.stationsQuery = '';
+        state.currentStations = [];
+        state.stationsTotal = 0;
+        state.stationsPage = 1;
+        el.backToNearby.hidden = true;
+        el.stationsGeocodedNote.hidden = true;
+        renderList([]);
+        el.stationsEmpty.textContent = 'Activa la ubicación o busca un municipio, dirección o marca para ver gasolineras.';
+        updatePaginationControls();
     }
 
     
@@ -352,7 +382,9 @@
         const pref = loadLocationPref();
         if (pref === 'off') {
             updateGeoToggle();
-            performSearch('');
+            if (state.stationsMode !== 'search') {
+                showSearchPrompt();
+            }
             return;
         }
         if (pref === 'on') {
@@ -370,12 +402,14 @@
                 if (status.state === 'denied') {
                     el.geoFallback.hidden = false;
                     updateGeoToggle();
-                    performSearch('');
+                    if (state.stationsMode !== 'search') {
+                        showSearchPrompt();
+                    }
                     return;
                 }
             } catch (e) {
-                
-                
+                el.geoAsk.showModal();
+                return;
             }
         }
         el.geoAsk.showModal();
@@ -488,7 +522,7 @@
             data: {
                 labels: data.serie.map((p) => p.fecha.slice(5)),
                 datasets: [{
-                    label: `Media nacional · ${FUEL_LABELS[fuel] || fuel}`,
+                    label: `Media nacional · ${fuelLabel(fuel)}`,
                     data: data.serie.map((p) => p.media),
                     borderColor: '#8A5A00',
                     backgroundColor: 'rgba(184, 134, 11, 0.12)',
@@ -529,10 +563,18 @@
     async function backToNearby() {
         el.searchInput.value = '';
         el.stationsGeocodedNote.hidden = true;
+        if (state.userLat === null) {
+            showSearchPrompt();
+            return;
+        }
         await loadNearby();
     }
 
     async function performSearch(query) {
+        if (query.trim().length < 2) {
+            showSearchPrompt();
+            return;
+        }
         state.stationsMode = 'search';
         state.stationsQuery = query;
         el.backToNearby.hidden = state.userLat === null;
@@ -610,12 +652,13 @@
         } catch (e) {
             state.stationsLoading = false;
             updatePaginationControls();
+            showToast('No se pudieron cargar las gasolineras: ' + e.message);
             return;
         }
 
-        state.currentStations = data.stations;
+        state.currentStations = data.stations || [];
         state.stationsPage = pageNumber;
-        state.stationsTotal = data.total;
+        state.stationsTotal = data.total || 0;
         state.stationsLoading = false;
 
         if (data.geocodedFrom) {
@@ -643,9 +686,11 @@
         el.paginationNav.hidden = state.stationsTotal <= PAGE_SIZE;
         el.paginationPrev.disabled = state.stationsLoading || state.stationsPage <= 1;
         el.paginationNext.disabled = state.stationsLoading || state.stationsPage >= totalPages;
-        el.paginationStatus.textContent = state.stationsLoading
-            ? 'Cargando…'
-            : `Página ${state.stationsPage} de ${totalPages}`;
+        if (state.stationsLoading) {
+            el.paginationStatus.textContent = 'Cargando…';
+        } else {
+            el.paginationStatus.textContent = `Página ${state.stationsPage} de ${totalPages}`;
+        }
     }
 
     function fuelPriceLabel(station, fuelSlug) {
@@ -661,7 +706,7 @@
         if (trend && TREND_SYMBOL[trend]) {
             symbol = TREND_SYMBOL[trend];
         }
-        let label = `${price.toFixed(3)} €`;
+        let label = priceText(price, fuelSlug);
         if (symbol) {
             label += ' ' + symbol;
         }
@@ -670,6 +715,7 @@
 
     function renderList(stations) {
         el.stationsList.innerHTML = '';
+        el.stationsEmpty.textContent = 'No hay gasolineras que coincidan con la búsqueda.';
         el.stationsEmpty.hidden = stations.length > 0;
 
         const filterFuel = el.filterFuel.value;
@@ -706,7 +752,7 @@
             }
             let filteredPriceHtml = '';
             if (filteredPrice) {
-                filteredPriceHtml = `<span>${escapeHtml(FUEL_LABELS[filterFuel] || filterFuel)}: ${filteredPrice}</span>`;
+                filteredPriceHtml = `<span>${escapeHtml(fuelLabel(filterFuel))}: ${filteredPrice}</span>`;
             }
 
             li.innerHTML = `
@@ -753,6 +799,7 @@
             initialLat = state.userLat;
             initialLon = state.userLon;
             initialZoom = 13;
+            state.mapCentered = true;
         }
 
         state.map = L.map(el.map).setView([initialLat, initialLon], initialZoom);
@@ -774,8 +821,13 @@
             }).addTo(state.map);
         }
 
-        state.map.on('moveend', loadBboxForMap);
+        state.map.on('moveend', scheduleBboxLoad);
         state.mapReady = true;
+    }
+
+    function scheduleBboxLoad() {
+        clearTimeout(state.bboxTimer);
+        state.bboxTimer = setTimeout(loadBboxForMap, 300);
     }
 
     function priceColor(precio, min, max) {
@@ -792,6 +844,11 @@
         if (!state.mapReady) {
             return;
         }
+        if (state.bboxController) {
+            state.bboxController.abort();
+        }
+        const controller = new AbortController();
+        state.bboxController = controller;
         const bounds = state.map.getBounds();
         const filters = currentFilters();
         let data;
@@ -803,11 +860,24 @@
                 west: bounds.getWest(),
                 fuel: filters.fuel,
                 open: filters.open,
-            });
+            }, controller.signal);
         } catch (e) {
+            if (e.name !== 'AbortError') {
+                showToast('No se pudieron cargar las gasolineras del mapa');
+            }
             return;
         }
+        if (state.bboxController !== controller) {
+            return;
+        }
+        state.bboxController = null;
         renderMapStations(data.stations);
+        if (data.truncated) {
+            el.mapNote.textContent = `Se muestran ${data.stations.length.toLocaleString('es-ES')} de ${data.total.toLocaleString('es-ES')} gasolineras. Acerca el mapa para verlas todas.`;
+            el.mapNote.hidden = false;
+        } else {
+            el.mapNote.hidden = true;
+        }
     }
 
     function renderMapStations(stations) {
@@ -830,9 +900,9 @@
                 fillOpacity: 0.85,
                 weight: 1,
             });
-            let priceText = 'Sin dato';
+            let popupPrice = 'Sin dato';
             if (station.precio !== null) {
-                priceText = `${station.precio.toFixed(3)} €`;
+                popupPrice = priceText(station.precio, el.filterFuel.value);
             }
             let open24hText = '';
             if (station.is24h) {
@@ -840,7 +910,7 @@
             }
             marker.bindPopup(`
                 <strong>${escapeHtml(station.rotulo)}</strong><br>
-                ${priceText}${open24hText}<br>
+                ${popupPrice}${open24hText}<br>
                 <button class="popup-view-btn" data-ideess="${station.ideess}">Ver ficha</button>
             `);
             marker.on('popupopen', (e) => {
@@ -879,7 +949,8 @@
     function refreshMapMarkers() {
         ensureMap();
         state.map.invalidateSize();
-        if (state.userLat !== null) {
+        if (state.userLat !== null && !state.mapCentered) {
+            state.mapCentered = true;
             state.map.setView([state.userLat, state.userLon], 13);
         }
         loadBboxForMap();
@@ -938,15 +1009,15 @@
 
     const MONTH_LABELS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
-    function periodLabel(periodo) {
-        if (state.statsGroup === 'month') {
+    function periodLabel(periodo, group = state.statsGroup) {
+        if (group === 'month') {
             const [year, month] = periodo.split('-');
             return `${MONTH_LABELS[Number(month) - 1]} ${year}`;
         }
         return periodo.slice(5);
     }
 
-    function variationText(serie, valueKey) {
+    function variationText(serie, valueKey, group = state.statsGroup) {
         if (serie.length < 2) {
             return 'Aún no hay suficiente histórico para calcular una variación.';
         }
@@ -962,10 +1033,10 @@
             sign = '+';
         }
         let periodWord = 'días';
-        if (state.statsGroup === 'month') {
+        if (group === 'month') {
             periodWord = 'meses';
         }
-        return `<strong>${sign}${pct.toFixed(1)}%</strong> (${sign}${diff.toFixed(3)} €) entre ${periodLabel(serie[0].fecha)} y ${periodLabel(serie[serie.length - 1].fecha)} · ${serie.length} ${periodWord} con dato.`;
+        return `<strong>${sign}${pct.toFixed(1)}%</strong> (${sign}${diff.toFixed(3)} €) entre ${periodLabel(serie[0].fecha, group)} y ${periodLabel(serie[serie.length - 1].fecha, group)} · ${serie.length} ${periodWord} con dato.`;
     }
 
     async function renderStatsNationalChart() {
@@ -990,7 +1061,7 @@
             data: {
                 labels: data.serie.map((p) => periodLabel(p.fecha)),
                 datasets: [{
-                    label: `Media nacional · ${FUEL_LABELS[fuel] || fuel}`,
+                    label: `Media nacional · ${fuelLabel(fuel)}`,
                     data: data.serie.map((p) => p.media),
                     borderColor: '#8A5A00',
                     backgroundColor: 'rgba(184, 134, 11, 0.12)',
@@ -1048,11 +1119,17 @@
         const fuel = el.statsFuel.value;
         let data;
         try {
-            data = await Api.history(state.statsSelectedIdeess, fuel, el.statsFrom.value, el.statsTo.value, state.statsGroup);
+            data = await Api.history(state.statsSelectedIdeess, fuel, el.statsFrom.value, el.statsTo.value, 'day');
         } catch (e) {
+            showToast('No se pudo cargar el histórico de la gasolinera');
             return;
         }
-        el.statsStationVariation.innerHTML = variationText(data.serie, 'precio');
+        let retention = 10;
+        if (data.retentionDays) {
+            retention = data.retentionDays;
+        }
+        el.statsStationVariation.innerHTML = variationText(data.serie, 'precio', 'day')
+            + `<br><small>El histórico por gasolinera guarda los últimos ${retention} días.</small>`;
         if (!data.serie.length || typeof Chart === 'undefined') {
             return;
         }
@@ -1063,9 +1140,9 @@
         state.statsStationChart = new Chart(el.statsStationChart, {
             type: 'line',
             data: {
-                labels: data.serie.map((p) => periodLabel(p.fecha)),
+                labels: data.serie.map((p) => periodLabel(p.fecha, 'day')),
                 datasets: [{
-                    label: FUEL_LABELS[fuel] || fuel,
+                    label: fuelLabel(fuel),
                     data: data.serie.map((p) => p.precio),
                     borderColor: '#8A5A00',
                     backgroundColor: 'rgba(184, 134, 11, 0.12)',
@@ -1118,7 +1195,7 @@
                 const bySeriesFecha = {};
                 data.series[slug].forEach((p) => { bySeriesFecha[p.fecha] = p.media; });
                 return {
-                    label: FUEL_LABELS[slug] || slug,
+                    label: fuelLabel(slug),
                     data: labels.map((fecha) => {
                         if (fecha in bySeriesFecha) {
                             return bySeriesFecha[fecha];
@@ -1170,7 +1247,7 @@
             data: {
                 labels: data.provincias.map((p) => p.provincia),
                 datasets: [{
-                    label: `Media hoy · ${FUEL_LABELS[fuel] || fuel}`,
+                    label: `Media hoy · ${fuelLabel(fuel)}`,
                     data: data.provincias.map((p) => p.media),
                     backgroundColor: data.provincias.map((p) => {
                         if (p.provincia === cheapest.provincia) {
@@ -1208,7 +1285,7 @@
             return;
         }
         const total = data.buckets.reduce((sum, b) => sum + b.estaciones, 0);
-        el.statsDistributionNote.textContent = `${total.toLocaleString('es-ES')} gasolineras con precio de ${FUEL_LABELS[fuel] || fuel} hoy.`;
+        el.statsDistributionNote.textContent = `${total.toLocaleString('es-ES')} gasolineras con precio de ${fuelLabel(fuel)} hoy.`;
         if (state.statsDistributionChart) {
             state.statsDistributionChart.destroy();
             state.statsDistributionChart = null;
@@ -1226,7 +1303,7 @@
             options: {
                 responsive: true,
                 plugins: { legend: { display: false } },
-                scales: { x: { title: { display: true, text: '€/L', font: { size: 10 } } } },
+                scales: { x: { title: { display: true, text: '€/' + AlertsStore.unitFor(fuel), font: { size: 10 } } } },
             },
         });
     }
@@ -1250,6 +1327,7 @@
         try {
             station = await Api.station(ideess);
         } catch (e) {
+            showToast('No se pudo abrir la gasolinera: ' + e.message);
             return;
         }
 
@@ -1275,7 +1353,7 @@
             if (info.tendencia && TREND_SYMBOL[info.tendencia]) {
                 symbol = TREND_SYMBOL[info.tendencia];
             }
-            li.innerHTML = `<span>${escapeHtml(FUEL_LABELS[slug] || slug)}</span><span>${info.precio.toFixed(3)} € ${symbol}</span>`;
+            li.innerHTML = `<span>${escapeHtml(fuelLabel(slug))}</span><span>${priceText(info.precio, slug)} ${symbol}</span>`;
             el.modalFuels.appendChild(li);
         }
 
@@ -1314,8 +1392,7 @@
         loadHistoryChart(ideess, defaultFuel);
 
         el.stationModal.showModal();
-        
-        // Deep linking: Push state if opening from list/map
+
         if (!window.location.pathname.startsWith('/stations/' + ideess)) {
             history.pushState({ modal: ideess }, '', '/stations/' + ideess);
         } else if (!history.state || !history.state.modal) {
@@ -1360,7 +1437,7 @@
             data: {
                 labels: data.serie.map((p) => p.fecha.slice(5)),
                 datasets: [{
-                    label: FUEL_LABELS[fuel] || fuel,
+                    label: fuelLabel(fuel),
                     data: data.serie.map((p) => p.precio),
                     borderColor: '#8A5A00',
                     backgroundColor: 'rgba(184, 134, 11, 0.12)',
@@ -1406,12 +1483,12 @@
 
         for (const slug of allFuelSlugs) {
             const row = document.createElement('tr');
-            let cells = `<td>${escapeHtml(FUEL_LABELS[slug] || slug)}</td>`;
+            let cells = `<td>${escapeHtml(fuelLabel(slug))}</td>`;
             for (const d of details) {
                 const info = d && d.combustibles[slug];
                 let cellText = '—';
                 if (info) {
-                    cellText = info.precio.toFixed(3) + ' €';
+                    cellText = priceText(info.precio, slug);
                 }
                 cells += `<td>${cellText}</td>`;
             }
@@ -1499,6 +1576,11 @@
     });
 
     el.filterFuel.addEventListener('change', () => {
+        try {
+            localStorage.setItem(FUEL_PREF_KEY, el.filterFuel.value);
+        } catch (e) {
+            showToast('No se pudo guardar el carburante elegido');
+        }
         if (!el.nationalDetail.hidden) {
             renderNationalChart();
         }
@@ -1514,13 +1596,14 @@
         closeGeoAsk();
         saveLocationPref('off');
         updateGeoToggle();
-        performSearch('');
+        showSearchPrompt();
     });
     el.geoToggle.addEventListener('click', toggleLocation);
-    
-    
-    
-    
+    el.geoAsk.addEventListener('cancel', () => {
+        if (state.stationsMode === null) {
+            showSearchPrompt();
+        }
+    });
     el.geoAsk.addEventListener('close', updateGeoToggle);
     el.geoRetry.addEventListener('click', requestGeolocation);
     el.legalOpen.addEventListener('click', () => el.legalPanel.showModal());
@@ -1567,8 +1650,7 @@
             el.stationModal.close();
         }
     });
-    
-    // Configuración del botón compartir
+
     const btnShare = document.getElementById('modal-share');
     if (btnShare) {
         if (navigator.share) {
@@ -1648,8 +1730,20 @@
         }
         await AlertsStore.set('favorites', state.favoritesList);
         await AlertsStore.set('enabled', true);
-        await AlertsStore.checkPrices();
+        await checkAndNotifyDrops();
         return '';
+    }
+
+    async function checkAndNotifyDrops() {
+        const drops = await AlertsStore.checkPrices();
+        if (!drops.length || typeof Notification === 'undefined' || Notification.permission !== 'granted') {
+            return;
+        }
+        const registration = await navigator.serviceWorker.ready;
+        for (const drop of drops) {
+            const notification = AlertsStore.notificationFor(drop);
+            await registration.showNotification(notification.title, notification.options);
+        }
     }
 
     async function disableAlerts() {
@@ -1680,8 +1774,28 @@
     AlertsStore.set('favorites', state.favoritesList).catch(() => {});
     AlertsStore.get('enabled').then((enabled) => {
         alertsToggle.checked = enabled === true && typeof Notification !== 'undefined' && Notification.permission === 'granted';
-        if (alertsToggle.checked) AlertsStore.checkPrices().catch(() => {});
+        if (alertsToggle.checked) {
+            checkAndNotifyDrops().catch(() => {});
+        }
     }).catch(() => {});
+
+    function restoreFuelPreference() {
+        let saved = null;
+        try {
+            saved = localStorage.getItem(FUEL_PREF_KEY);
+        } catch (e) {
+            saved = null;
+        }
+        if (!saved) {
+            return;
+        }
+        if ([...el.filterFuel.options].some((option) => option.value === saved)) {
+            el.filterFuel.value = saved;
+        }
+        if ([...el.statsFuel.options].some((option) => option.value === saved)) {
+            el.statsFuel.value = saved;
+        }
+    }
 
     function handleDeepLink() {
         const params = new URLSearchParams(location.search);
@@ -1711,15 +1825,13 @@
         }
     });
 
-
-
+    restoreFuelPreference();
     initGeolocationFlow();
     handleDeepLink();
     updateCompareCount();
     updateFavoritesCount();
     loadNationalHeadline();
 
-    // Check for deep link on load
     const pathMatch = window.location.pathname.match(/^\/stations\/([^/]+)/);
     if (pathMatch) {
         openStationModal(pathMatch[1]);

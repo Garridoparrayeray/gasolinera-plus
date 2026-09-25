@@ -8,8 +8,7 @@ $path = parse_url($requestUri, PHP_URL_PATH);
 
 if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     $ideess = $matches[1];
-    
-    // Conectar a la base de datos de manera ligera solo para SEO
+
     require_once __DIR__ . '/Core/Config.php';
     require_once __DIR__ . '/Core/Database.php';
     
@@ -28,7 +27,10 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             
             $priceText = [];
             foreach ($prices as $p) {
-                $name = $p['carburante'] === 'gasoleo_a' ? 'Gasóleo A' : 'Gasolina 95';
+                $name = 'Gasolina 95';
+                if ($p['carburante'] === 'gasoleo_a') {
+                    $name = 'Gasóleo A';
+                }
                 $priceText[] = $name . ' a ' . number_format((float)$p['precio'], 3, ',', '.') . '€';
             }
             
@@ -40,7 +42,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             $ogUrl = 'https://gasolineraplus.vercel.app/stations/' . urlencode($ideess);
         }
     } catch (\Throwable $t) {
-        // En caso de error, el frontend se recuperará normalmente. Fallback a genérico.
+        error_log('Gasolinera+ shell OG: ' . $t->getMessage());
     }
 }
 ?>
@@ -161,6 +163,13 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 <option value="gasolina_98_e5">Gasolina 98 E5</option>
                 <option value="adblue">AdBlue</option>
                 <option value="glp">GLP</option>
+                <optgroup label="Otras gasolinas y gasóleos">
+                    <option value="gasolina_95_e5_premium">Gasolina 95 Premium</option>
+                    <option value="gasoleo_b">Gasóleo B</option>
+                    <option value="gasolina_95_e10">Gasolina 95 E10</option>
+                    <option value="gasolina_98_e10">Gasolina 98 E10</option>
+                    <option value="gasolina_95_e85">Gasolina 95 E85</option>
+                </optgroup>
                 <optgroup label="Alternativos y renovables">
                     <option value="diesel_renovable">Diésel Renovable</option>
                     <option value="gasolina_renovable">Gasolina Renovable</option>
@@ -226,6 +235,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                     <span>Cara</span>
                 </div>
             </div>
+            <p id="map-note" hidden></p>
         </section>
 
         <section id="view-stats" hidden>
@@ -239,6 +249,13 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                         <option value="gasolina_98_e5">Gasolina 98 E5</option>
                         <option value="adblue">AdBlue</option>
                         <option value="glp">GLP</option>
+                        <optgroup label="Otras gasolinas y gasóleos">
+                            <option value="gasolina_95_e5_premium">Gasolina 95 Premium</option>
+                            <option value="gasoleo_b">Gasóleo B</option>
+                            <option value="gasolina_95_e10">Gasolina 95 E10</option>
+                            <option value="gasolina_98_e10">Gasolina 98 E10</option>
+                            <option value="gasolina_95_e85">Gasolina 95 E85</option>
+                        </optgroup>
                         <optgroup label="Alternativos y renovables">
                             <option value="diesel_renovable">Diésel Renovable</option>
                             <option value="gasolina_renovable">Gasolina Renovable</option>
@@ -352,8 +369,6 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             <button id="modal-compare-toggle" type="button" class="pill">Añadir a comparar</button>
         </div>
     </dialog>
-
-    <dialog id="marker-popup-template" hidden></dialog>
 
     <dialog id="favorites-panel">
         <button id="favorites-close" class="btn-icon" type="button" aria-label="Cerrar">

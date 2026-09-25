@@ -1,25 +1,19 @@
 <?php
 
-
 declare(strict_types=1);
-
-
-
-
 
 ini_set('memory_limit', '1024M');
 
 require __DIR__ . '/../api/Core/Http.php';
+require __DIR__ . '/../api/Services/OpeningHours.php';
+require __DIR__ . '/../api/Models/Search.php';
 
 use Core\Http;
 
 const SOURCE_CURRENT = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/';
 const SOURCE_HIST_PREFIX = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestresHist/';
 const DEFAULT_OUTPUT = __DIR__ . '/../data/gasolinera.sqlite';
-
-
 const PRICE_HISTORY_RETENTION_DAYS = 10;
-
 
 const FUEL_FIELD_MAP = [
     'Precio Gasoleo A' => 'gasoleo_a',
@@ -46,7 +40,6 @@ const FUEL_FIELD_MAP = [
     'Precio Biogas Natural Comprimido' => 'biogas_natural_comprimido',
     'Precio Biogas Natural Licuado' => 'biogas_natural_licuado',
 ];
-
 
 function fieldStr(array $row, string $key): string
 {
@@ -78,6 +71,8 @@ function main(array $argv): void
 
     if ($mode === 'daily') {
         runDaily($pdo, $opts['source']);
+        $pdo = null;
+        generateLiteJson($output);
     } else {
         $days = $opts['days'];
         if ($days === null || $days < 1) {
@@ -90,7 +85,6 @@ function main(array $argv): void
     $size = filesize($output);
     printf("\nDatabase written to: %s\nFile size: %.1f MB\n", $output, $size / 1024 / 1024);
 }
-
 
 function parseArgs(array $argv): array
 {
@@ -116,7 +110,6 @@ function openDatabase(string $path): \PDO
     $pdo->exec('PRAGMA journal_mode = WAL');
     return $pdo;
 }
-
 
 function ensureSchema(\PDO $pdo): void
 {
@@ -194,7 +187,6 @@ function ensureSchema(\PDO $pdo): void
     $pdo->exec('CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
 }
 
-
 function parseSpanishDecimal(string $value): ?float
 {
     $value = trim($value);
@@ -204,7 +196,6 @@ function parseSpanishDecimal(string $value): ?float
     return (float)str_replace(',', '.', $value);
 }
 
-
 function feedDateToIso(string $fecha): string
 {
     $datePart = explode(' ', $fecha)[0];
@@ -212,13 +203,11 @@ function feedDateToIso(string $fecha): string
     return sprintf('%04d-%02d-%02d', (int)$y, (int)$m, (int)$d);
 }
 
-
 function isoDateToHistParam(string $isoDate): string
 {
     [$y, $m, $d] = explode('-', $isoDate);
     return sprintf('%s-%s-%s', $d, $m, $y);
 }
-
 
 function fetchSnapshot(string $url): array
 {
@@ -234,7 +223,6 @@ function fetchSnapshot(string $url): array
     }
     return ['fecha' => $fecha, 'estaciones' => $data['ListaEESSPrecio']];
 }
-
 
 function loadFuelPrices(array $row): array
 {
@@ -256,13 +244,10 @@ function loadFuelPrices(array $row): array
     return $prices;
 }
 
-
 function detectIs24h(string $horario): bool
 {
-    $normalized = mb_strtoupper(trim($horario), 'UTF-8');
-    return str_contains($normalized, '24H') || str_contains($normalized, '24 H') || $normalized === 'L-D: 00:00-24:00';
+    return \Services\OpeningHours::isAlwaysOpen($horario);
 }
-
 
 function runDaily(\PDO $pdo, ?string $source): void
 {
@@ -283,9 +268,8 @@ function runDaily(\PDO $pdo, ?string $source): void
     $stmt->execute(['source_updated_at', $snapshot['fecha']]);
 
     updateNationalPriceHistory($pdo, $fechaIso);
-    pruneOldPriceHistory($pdo);
+    pruneOldPriceHistory($pdo, $fechaIso);
 }
-
 
 function updateNationalPriceHistory(\PDO $pdo, string $fechaIso): void
 {
@@ -305,14 +289,13 @@ function updateNationalPriceHistory(\PDO $pdo, string $fechaIso): void
     echo '  media nacional guardada para ' . count($rows) . " carburantes ($fechaIso)\n";
 }
 
-
-function pruneOldPriceHistory(\PDO $pdo): void
+function pruneOldPriceHistory(\PDO $pdo, string $snapshotDate): void
 {
-    $deleted = $pdo->exec('DELETE FROM price_history WHERE fecha < date(\'now\', \'-' . PRICE_HISTORY_RETENTION_DAYS . ' days\')');
-    echo "  recortadas $deleted filas de price_history (fuera de los " . PRICE_HISTORY_RETENTION_DAYS . " días de retención)\n";
+    $stmt = $pdo->prepare('DELETE FROM price_history WHERE fecha < date(?, ?)');
+    $stmt->execute([$snapshotDate, '-' . PRICE_HISTORY_RETENTION_DAYS . ' days']);
+    echo '  recortadas ' . $stmt->rowCount() . ' filas de price_history (fuera de los ' . PRICE_HISTORY_RETENTION_DAYS . " días de retención)\n";
     $pdo->exec('VACUUM');
 }
-
 
 function runBackfill(\PDO $pdo, int $days): void
 {
@@ -351,7 +334,6 @@ function runBackfill(\PDO $pdo, int $days): void
         $stmt->execute(['backfill_completed_through', $lastCovered]);
     }
 }
-
 
 function applySnapshot(\PDO $pdo, array $estaciones, string $fechaIso, bool $updateCurrentAndStations): void
 {
@@ -506,17 +488,7 @@ function applySnapshot(\PDO $pdo, array $estaciones, string $fechaIso, bool $upd
 
     $pdo->commit();
     echo "  $count estaciones procesadas para $fechaIso\n";
-
-    // Mantenemos el tamaño de la base de datos bajo control para no superar
-    // el límite de 100MB de GitHub ni el de Vercel. 10 días de histórico
-    // son suficientes para las gráficas de tendencias en la UI.
-    if ($updateCurrentAndStations) {
-        echo "Limpiando histórico antiguo (manteniendo 10 días)...\n";
-        $pdo->exec("DELETE FROM price_history WHERE fecha <= date('now', '-10 days', 'localtime')");
-        $pdo->exec("VACUUM");
-    }
 }
-
 
 function fetchLocalOrRemote(string $source): array
 {
@@ -536,50 +508,46 @@ function fetchLocalOrRemote(string $source): array
     return fetchSnapshot($source);
 }
 
-require __DIR__ . '/../api/Models/Search.php';
-
-function generateLiteJson(string $dbPath): void {
+function generateLiteJson(string $dbPath): void
+{
     echo "Generando JSON offline con todos los datos de hoy...\n";
     $pdo = new PDO('sqlite:' . $dbPath);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
-    // Obtener todas las gasolineras (quitamos campos internos normalizados para ahorrar un poco de peso)
-    $stmt = $pdo->query('
-        SELECT 
-            ideess, rotulo, direccion, localidad, municipio, municipio_id, provincia, provincia_id, ccaa_id, cp, margen, tipo_venta, horario_raw, is_24h, lat, lon 
-        FROM stations
-    ');
-    $stations = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Obtener absolutamente todos los precios actuales de todos los carburantes
-    $prices = $pdo->query('SELECT ideess, carburante, precio FROM current_prices')->fetchAll(PDO::FETCH_ASSOC);
-    
-    $pricesById = [];
-    foreach ($prices as $p) {
-        $pricesById[$p['ideess']][$p['carburante']] = $p['precio'];
-    }
-    
-    // Unir precios con gasolineras
-    foreach ($stations as &$st) {
-        if (isset($pricesById[$st['ideess']])) {
-            $st['precios'] = $pricesById[$st['ideess']];
-        } else {
-            $st['precios'] = new stdClass(); // Objeto vacío
-        }
-        
-        // Redondear lat/lon para no desperdiciar bytes
-        $st['lat'] = round((float)$st['lat'], 5);
-        $st['lon'] = round((float)$st['lon'], 5);
-    }
-    unset($st);
 
-    $json = json_encode($stations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $stations = $pdo->query("
+        SELECT ideess, rotulo, direccion, localidad, municipio, municipio_id, provincia, provincia_id, ccaa_id,
+               cp, margen, tipo_venta, horario_raw, is_24h, lat, lon
+        FROM stations
+        WHERE last_seen_date >= (SELECT date(MAX(last_seen_date), '-10 days') FROM stations)
+    ")->fetchAll(PDO::FETCH_ASSOC);
+
+    $pricesById = [];
+    foreach ($pdo->query('SELECT ideess, carburante, precio FROM current_prices')->fetchAll(PDO::FETCH_ASSOC) as $price) {
+        $pricesById[$price['ideess']][$price['carburante']] = (float)$price['precio'];
+    }
+
+    foreach ($stations as &$station) {
+        $station['precios'] = new stdClass();
+        if (isset($pricesById[$station['ideess']])) {
+            $station['precios'] = $pricesById[$station['ideess']];
+        }
+        $station['is_24h'] = (int)$station['is_24h'];
+        $station['lat'] = round((float)$station['lat'], 5);
+        $station['lon'] = round((float)$station['lon'], 5);
+    }
+    unset($station);
+
+    $snapshotDate = (string)$pdo->query("SELECT value FROM meta WHERE key = 'last_snapshot_date'")->fetchColumn();
+    $payload = [
+        'generatedAt' => gmdate('c'),
+        'snapshotDate' => $snapshotDate,
+        'stations' => $stations,
+    ];
+
     $outputPath = dirname($dbPath) . '/stations-lite.json';
-    file_put_contents($outputPath, $json);
-    
+    file_put_contents($outputPath, json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     $mb = round(filesize($outputPath) / 1024 / 1024, 2);
-    echo "Archivo JSON offline guardado con éxito: stations-lite.json ($mb MB sin comprimir)\n";
+    echo "JSON offline guardado: $outputPath ($mb MB sin comprimir, " . count($stations) . " estaciones)\n";
 }
 
 main(array_slice($argv, 1));
-generateLiteJson(__DIR__ . '/../data/gasolinera.sqlite');

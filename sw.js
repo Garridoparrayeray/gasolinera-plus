@@ -1,6 +1,6 @@
 importScripts('/js/alerts-store.js');
 
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = 'gasolinera-shell-' + CACHE_VERSION;
 const API_CACHE_NAME = 'gasolinera-api-' + CACHE_VERSION;
 const SHELL_FILES = [
@@ -34,7 +34,6 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    // Cache OpenStreetMap tiles, Leaflet, and Chart.js from CDNs
     const isCDN = url.hostname === 'unpkg.com' || url.hostname === 'cdn.jsdelivr.net' || url.hostname.endsWith('tile.openstreetmap.org');
 
     if (event.request.method !== 'GET') {
@@ -71,23 +70,14 @@ self.addEventListener('fetch', (event) => {
     }
 });
 
-function formatPrice(value) {
-    return value.toFixed(3).replace('.', ',');
-}
-
 async function notifyPriceDrops() {
-    if (!(await AlertsStore.get('enabled'))) return;
+    if (!(await AlertsStore.get('enabled'))) {
+        return;
+    }
     const drops = await AlertsStore.checkPrices();
     for (const drop of drops) {
-        const lines = drop.fuelDrops.slice(0, 3).map((f) =>
-            (AlertsStore.FUEL_LABELS[f.slug] || f.slug) + ': ' + formatPrice(f.from) + ' → ' + formatPrice(f.to) + ' €'
-        );
-        await self.registration.showNotification(drop.favorite.rotulo + ' ha bajado de precio', {
-            body: lines.join('\n'),
-            icon: '/icons/icon-192.png',
-            tag: 'price-' + drop.favorite.ideess,
-            data: { ideess: drop.favorite.ideess },
-        });
+        const notification = AlertsStore.notificationFor(drop);
+        await self.registration.showNotification(notification.title, notification.options);
     }
 }
 

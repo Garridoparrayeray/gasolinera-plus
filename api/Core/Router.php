@@ -4,29 +4,9 @@ namespace Core;
 
 class Router
 {
-    
     private array $routes = [];
 
-    
     public function get(string $pattern, callable $handler): void
-    {
-        $this->add('GET', $pattern, $handler);
-    }
-
-    
-    public function post(string $pattern, callable $handler): void
-    {
-        $this->add('POST', $pattern, $handler);
-    }
-
-    
-    public function delete(string $pattern, callable $handler): void
-    {
-        $this->add('DELETE', $pattern, $handler);
-    }
-
-    
-    private function add(string $method, string $pattern, callable $handler): void
     {
         $paramNames = [];
         $regex = preg_replace_callback('#\{(\w+)\}#', function ($m) use (&$paramNames) {
@@ -35,15 +15,13 @@ class Router
         }, $pattern);
 
         $this->routes[] = [
-            'method' => $method,
-            'pattern' => $pattern,
+            'method' => 'GET',
             'regex' => '#^' . $regex . '$#',
             'params' => $paramNames,
             'handler' => $handler,
         ];
     }
 
-    
     public function dispatch(Request $request): void
     {
         $matchedPath = false;
@@ -56,11 +34,11 @@ class Router
                 continue;
             }
             array_shift($matches);
-            $params = array_combine($route['params'], $matches);
+            $params = array_combine($route['params'], array_map('rawurldecode', $matches));
             try {
                 ($route['handler'])($request, $params);
             } catch (\Throwable $e) {
-                Response::error('Internal error: ' . $e->getMessage(), 500);
+                Response::internalError($e);
             }
             return;
         }

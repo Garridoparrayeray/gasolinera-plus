@@ -4,7 +4,8 @@
     "namespace": "android_app",
     "package_name": "app.vercel.gasolineraplus.twa",
     "sha256_cert_fingerprints": [
-      "C9:B4:70:CD:F5:0D:CF:D6:AD:52:23:12:C5:91:70:33:2B:7A:A0:8B:CF:B6:63:F5:3F:BA:2E:A6:9E:50:93:20"
+      "C9:B4:70:CD:F5:0D:CF:D6:AD:52:23:12:C5:91:70:33:2B:7A:A0:8B:CF:B6:63:F5:3F:BA:2E:A6:9E:50:93:20",
+      "8F:0E:B9:3B:34:9C:5D:3A:C7:CE:22:C9:1A:5C:15:50:75:BD:99:47:2F:AE:05:5E:48:02:BE:67:08:A1:F8:32"
     ]
   }
 }]

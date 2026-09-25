@@ -90,6 +90,18 @@ print('archivos del precache que no existen:', missing_files or 'ninguno')
 if missing_files:
     failures.append('precache con archivos inexistentes')
 
+for unit in own_files('tests/*-test.php'):
+    result = subprocess.run([PHP, unit], capture_output=True, text=True)
+    print(os.path.basename(unit), result.stdout.strip()[-300:])
+    if result.returncode != 0:
+        failures.append('test unitario ' + os.path.basename(unit))
+
+for unit in own_files('tests/*.test.mjs'):
+    result = subprocess.run(['node', unit], capture_output=True, text=True)
+    print(os.path.basename(unit), (result.stdout + result.stderr).strip()[-300:])
+    if result.returncode != 0:
+        failures.append('test unitario ' + os.path.basename(unit))
+
 if failures:
     print('RESULTADO estatico: FALLA -> ' + '; '.join(sorted(set(failures))))
     sys.exit(1)

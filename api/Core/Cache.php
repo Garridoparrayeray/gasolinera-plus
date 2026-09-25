@@ -2,13 +2,11 @@
 
 namespace Core;
 
-
 class Cache
 {
-    
     public static function remember(string $key, int $ttlSeconds, callable $producer): mixed
     {
-        $file = sys_get_temp_dir() . '/bizkaibusplus_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $key) . '.json';
+        $file = sys_get_temp_dir() . '/gasolineraplus_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $key) . '.json';
 
         if (is_file($file) && (time() - filemtime($file)) < $ttlSeconds) {
             $cached = json_decode((string)file_get_contents($file), true);

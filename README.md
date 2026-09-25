@@ -24,9 +24,9 @@ para que la gráfica de evolución semanal de cada gasolinera tenga datos reales
 
 El cron diario (`.github/workflows/rebuild-schedule.yml`, 03:00 UTC) ejecuta solo `--mode=daily`: descarga el snapshot de hoy, actualiza `stations`/`current_prices` con `UPSERT`, y añade una fila más a `price_history` por cada estación y carburante (misma garantía de idempotencia si el workflow se relanza el mismo día).
 
-## Por qué `price_history` crece indefinidamente
+## Retención del histórico
 
-No hay política de retención en v1, es una decisión consciente, no una omisión. Cada día añade una fila por estación y carburante con dato (~40.000 filas/día verificado con datos reales); el `.sqlite` completo, con ~8 días de histórico, ocupa ~62MB. Si el tamaño se vuelve un problema real (para el límite de Vercel, o para el propio repo git creciendo con un commit diario), la salida más simple sería purgar filas de `price_history` más antiguas que N meses en el propio `--mode=daily`, pero no se implementa hasta que haga falta de verdad.
+`price_history` (el precio de cada estación, día a día) conserva los últimos **10 días**: `--mode=daily` borra lo anterior en relación con la fecha del snapshot, para que el `.sqlite` que se comitea cada día no haga crecer el repo sin límite. Por eso la gráfica de una gasolinera concreta abarca como mucho esos 10 días. `national_price_history` (una fila por día y carburante con la media de España) sí se conserva entera: ocupa muy poco y es la que alimenta las vistas mensuales de estadísticas.
 
 ## Estaciones que desaparecen del feed
 
@@ -64,9 +64,21 @@ Verificado contra los 1.177 valores distintos de `horario_raw` de un snapshot re
 ```
 php scripts/build-database.php --mode=backfill --days=14   # una vez, para tener histórico real
 php scripts/build-database.php --mode=daily                # snapshot de hoy
-php -S localhost:8000 dev-router.php
+php -S localhost:8021 dev-router.php
 ```
+
+## Tests
+
+Sin dependencias npm: `tests/cdp.mjs` maneja Edge/Chrome headless por el protocolo DevTools con el WebSocket nativo de Node 22.
+
+```
+python tests/static-checks.py   # lint PHP/JS, ids huérfanos, ternarios, tests unitarios
+python tests/api-smoke.py       # la API contra datos reales (BASE_URL, por defecto localhost:8021)
+node tests/ui-battery.mjs       # la app en móvil y escritorio, incluido el modo sin conexión
+```
+
+El workflow `.github/workflows/tests.yml` los ejecuta en cada push a una rama distinta de `main`.
 
 ## Despliegue
 
-`vercel.json` (mismo patrón que bizkaibus+: `api/shell.php` debe existir físicamente dentro de `api/` desde el primer commit, o el deploy falla con "pattern doesn't match any Serverless Functions"). El cron de `.github/workflows/rebuild-schedule.yml` ejecuta `--mode=daily`, comitea `data/gasolinera.sqlite` si cambió, y despliega con `vercel deploy --prod`; necesita los secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID` y `VERCEL_PROJECT_ID` configurados en el repo de GitHub.
+`vercel.json` (mismo patrón que bizkaibus+: `api/shell.php` debe existir físicamente dentro de `api/` desde el primer commit, o el deploy falla con "pattern doesn't match any Serverless Functions"). El cron de `.github/workflows/rebuild-schedule.yml` ejecuta `--mode=daily`, comitea `data/gasolinera.sqlite` si cambió, y despliega con `vercel deploy --prod`; necesita los secrets `TOKEN_GASOLINERA` (token de Vercel), `TEAM_ID` y `PROJECT_ID` configurados en el repo de GitHub.

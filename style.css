@@ -33,9 +33,10 @@ body {
     font-family: 'Inter', sans-serif;
     background: var(--bg);
     margin: 0;
-    padding: var(--page-pad) var(--page-pad) 0;
+    padding: calc(var(--page-pad) + env(safe-area-inset-top)) calc(var(--page-pad) + env(safe-area-inset-right)) 0 calc(var(--page-pad) + env(safe-area-inset-left));
     color: var(--text);
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
 }
 
@@ -387,7 +388,8 @@ header {
 .pill[aria-pressed="true"] { background: var(--primary); color: white; border-color: var(--primary); }
 
 #map-wrap { position: relative; }
-#map { height: 60vh; min-height: 360px; border-radius: 4px; border: 1px solid var(--border); }
+#map { height: 60vh; height: 60dvh; min-height: 360px; border-radius: 4px; border: 1px solid var(--border); }
+#map-note { margin: 8px 0 0; font-size: 0.78rem; color: var(--text-secondary); }
 
 #map-legend {
     position: absolute;
@@ -653,10 +655,10 @@ dialog::backdrop { background: rgba(34, 29, 18, 0.5); }
     #dev-footer {
         margin-left: calc(-1 * var(--page-pad));
         margin-right: calc(-1 * var(--page-pad));
-        padding-bottom: calc(20px + env(safe-area-inset-bottom));
         border-radius: 0;
     }
 }
+#dev-footer { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
 #dev-footer p { margin: 0 0 8px; font-size: 0.78rem; color: rgba(255, 255, 255, 0.8); }
 #dev-footer p:last-child { margin-bottom: 0; }
 #dev-footer a {

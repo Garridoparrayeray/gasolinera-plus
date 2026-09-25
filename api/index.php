@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 date_default_timezone_set('Europe/Madrid');
 
-
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
 spl_autoload_register(function (string $class): void {
-    
     $path = __DIR__ . '/' . str_replace('\\', '/', $class) . '.php';
     if (is_file($path)) {
         require $path;
@@ -41,5 +39,5 @@ $router->get('/stations/{ideess}/zone-comparison', [$stations, 'zoneComparison']
 try {
     $router->dispatch($request);
 } catch (\Throwable $e) {
-    Response::error('Unhandled error: ' . $e->getMessage(), 500);
+    Response::internalError($e);
 }

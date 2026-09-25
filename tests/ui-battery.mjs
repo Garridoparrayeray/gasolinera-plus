@@ -4,7 +4,10 @@ const s = await launch(Number(process.env.CDP_PORT || 9372));
 const { ev, go, check, waitFor } = s;
 
 const sizes = [{ n: 'movil', w: 390, h: 844, m: true }, { n: 'pc', w: 1366, h: 800, m: false }];
-const sizeFilter = process.env.SIZES ? process.env.SIZES.split(',') : null;
+let sizeFilter = null;
+if (process.env.SIZES) {
+    sizeFilter = process.env.SIZES.split(',');
+}
 
 async function search(query) {
     await ev(`(()=>{const i=document.getElementById('search-input');i.value=${JSON.stringify(query)};i.dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('search-form').requestSubmit();})()`);

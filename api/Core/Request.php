@@ -6,11 +6,7 @@ class Request
 {
     public string $method;
     public string $path;
-    
     public array $query;
-    
-    private ?array $jsonBody = null;
-    private bool $jsonBodyParsed = false;
 
     public function __construct()
     {
@@ -59,32 +55,5 @@ class Request
             return $default;
         }
         return (int)$this->query[$key];
-    }
-
-    
-    public function json(): array
-    {
-        if (!$this->jsonBodyParsed) {
-            $raw = file_get_contents('php://input');
-            $decoded = null;
-            if ($raw) {
-                $decoded = json_decode($raw, true);
-            }
-            if (is_array($decoded)) {
-                $this->jsonBody = $decoded;
-            } else {
-                $this->jsonBody = [];
-            }
-            $this->jsonBodyParsed = true;
-        }
-        return $this->jsonBody;
-    }
-
-    public function cookie(string $name): ?string
-    {
-        if (isset($_COOKIE[$name])) {
-            return $_COOKIE[$name];
-        }
-        return null;
     }
 }

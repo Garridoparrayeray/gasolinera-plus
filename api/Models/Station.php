@@ -53,7 +53,8 @@ class Station
         int $staleStationDays,
         int $offset,
         int $limit,
-        ?float $nearbyMergeRadiusKm = null
+        ?array $mergePlace = null,
+        float $mergeRadiusKm = 10.0
     ): array {
         $normalized = Search::normalize($query);
         $like = '%' . $normalized . '%';
@@ -66,12 +67,15 @@ class Station
         if ($open24h) {
             $where .= ' AND is_24h = 1';
         }
+        if ($fuel !== null) {
+            $where .= ' AND EXISTS (SELECT 1 FROM current_prices cp WHERE cp.ideess = stations.ideess AND cp.carburante = :fuel)';
+            $params['fuel'] = $fuel;
+        }
 
         $stmt = $this->pdo->prepare("
             SELECT ideess, rotulo, direccion, municipio, localidad, cp, lat, lon, horario_raw, is_24h
             FROM stations
             $where
-            LIMIT 500
         ");
         $stmt->execute($params);
         $rows = $stmt->fetchAll();
@@ -94,35 +98,28 @@ class Station
             ];
         }
 
-        
-        
-        
-        
-        
-        
-        
-        
-        if ($nearbyMergeRadiusKm !== null && $lat !== null && $lon !== null) {
-            $bbox = self::boundingBox($lat, $lon, $nearbyMergeRadiusKm);
+        if ($mergePlace !== null) {
+            $bbox = self::boundingBox($mergePlace['lat'], $mergePlace['lon'], $mergeRadiusKm);
             $nearbyRows = $this->fetchInBoundingBox($bbox, $fuel, $open24h, $staleStationDays);
             foreach ($nearbyRows as $row) {
                 if (isset($seenIdeess[$row['ideess']])) {
                     continue;
                 }
-                $distanceKm = self::haversineKm($lat, $lon, (float)$row['lat'], (float)$row['lon']);
-                if ($distanceKm > $nearbyMergeRadiusKm) {
+                $placeDistanceKm = self::haversineKm($mergePlace['lat'], $mergePlace['lon'], (float)$row['lat'], (float)$row['lon']);
+                if ($placeDistanceKm > $mergeRadiusKm) {
                     continue;
                 }
                 if ($openNow && $this->isOpenNow($row['horario_raw']) !== true) {
                     continue;
                 }
+                $distanceKm = null;
+                if ($lat !== null && $lon !== null) {
+                    $distanceKm = self::haversineKm($lat, $lon, (float)$row['lat'], (float)$row['lon']);
+                }
                 $seenIdeess[$row['ideess']] = true;
                 $candidates[] = [
                     'row' => $row,
                     'distanceKm' => $distanceKm,
-                    
-                    
-                    
                     'relevance' => 6,
                 ];
             }
@@ -204,9 +201,18 @@ class Station
     }
 
     
-    public function withinBounds(float $north, float $south, float $east, float $west, ?string $fuel, bool $open24h): array
-    {
+    public function withinBounds(
+        float $north,
+        float $south,
+        float $east,
+        float $west,
+        ?string $fuel,
+        bool $open24h,
+        int $staleStationDays,
+        int $maxStations
+    ): array {
         $where = 'WHERE lat BETWEEN :south AND :north AND lon BETWEEN :west AND :east';
+        $where .= self::staleClause($staleStationDays);
         $params = ['south' => $south, 'north' => $north, 'west' => $west, 'east' => $east];
         if ($open24h) {
             $where .= ' AND is_24h = 1';
@@ -220,9 +226,6 @@ class Station
         $stmt->execute($params);
         $rows = $stmt->fetchAll();
 
-        
-        
-        
         $priceMap = [];
         if ($fuel !== null) {
             $priceMap = $this->batchFuelPrices(array_column($rows, 'ideess'), $fuel);
@@ -247,7 +250,18 @@ class Station
                 'precio' => $precio,
             ];
         }
-        return $results;
+
+        $total = count($results);
+        $truncated = $total > $maxStations;
+        if ($truncated) {
+            $step = $total / $maxStations;
+            $sampled = [];
+            for ($i = 0; $i < $maxStations; $i++) {
+                $sampled[] = $results[(int)floor($i * $step)];
+            }
+            $results = $sampled;
+        }
+        return ['stations' => $results, 'total' => $total, 'truncated' => $truncated];
     }
 
     
@@ -283,14 +297,19 @@ class Station
             return null;
         }
 
-        $pricesStmt = $this->pdo->prepare('SELECT carburante, precio, fecha FROM current_prices WHERE ideess = ?');
-        $pricesStmt->execute([$ideess]);
+        $pricesById = $this->batchAllPrices([$ideess]);
+        $stationPrices = [];
+        if (isset($pricesById[$ideess])) {
+            $stationPrices = $pricesById[$ideess];
+        }
+        $trends = $this->batchTrends([$ideess], array_keys($stationPrices), $pricesById);
         $fuels = [];
-        foreach ($pricesStmt->fetchAll() as $p) {
-            $fuels[$p['carburante']] = [
-                'precio' => (float)$p['precio'],
-                'tendencia' => $this->trendFor($ideess, $p['carburante'], (float)$p['precio']),
-            ];
+        foreach ($stationPrices as $slug => $precio) {
+            $trend = null;
+            if (isset($trends[$ideess][$slug])) {
+                $trend = $trends[$ideess][$slug];
+            }
+            $fuels[$slug] = ['precio' => $precio, 'tendencia' => $trend];
         }
 
         return [
@@ -312,26 +331,61 @@ class Station
     }
 
     
-    public function trendFor(string $ideess, string $carburante, float $todayPrice): ?string
+    private function batchAllPrices(array $ideessList): array
     {
-        $stmt = $this->pdo->prepare('
-            SELECT precio FROM price_history
-            WHERE ideess = ? AND carburante = ? AND fecha < (SELECT MAX(fecha) FROM price_history WHERE ideess = ? AND carburante = ?)
-            ORDER BY fecha DESC LIMIT 1
-        ');
-        $stmt->execute([$ideess, $carburante, $ideess, $carburante]);
-        $previous = $stmt->fetchColumn();
-        if ($previous === false) {
-            return null;
+        $result = [];
+        foreach (array_chunk($ideessList, 400) as $chunk) {
+            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+            $stmt = $this->pdo->prepare("SELECT ideess, carburante, precio FROM current_prices WHERE ideess IN ($placeholders)");
+            $stmt->execute($chunk);
+            foreach ($stmt->fetchAll() as $row) {
+                $result[$row['ideess']][$row['carburante']] = (float)$row['precio'];
+            }
         }
-        $previous = (float)$previous;
-        if (abs($todayPrice - $previous) < 0.0005) {
-            return 'same';
+        return $result;
+    }
+
+    private function batchTrends(array $ideessList, array $fuels, array $pricesById): array
+    {
+        $trends = [];
+        if (empty($ideessList) || empty($fuels)) {
+            return $trends;
         }
-        if ($todayPrice > $previous) {
-            return 'up';
+        $fuelPlaceholders = implode(',', array_fill(0, count($fuels), '?'));
+        foreach (array_chunk($ideessList, 200) as $chunk) {
+            $idPlaceholders = implode(',', array_fill(0, count($chunk), '?'));
+            $stmt = $this->pdo->prepare("
+                SELECT ideess, carburante, precio FROM price_history
+                WHERE ideess IN ($idPlaceholders) AND carburante IN ($fuelPlaceholders)
+                ORDER BY ideess, carburante, fecha DESC
+            ");
+            $stmt->execute([...$chunk, ...$fuels]);
+            $seen = [];
+            foreach ($stmt->fetchAll() as $row) {
+                $key = $row['ideess'] . '|' . $row['carburante'];
+                if (!isset($seen[$key])) {
+                    $seen[$key] = 1;
+                    continue;
+                }
+                if ($seen[$key] > 1) {
+                    continue;
+                }
+                $seen[$key] = 2;
+                if (!isset($pricesById[$row['ideess']][$row['carburante']])) {
+                    continue;
+                }
+                $today = $pricesById[$row['ideess']][$row['carburante']];
+                $previous = (float)$row['precio'];
+                $trend = 'down';
+                if (abs($today - $previous) < 0.0005) {
+                    $trend = 'same';
+                } elseif ($today > $previous) {
+                    $trend = 'up';
+                }
+                $trends[$row['ideess']][$row['carburante']] = $trend;
+            }
         }
-        return 'down';
+        return $trends;
     }
 
     
@@ -422,13 +476,11 @@ class Station
         return " AND last_seen_date >= date('now', '-$staleStationDays days')";
     }
 
-    private function buildListItem(array $row, ?float $distanceKm, ?string $primaryFuel = null): array
+    private function buildListItem(array $row, ?float $distanceKm, array $showFuels, array $pricesById, array $trends): array
     {
-        $pricesStmt = $this->pdo->prepare('SELECT carburante, precio FROM current_prices WHERE ideess = ?');
-        $pricesStmt->execute([$row['ideess']]);
         $allPrices = [];
-        foreach ($pricesStmt->fetchAll() as $p) {
-            $allPrices[$p['carburante']] = (float)$p['precio'];
+        if (isset($pricesById[$row['ideess']])) {
+            $allPrices = $pricesById[$row['ideess']];
         }
 
         $distanciaKmRounded = null;
@@ -450,20 +502,15 @@ class Station
             'tendencias' => [],
         ];
 
-        
-        
-        
-        $showFuels = ['gasoleo_a', 'gasolina_95_e5'];
-        if ($primaryFuel !== null && !in_array($primaryFuel, $showFuels, true)) {
-            $showFuels[] = $primaryFuel;
-        }
-
         foreach ($showFuels as $slug) {
             if (!isset($allPrices[$slug])) {
                 continue;
             }
             $item['precios'][$slug] = $allPrices[$slug];
-            $item['tendencias'][$slug] = $this->trendFor($row['ideess'], $slug, $allPrices[$slug]);
+            $item['tendencias'][$slug] = null;
+            if (isset($trends[$row['ideess']][$slug])) {
+                $item['tendencias'][$slug] = $trends[$row['ideess']][$slug];
+            }
         }
 
         return $item;
@@ -544,9 +591,17 @@ class Station
         $total = count($candidates);
         $page = array_slice($candidates, $offset, $limit);
 
+        $showFuels = ['gasoleo_a', 'gasolina_95_e5'];
+        if ($fuel !== null && !in_array($fuel, $showFuels, true)) {
+            $showFuels[] = $fuel;
+        }
+        $pageIds = array_map(fn($c) => $c['row']['ideess'], $page);
+        $pricesById = $this->batchAllPrices($pageIds);
+        $trends = $this->batchTrends($pageIds, $showFuels, $pricesById);
+
         $items = [];
         foreach ($page as $candidate) {
-            $items[] = $this->buildListItem($candidate['row'], $candidate['distanceKm'], $fuel);
+            $items[] = $this->buildListItem($candidate['row'], $candidate['distanceKm'], $showFuels, $pricesById, $trends);
         }
 
         return ['items' => $items, 'total' => $total];

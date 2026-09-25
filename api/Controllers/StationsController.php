@@ -11,26 +11,32 @@ use Services\PlaceGeocoder;
 
 class StationsController
 {
-    private const VALID_FUELS = [
+    private const MAIN_FUELS = [
         'gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium',
         'gasolina_98_e5', 'adblue', 'glp',
     ];
 
-    
-    private const ALTERNATIVE_FUELS = [
-        'diesel_renovable', 'gasolina_renovable', 'biodiesel', 'bioetanol',
-        'gnc', 'gnl', 'biogas_natural_comprimido', 'biogas_natural_licuado', 'hidrogeno',
+    private const KNOWN_FUELS = [
+        'gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_e5', 'adblue', 'glp',
+        'gasoleo_b', 'gasolina_95_e5_premium', 'gasolina_95_e10', 'gasolina_98_e10',
+        'gasolina_95_e25', 'gasolina_95_e85', 'diesel_renovable', 'gasolina_renovable',
+        'biodiesel', 'bioetanol', 'gnc', 'gnl', 'biogas_natural_comprimido',
+        'biogas_natural_licuado', 'hidrogeno', 'amoniaco', 'metanol',
     ];
 
     
     public function near(Request $request): void
     {
-        $lat = $request->query('lat');
-        $lon = $request->query('lon');
-        if ($lat === null || $lon === null) {
-            Response::error('lat y lon son obligatorios', 422);
+        $coordinates = $this->parseCoordinates($request->query('lat'), $request->query('lon'));
+        if ($coordinates === null) {
+            Response::error('lat y lon son obligatorios y deben ser coordenadas válidas', 422);
             return;
         }
+        if ($this->isInvalidFuel($request->query('fuel'))) {
+            Response::error('Carburante no válido', 422);
+            return;
+        }
+        [$lat, $lon] = $coordinates;
 
         $config = Config::current();
         $radius = $request->queryInt('radius', 5);
@@ -48,8 +54,8 @@ class StationsController
 
         $model = new Station(Database::connection());
         $page = $model->near(
-            (float)$lat,
-            (float)$lon,
+            $lat,
+            $lon,
             (float)$radius,
             $sort,
             $fuel,
@@ -71,22 +77,28 @@ class StationsController
     
     public function search(Request $request): void
     {
+        $config = Config::current();
         $q = trim((string)$request->query('q', ''));
         if (mb_strlen($q) < 2) {
-            Response::json(['stations' => []]);
+            Response::json([
+                'stations' => [],
+                'total' => 0,
+                'hasMore' => false,
+                'geocodedFrom' => null,
+                'attribution' => $config['attribution'],
+            ]);
+            return;
+        }
+        if ($this->isInvalidFuel($request->query('fuel'))) {
+            Response::error('Carburante no válido', 422);
             return;
         }
 
-        $config = Config::current();
-        $lat = $request->query('lat');
-        $lon = $request->query('lon');
-        $latFloat = null;
-        if ($lat !== null) {
-            $latFloat = (float)$lat;
-        }
-        $lonFloat = null;
-        if ($lon !== null) {
-            $lonFloat = (float)$lon;
+        $userLat = null;
+        $userLon = null;
+        $coordinates = $this->parseCoordinates($request->query('lat'), $request->query('lon'));
+        if ($coordinates !== null) {
+            [$userLat, $userLon] = $coordinates;
         }
 
         $fuel = $this->normalizeFuel($request->query('fuel'));
@@ -96,45 +108,33 @@ class StationsController
 
         $model = new Station(Database::connection());
 
-        
-        
-        
-        
         $place = null;
         if ($model->looksLikePlaceQuery($q)) {
             $place = PlaceGeocoder::resolve($q);
-            if ($place !== null) {
-                $latFloat = $place['lat'];
-                $lonFloat = $place['lon'];
-            }
         }
 
-        if ($latFloat === null && $sort === 'distance') {
-            $sort = 'price';
-        }
-
-        $geocodedFrom = null;
-
-        $nearbyMergeRadiusKm = null;
-        if ($place !== null) {
-            $nearbyMergeRadiusKm = 10.0;
+        $sortForText = $sort;
+        if ($userLat === null && $sort === 'distance') {
+            $sortForText = 'price';
         }
 
         $page = $model->search(
             $q,
-            $latFloat,
-            $lonFloat,
-            $sort,
+            $userLat,
+            $userLon,
+            $sortForText,
             $fuel,
             $open24h,
             $openNow,
             (int)$config['stale_station_days'],
             $offset,
             $limit,
-            $nearbyMergeRadiusKm
+            $place,
+            10.0
         );
 
-        if ($page['total'] === 0 && $offset === 0) {
+        $geocodedFrom = null;
+        if ($page['total'] === 0) {
             if ($place === null) {
                 $place = PlaceGeocoder::resolve($q);
             }
@@ -148,7 +148,7 @@ class StationsController
                     $open24h,
                     $openNow,
                     (int)$config['stale_station_days'],
-                    0,
+                    $offset,
                     $limit
                 );
                 $geocodedFrom = $q;
@@ -182,22 +182,37 @@ class StationsController
     
     public function bbox(Request $request): void
     {
-        $north = $request->query('north');
-        $south = $request->query('south');
-        $east = $request->query('east');
-        $west = $request->query('west');
-        if ($north === null || $south === null || $east === null || $west === null) {
-            Response::error('north, south, east y west son obligatorios', 422);
+        $bounds = [];
+        foreach (['north', 'south', 'east', 'west'] as $key) {
+            $value = $request->query($key);
+            if ($value === null || !is_numeric($value)) {
+                Response::error('north, south, east y west son obligatorios y numéricos', 422);
+                return;
+            }
+            $bounds[$key] = (float)$value;
+        }
+        if ($this->isInvalidFuel($request->query('fuel'))) {
+            Response::error('Carburante no válido', 422);
             return;
         }
 
         $fuel = $this->normalizeFuel($request->query('fuel'));
         [$open24h, ] = $this->parseOpenParam($request->query('open'));
+        $config = Config::current();
 
         $model = new Station(Database::connection());
-        $results = $model->withinBounds((float)$north, (float)$south, (float)$east, (float)$west, $fuel, $open24h);
+        $result = $model->withinBounds(
+            $bounds['north'],
+            $bounds['south'],
+            $bounds['east'],
+            $bounds['west'],
+            $fuel,
+            $open24h,
+            (int)$config['stale_station_days'],
+            (int)$config['bbox_max_stations']
+        );
 
-        Response::json(['stations' => $results]);
+        Response::json($result);
     }
 
     
@@ -216,13 +231,13 @@ class StationsController
     
     public function history(Request $request, array $params): void
     {
-        $fuel = $request->query('fuel', 'gasoleo_a');
-        $group = $this->normalizeGroup($request->query('group'));
-        $maxDays = 90;
-        if ($group === 'month') {
-            $maxDays = 730;
+        $fuel = $this->normalizeFuel($request->query('fuel'));
+        if ($fuel === null) {
+            $fuel = 'gasoleo_a';
         }
-        [$from, $to] = $this->parseDateRange($request, 7, $maxDays);
+        $group = $this->normalizeGroup($request->query('group'));
+        $retentionDays = (int)Config::current()['history_retention_days'];
+        [$from, $to] = $this->parseDateRange($request, $retentionDays, $retentionDays);
 
         $pdo = Database::connection();
         if ($group === 'month') {
@@ -245,7 +260,15 @@ class StationsController
         $rows = $stmt->fetchAll();
 
         $series = array_map(fn($r) => ['fecha' => $r['periodo'], 'precio' => (float)$r['precio']], $rows);
-        Response::json(['ideess' => $params['ideess'], 'carburante' => $fuel, 'group' => $group, 'from' => $from, 'to' => $to, 'serie' => $series]);
+        Response::json([
+            'ideess' => $params['ideess'],
+            'carburante' => $fuel,
+            'group' => $group,
+            'from' => $from,
+            'to' => $to,
+            'retentionDays' => $retentionDays,
+            'serie' => $series,
+        ]);
     }
 
     
@@ -291,7 +314,7 @@ class StationsController
         }
         [$from, $to] = $this->parseDateRange($request, 30, $maxDays);
 
-        $placeholders = implode(',', array_fill(0, count(self::VALID_FUELS), '?'));
+        $placeholders = implode(',', array_fill(0, count(self::MAIN_FUELS), '?'));
         $periodoExpr = 'fecha';
         if ($group === 'month') {
             $periodoExpr = 'strftime(\'%Y-%m\', fecha)';
@@ -304,11 +327,11 @@ class StationsController
             GROUP BY periodo, carburante
             ORDER BY periodo ASC
         ");
-        $stmt->execute([...self::VALID_FUELS, $from, $to]);
+        $stmt->execute([...self::MAIN_FUELS, $from, $to]);
         $rows = $stmt->fetchAll();
 
         $series = [];
-        foreach (self::VALID_FUELS as $slug) {
+        foreach (self::MAIN_FUELS as $slug) {
             $series[$slug] = [];
         }
         foreach ($rows as $row) {
@@ -401,7 +424,10 @@ class StationsController
 
     public function zoneComparison(Request $request, array $params): void
     {
-        $fuel = $request->query('fuel', 'gasoleo_a');
+        $fuel = $this->normalizeFuel($request->query('fuel'));
+        if ($fuel === null) {
+            $fuel = 'gasoleo_a';
+        }
         $model = new Station(Database::connection());
         $comparison = $model->zoneComparison($params['ideess'], $fuel);
         if ($comparison === null) {
@@ -416,10 +442,31 @@ class StationsController
         if ($fuel === null || $fuel === '') {
             return null;
         }
-        if (!in_array($fuel, self::VALID_FUELS, true) && !in_array($fuel, self::ALTERNATIVE_FUELS, true)) {
+        if (!in_array($fuel, self::KNOWN_FUELS, true)) {
             return null;
         }
         return $fuel;
+    }
+
+    private function isInvalidFuel(?string $fuel): bool
+    {
+        if ($fuel === null || $fuel === '') {
+            return false;
+        }
+        return !in_array($fuel, self::KNOWN_FUELS, true);
+    }
+
+    private function parseCoordinates(?string $lat, ?string $lon): ?array
+    {
+        if ($lat === null || $lon === null || !is_numeric($lat) || !is_numeric($lon)) {
+            return null;
+        }
+        $latFloat = (float)$lat;
+        $lonFloat = (float)$lon;
+        if ($latFloat < -90 || $latFloat > 90 || $lonFloat < -180 || $lonFloat > 180) {
+            return null;
+        }
+        return [$latFloat, $lonFloat];
     }
 
     private function normalizeGroup(?string $group): string

@@ -53,7 +53,11 @@ export async function launch(port) {
             if (details.exception && details.exception.description) {
                 text = details.exception.description.split('\n')[0];
             }
-            problems.push(`[${session.where}] EXCEPCION ${text}`);
+            let origin = '';
+            if (details.url) {
+                origin = ` @ ${details.url.replace(BASE, '')}:${details.lineNumber}`;
+            }
+            problems.push(`[${session.where}] EXCEPCION ${text}${origin}`);
         }
         if (message.method === 'Runtime.consoleAPICalled' && message.params.type === 'error') {
             const arg = message.params.args[0] || {};
