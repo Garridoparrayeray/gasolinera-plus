@@ -1,0 +1,26 @@
+{
+  "maxzoom": 15,
+  "minzoom": 12,
+  "maxBytes": 2040109465,
+  "regions": [
+    { "id": "andalucia", "name": "Andalucía", "bbox": [-7.56, 35.90, -1.60, 38.76] },
+    { "id": "aragon", "name": "Aragón", "bbox": [-2.21, 39.81, 0.80, 42.96] },
+    { "id": "asturias", "name": "Asturias", "bbox": [-7.22, 42.85, -4.48, 43.70] },
+    { "id": "baleares", "name": "Illes Balears", "bbox": [1.12, 38.60, 4.36, 40.13] },
+    { "id": "canarias", "name": "Canarias", "bbox": [-18.20, 27.60, -13.30, 29.45] },
+    { "id": "cantabria", "name": "Cantabria", "bbox": [-4.89, 42.72, -3.11, 43.55] },
+    { "id": "castilla-la-mancha", "name": "Castilla-La Mancha", "bbox": [-5.44, 37.99, -0.88, 41.36] },
+    { "id": "castilla-y-leon", "name": "Castilla y León", "bbox": [-7.11, 40.05, -1.74, 43.27] },
+    { "id": "cataluna", "name": "Cataluña", "bbox": [0.12, 40.49, 3.36, 42.90] },
+    { "id": "comunitat-valenciana", "name": "Comunitat Valenciana", "bbox": [-1.56, 37.81, 0.72, 40.82] },
+    { "id": "extremadura", "name": "Extremadura", "bbox": [-7.58, 37.91, -4.61, 40.52] },
+    { "id": "galicia", "name": "Galicia", "bbox": [-9.34, 41.77, -6.70, 43.83] },
+    { "id": "madrid", "name": "Comunidad de Madrid", "bbox": [-4.61, 39.85, -3.02, 41.20] },
+    { "id": "murcia", "name": "Región de Murcia", "bbox": [-2.38, 37.34, -0.61, 38.79] },
+    { "id": "navarra", "name": "Navarra", "bbox": [-2.53, 41.88, -0.69, 43.35] },
+    { "id": "pais-vasco", "name": "País Vasco", "bbox": [-3.48, 42.44, -1.70, 43.49] },
+    { "id": "la-rioja", "name": "La Rioja", "bbox": [-3.17, 41.89, -1.64, 42.68] },
+    { "id": "ceuta", "name": "Ceuta", "bbox": [-5.44, 35.85, -5.26, 35.94] },
+    { "id": "melilla", "name": "Melilla", "bbox": [-2.99, 35.25, -2.90, 35.34] }
+  ]
+}

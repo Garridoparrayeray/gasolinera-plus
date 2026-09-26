@@ -1,0 +1,78 @@
+name: Offline maps
+
+on:
+  schedule:
+    - cron: '0 5 3 * *'
+  push:
+    branches:
+      - 'feat/**'
+    paths:
+      - 'tools/maps/**'
+      - '.github/workflows/offline-maps.yml'
+  workflow_dispatch:
+    inputs:
+      build:
+        description: 'Build de Protomaps (AAAAMMDD). Vacío para usar la más reciente.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: offline-maps
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      PMTILES_VERSION: '1.31.2'
+      TAG: offline-maps
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Install pmtiles CLI (go-pmtiles)
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl -sSfL -o "$RUNNER_TEMP/pmtiles.tar.gz" "https://github.com/protomaps/go-pmtiles/releases/download/v${PMTILES_VERSION}/go-pmtiles_${PMTILES_VERSION}_Linux_x86_64.tar.gz"
+          tar -xzf "$RUNNER_TEMP/pmtiles.tar.gz" -C "$RUNNER_TEMP/bin" pmtiles
+          "$RUNNER_TEMP/bin/pmtiles" version
+
+      - name: Extract regions from the latest Protomaps build
+        env:
+          BUILD: ${{ inputs.build }}
+        run: |
+          node tools/maps/build-maps.mjs --pmtiles "$RUNNER_TEMP/bin/pmtiles" --out "$RUNNER_TEMP/maps" --build "$BUILD"
+          ls -la "$RUNNER_TEMP/maps"
+          df -h "$RUNNER_TEMP"
+
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          DIR="$RUNNER_TEMP/maps"
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --target "$GITHUB_SHA" --latest=false \
+              --title "Mapas sin conexión (OpenStreetMap)" \
+              --notes "Mapas vectoriales por comunidad autónoma para usar Gasolinera+ sin conexión. Datos © OpenStreetMap contributors (ODbL), teselas de Protomaps (https://protomaps.com). Se regeneran cada mes y la app lee index.json."
+          fi
+          for file in "$DIR"/*.pmtiles; do
+            gh release upload "$TAG" "$file" --clobber
+          done
+          gh release upload "$TAG" "$DIR/index.json" --clobber
+          jq -r '.regions[].file' "$DIR/index.json" > "$RUNNER_TEMP/keep.txt"
+          gh release view "$TAG" --json assets --jq '.assets[].name' > "$RUNNER_TEMP/assets.txt"
+          while read -r name; do
+            if [ "$name" != "index.json" ] && ! grep -qxF "$name" "$RUNNER_TEMP/keep.txt"; then
+              echo "Borrando $name"
+              gh release delete-asset "$TAG" "$name" --yes
+            fi
+          done < "$RUNNER_TEMP/assets.txt"
+          gh release view "$TAG" --json assets --jq '.assets[] | "\(.name) \(.size)"'
