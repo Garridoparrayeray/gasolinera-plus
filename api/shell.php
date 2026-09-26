@@ -394,9 +394,31 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                     <p id="garage-refuels-empty" class="garage-note">Todavía no has anotado ningún repostaje. Anota los llenos con los km del cuentakilómetros para calcular tu consumo real.</p>
                     <ul id="garage-refuels"></ul>
                 </div>
-                <div class="garage-card" id="garage-trips-card" hidden>
+                <div class="garage-card" id="garage-trips-card">
                     <h3>Viajes</h3>
-                    <div id="garage-trips"></div>
+                    <div id="trip-live" hidden>
+                        <div class="garage-tiles">
+                            <div><small>Distancia</small><strong id="trip-live-distance">0,0 km</strong></div>
+                            <div><small>Velocidad</small><strong id="trip-live-speed">0 km/h</strong></div>
+                            <div><small>Tiempo</small><strong id="trip-live-time">0:00</strong></div>
+                            <div><small>Máxima</small><strong id="trip-live-max">0 km/h</strong></div>
+                        </div>
+                    </div>
+                    <div class="garage-actions">
+                        <button id="trip-start" type="button" class="pill pill--primary">Empezar viaje</button>
+                        <button id="trip-stop" type="button" class="pill pill--danger" hidden>Terminar viaje</button>
+                    </div>
+                    <p id="trip-note" class="garage-note"></p>
+                    <label class="garage-check" id="trip-auto-wrap" hidden><input type="checkbox" id="trip-auto"> Detectar mis viajes en coche automáticamente</label>
+                    <div id="trip-permissions" hidden>
+                        <p class="garage-note" id="trip-permissions-text"></p>
+                        <div class="garage-actions">
+                            <button id="trip-permissions-fix" type="button" class="pill">Dar permisos</button>
+                            <button id="trip-battery" type="button" class="pill">Quitar el ahorro de batería</button>
+                        </div>
+                    </div>
+                    <ul id="trip-list"></ul>
+                    <p id="trip-empty" class="garage-note">Todavía no hay viajes grabados.</p>
                 </div>
                 <div class="garage-card">
                     <h3>Copia de seguridad</h3>
@@ -523,11 +545,12 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         <h3>Aviso Legal, Privacidad y Cookies</h3>
         <p>En estricto cumplimiento del <strong>Artículo 18 de la Constitución Española</strong> (derecho a la intimidad), el <strong>Reglamento General de Protección de Datos (RGPD)</strong>, la <strong>LSSI-CE</strong> y la <strong>Ley 37/2007 de reutilización de la información del sector público</strong>, informamos de lo siguiente:</p>
         <p><strong>Identidad del responsable:</strong> Proyecto independiente desarrollado sin ánimo de lucro por Yeray Garrido. Gasolinera+ no está afiliado ni respaldado por el Ministerio para la Transición Ecológica ni por ninguna marca de estaciones de servicio.</p>
-        <p><strong>Privacidad y ubicación:</strong> Esta app <strong>no recopila ni almacena datos personales en ningún servidor</strong>. Si activas la ubicación: con conexión a internet, tus coordenadas se envían de forma puntual a nuestro servidor únicamente para calcular las gasolineras más cercanas, sin guardarse; sin conexión, ese cálculo se hace enteramente en tu propio navegador y las coordenadas no salen de tu dispositivo.</p>
-        <p><strong>Analíticas:</strong> Usamos Vercel Web Analytics, una herramienta sin cookies que identifica cada visita con un hash no persistente (no un identificador de usuario) y descarta los datos a las 24 horas. Solo recoge estadísticas agregadas y anónimas (página vista, ubicación aproximada por ciudad, tipo de dispositivo y navegador): no permite identificarte ni rastrearte entre webs. Más información en <a href="https://vercel.com/docs/analytics/privacy-policy" target="_blank" rel="noopener noreferrer">la política de privacidad de Vercel</a>. El servicio se aloja de forma segura en Vercel, que procesa direcciones IP temporalmente por motivos técnicos y de seguridad.</p>
-        <p><strong>Cookies y almacenamiento local:</strong> No usamos cookies de terceros ni de rastreo. Empleamos el almacenamiento de tu propio navegador (<code>localStorage</code> e <code>IndexedDB</code>) exclusivamente para guardar tus gasolineras "Favoritas", el estado del "Comparador" y, si los activas, tus avisos de bajada de precio; todo queda solo en tu dispositivo. Al ser una petición del usuario de carácter puramente técnico, está exento del banner de consentimiento bajo el Art. 22.2 de la LSSI. Si borras los datos del navegador, se pierden.</p>
-        <p><strong>Modo sin conexión:</strong> Sin internet, la app sigue funcionando con la última copia de datos descargada (normalmente, la del día anterior). No están disponibles el histórico de precios, las tendencias, la comparación con la media de la zona ni la búsqueda de localidades sin gasolineras propias: todo eso requiere conexión. Al recuperar internet, la app se actualiza sola.</p>
-        <p><strong>Fuentes de datos y exención de responsabilidad:</strong> Los precios se publican tal cual los facilita el Ministerio para la Transición Ecológica, con actualización diaria automática y sin alterarlos; el mapa usa teselas de © OpenStreetMap contributors y búsquedas de lugares mediante Nominatim. No garantizamos la exactitud, actualidad ni disponibilidad continua de estos datos, que pueden no coincidir con el precio real en el momento de repostar. Esta aplicación es meramente informativa, no sustituye la comprobación del precio en el propio surtidor, y su uso es responsabilidad exclusiva de quien la utiliza.</p>
+        <p><strong>Privacidad y ubicación:</strong> Gasolinera+ <strong>no tiene cuentas ni guarda datos personales en ningún servidor</strong>. Si activas la ubicación, tus coordenadas se envían de forma puntual a nuestro servidor solo para buscar las gasolineras cercanas, sin guardarse; sin conexión, el cálculo se hace en tu dispositivo.</p>
+        <p><strong>Garaje, viajes y rutas:</strong> tus coches, repostajes y viajes se guardan solo en tu dispositivo. En la app de Android, los viajes se graban con el GPS aunque bloquees el móvil (con una notificación mientras graba) y, si activas la detección automática, con los permisos de actividad física y ubicación «todo el tiempo»; esos recorridos nunca salen del móvil. Las rutas se calculan en tu dispositivo; solo las direcciones que no están en la lista de pueblos se buscan en Nominatim a través de nuestro servidor.</p>
+        <p><strong>Analíticas:</strong> solo en la web usamos Vercel Web Analytics, sin cookies y con estadísticas agregadas y anónimas (<a href="https://vercel.com/docs/analytics/privacy-policy" target="_blank" rel="noopener noreferrer">política de Vercel</a>). La app no lleva analíticas. El servicio se aloja en Vercel, que procesa direcciones IP temporalmente por motivos técnicos y de seguridad.</p>
+        <p><strong>Cookies y almacenamiento local:</strong> no usamos cookies de terceros ni de rastreo. El almacenamiento local (<code>localStorage</code> e <code>IndexedDB</code>) solo guarda lo que tú creas: favoritas, comparador, carburante elegido, avisos, garaje y viajes. Es técnicamente necesario (Art. 22.2 LSSI). Si borras los datos sin haber exportado una copia, se pierden.</p>
+        <p><strong>Modo sin conexión:</strong> sin internet siguen funcionando la búsqueda con la última copia de precios, el garaje, los viajes y las rutas; el histórico, las tendencias y la comparación con la zona necesitan conexión.</p>
+        <p><strong>Fuentes de datos y exención de responsabilidad:</strong> los precios se publican tal cual los facilita el Ministerio para la Transición Ecológica, con actualización diaria. Mapa, carreteras y pueblos: © OpenStreetMap contributors, licencia ODbL. Las rutas, tiempos, consumos y costes son estimaciones sin tráfico en tiempo real, y las métricas de los viajes salen del GPS del móvil, no del coche. No garantizamos la exactitud ni la disponibilidad continua de estos datos, que pueden no coincidir con el precio real al repostar: la app es informativa y su uso es responsabilidad de quien la utiliza. <a href="/privacidad.html" target="_blank" rel="noopener">Política de privacidad completa</a>.</p>
         <p><strong>Contacto.</strong> <a href="https://www.yeraygarrido.dev/" target="_blank" rel="noopener noreferrer">yeraygarrido.dev</a></p>
     </dialog>
 
@@ -596,6 +619,25 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         </form>
     </dialog>
 
+    <dialog id="trip-dialog">
+        <button id="trip-dialog-close" class="btn-icon" type="button" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+        <h3 id="trip-dialog-title">Viaje</h3>
+        <p id="trip-dialog-subtitle" class="garage-note"></p>
+        <div id="trip-map"></div>
+        <div id="trip-legend"><span>Lento</span><span id="trip-legend-gradient"></span><span>Rápido</span></div>
+        <div class="garage-tiles" id="trip-metrics"></div>
+        <h4>Velocidad</h4>
+        <canvas id="trip-speed-chart" height="150"></canvas>
+        <h4>Tiempo por tramos de velocidad</h4>
+        <canvas id="trip-bands-chart" height="140"></canvas>
+        <p id="trip-quality" class="garage-note"></p>
+        <div class="dialog-actions">
+            <button id="trip-delete" type="button" class="pill pill--danger">Borrar viaje</button>
+        </div>
+    </dialog>
+
     <dialog id="odometer-dialog">
         <form id="odometer-form" method="dialog">
             <h3>Kilómetros actuales</h3>
@@ -644,7 +686,9 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <script src="/js/fuel-math.js"></script>
     <script src="/js/garage-store.js"></script>
     <script src="/js/backup.js"></script>
+    <script src="/js/trip-metrics.js"></script>
     <script src="/js/garage.js"></script>
+    <script src="/js/trips.js"></script>
     <script src="/js/router-core.js"></script>
     <script src="/js/route.js"></script>
 <?php if (!$isNative): ?>

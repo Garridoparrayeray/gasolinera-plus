@@ -1,0 +1,61 @@
+name: Road graph
+
+on:
+  schedule:
+    - cron: '0 4 2 * *'
+  push:
+    branches:
+      - 'feat/**'
+    paths:
+      - 'tools/graph/**'
+      - '.github/workflows/road-graph.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Download OpenStreetMap extracts (Geofabrik)
+        run: |
+          mkdir -p "$RUNNER_TEMP/osm"
+          curl -sSfL -o "$RUNNER_TEMP/osm/spain.osm.pbf" https://download.geofabrik.de/europe/spain-latest.osm.pbf
+          curl -sSfL -o "$RUNNER_TEMP/osm/canarias.osm.pbf" https://download.geofabrik.de/africa/canary-islands-latest.osm.pbf
+          ls -la "$RUNNER_TEMP/osm"
+
+      - name: Build road graph and places
+        run: |
+          node --max-old-space-size=12288 tools/graph/build-graph.mjs \
+            --out "$RUNNER_TEMP/road-graph" --stations data/stations-lite.json \
+            "$RUNNER_TEMP/osm/spain.osm.pbf" "$RUNNER_TEMP/osm/canarias.osm.pbf"
+          cat "$RUNNER_TEMP/road-graph/build-stats.json"
+
+      - name: Check the graph with reference routes
+        env:
+          GRAPH_DIR: ${{ runner.temp }}/road-graph
+        run: node --max-old-space-size=4096 tests/router.test.mjs
+
+      - name: Pack
+        run: |
+          rm -f "$RUNNER_TEMP/road-graph/build-stats.json"
+          tar -czf road-graph.tar.gz -C "$RUNNER_TEMP/road-graph" .
+          ls -la road-graph.tar.gz
+
+      - name: Publish release asset
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: road-graph
+          name: Grafo de carreteras (OpenStreetMap)
+          body: Red viaria de España y Canarias para el motor de rutas de Gasolinera+, generada a partir de OpenStreetMap (© OpenStreetMap contributors, ODbL). Se regenera cada mes.
+          files: road-graph.tar.gz
+          make_latest: false
+          prerelease: false

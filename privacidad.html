@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacidad · Gasolinera+</title>
     <meta name="robots" content="index, follow">
+    <link rel="stylesheet" href="/vendor/fonts/fonts.css">
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -14,13 +15,33 @@
         </header>
         <section class="stats-block" id="legal-panel">
             <h3>Política de privacidad</h3>
+            <p><em>Última actualización: septiembre de 2026. Se aplica a la web gasolineraplus.vercel.app y a la app de Gasolinera+ para Android e iOS.</em></p>
+
             <p><strong>Responsable:</strong> proyecto independiente y sin ánimo de lucro de Yeray Garrido. Gasolinera+ no está afiliado al Ministerio para la Transición Ecológica ni a ninguna marca de estaciones de servicio.</p>
-            <p><strong>Datos personales:</strong> la app no recopila, almacena ni cede datos personales, no requiere cuenta y no incluye analíticas de terceros con fines publicitarios.</p>
-            <p><strong>Ubicación:</strong> si concedes el permiso, tu ubicación se usa solo en tu dispositivo para calcular distancias y buscar gasolineras cercanas. Las coordenadas se envían al servidor únicamente para consultar las estaciones del radio elegido y no se guardan.</p>
-            <p><strong>Almacenamiento local:</strong> tus gasolineras favoritas, el comparador y tu preferencia de ubicación se guardan en el almacenamiento local de tu dispositivo (<code>localStorage</code>). Si borras los datos de la app, se pierden.</p>
-            <p><strong>Fuentes de datos:</strong> los precios los publica el Ministerio para la Transición Ecológica (geoportalgasolineras.es) y se muestran tal cual. El mapa usa teselas de OpenStreetMap y las búsquedas de lugares usan Nominatim.</p>
-            <p><strong>Alojamiento:</strong> el servicio se aloja en Vercel, que puede procesar direcciones IP de forma temporal por motivos técnicos y de seguridad.</p>
-            <p><strong>Contacto:</strong> <a href="https://www.yeraygarrido.dev/" target="_blank" rel="noopener noreferrer">yeraygarrido.dev</a></p>
+
+            <p><strong>Lo esencial:</strong> Gasolinera+ no tiene cuentas de usuario y no guarda datos personales en ningún servidor. Tus coches, repostajes, viajes y recorridos se quedan en tu dispositivo.</p>
+
+            <p><strong>Ubicación mientras usas la app:</strong> si concedes el permiso, tu posición se usa para buscar las gasolineras cercanas y como origen de las rutas. Para consultar las gasolineras de tu zona las coordenadas se envían a nuestro servidor, que responde y no las guarda. Sin conexión, el cálculo se hace entero en tu dispositivo.</p>
+
+            <p><strong>Viajes y ubicación en segundo plano (solo app de Android):</strong> si pulsas «Empezar viaje», la app graba tu recorrido con el GPS mientras dura el viaje, aunque bloquees el móvil. Una notificación permanente te avisa mientras graba. Si activas la detección automática, Android informa a la app cuando empiezas o terminas de ir en coche (permiso de actividad física) y la app necesita la ubicación «Permitir todo el tiempo» para poder grabar el viaje con la app cerrada. Estos datos solo se usan para calcular las métricas del viaje (distancia, velocidades, consumo y coste estimados), se guardan únicamente en tu móvil y nunca se envían a ningún servidor. Puedes desactivar la detección o borrar cualquier viaje cuando quieras.</p>
+
+            <p><strong>Tu garaje:</strong> los coches, repostajes y viajes que anotas se guardan en el almacenamiento interno de la app o del navegador (IndexedDB). Las copias de seguridad que exportas son ficheros que tú decides dónde guardar. Si desinstalas la app o borras los datos del navegador sin haber hecho copia, se pierden. En Android, la copia de seguridad automática del sistema puede incluir estos datos en tu cuenta de Google, como con cualquier otra app.</p>
+
+            <p><strong>Rutas:</strong> las rutas se calculan en tu dispositivo con datos de OpenStreetMap que la app descarga o lleva incluidos; el origen y el destino no salen de tu dispositivo. Solo si escribes una dirección que no está en la lista de pueblos y ciudades, ese texto se envía a nuestro servidor para buscarla en Nominatim (OpenStreetMap), sin guardar quién la ha pedido. Al pulsar «Iniciar en Google Maps» se abre Google Maps con el origen, el destino y la parada, y a partir de ahí se aplica la política de Google.</p>
+
+            <p><strong>Avisos de bajada de precio:</strong> si los activas, la app consulta periódicamente a nuestro servidor el precio de tus gasolineras favoritas (solo sus identificadores públicos) y te avisa con una notificación local. Tu lista de favoritas se guarda en tu dispositivo.</p>
+
+            <p><strong>Actualizaciones de la app:</strong> la app de Android comprueba si hay una versión nueva consultando la página pública de versiones del proyecto en GitHub, que como cualquier servidor recibe tu dirección IP.</p>
+
+            <p><strong>Analíticas:</strong> solo en la web se usa Vercel Web Analytics, sin cookies y con estadísticas agregadas y anónimas (página vista, ciudad aproximada, tipo de dispositivo). La app no incluye analíticas.</p>
+
+            <p><strong>Cookies y almacenamiento local:</strong> no se usan cookies de terceros ni de rastreo. El almacenamiento local solo guarda lo que tú creas (favoritas, comparador, carburante elegido, garaje y viajes) y es técnicamente necesario para esas funciones.</p>
+
+            <p><strong>Fuentes de datos y licencias:</strong> precios del Ministerio para la Transición Ecológica (geoportalgasolineras.es), publicados tal cual. Mapa, carreteras, pueblos y búsqueda de direcciones: © OpenStreetMap contributors, bajo licencia ODbL (openstreetmap.org/copyright). Las rutas y tiempos son estimaciones sin tráfico en tiempo real, y las métricas de los viajes salen del GPS del móvil, no de los sensores del coche.</p>
+
+            <p><strong>Alojamiento:</strong> la web y la API se alojan en Vercel, que puede procesar direcciones IP de forma temporal por motivos técnicos y de seguridad.</p>
+
+            <p><strong>Tus derechos:</strong> como no guardamos datos personales en ningún servidor, no hay datos tuyos que consultar, rectificar o borrar en nuestros sistemas; todo lo que hay está en tu dispositivo y lo controlas tú. Para cualquier duda: <a href="https://www.yeraygarrido.dev/" target="_blank" rel="noopener noreferrer">yeraygarrido.dev</a>.</p>
         </section>
     </main>
 </body>

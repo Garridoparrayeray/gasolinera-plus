@@ -31,6 +31,10 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Download road graph
+        continue-on-error: true
+        run: node tools/graph/fetch-graph.mjs
+
       - name: Start local server
         run: |
           PHP_CLI_SERVER_WORKERS=4 php -S localhost:8021 dev-router.php > "$RUNNER_TEMP/php-server.log" 2>&1 &

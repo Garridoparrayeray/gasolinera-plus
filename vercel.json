@@ -1,5 +1,12 @@
 {
-  "regions": ["cdg1"],
+  "regions": [
+    "cdg1"
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "main": false
+    }
+  },
   "functions": {
     "api/*.php": {
       "runtime": "vercel-php@0.9.0",
@@ -7,15 +14,44 @@
     }
   },
   "redirects": [
-    { "source": "/data/gasolinera.sqlite", "destination": "/", "permanent": false },
-    { "source": "/scripts/(.*)", "destination": "/", "permanent": false },
-    { "source": "/tests/(.*)", "destination": "/", "permanent": false },
-    { "source": "/tools/(.*)", "destination": "/", "permanent": false },
-    { "source": "/dev-router.php", "destination": "/", "permanent": false }
+    {
+      "source": "/data/gasolinera.sqlite",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/scripts/(.*)",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/tests/(.*)",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/tools/(.*)",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/dev-router.php",
+      "destination": "/",
+      "permanent": false
+    }
   ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.php" },
-    { "source": "/stations/(.*)", "destination": "/api/shell.php" },
-    { "source": "/", "destination": "/api/shell.php" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.php"
+    },
+    {
+      "source": "/stations/(.*)",
+      "destination": "/api/shell.php"
+    },
+    {
+      "source": "/",
+      "destination": "/api/shell.php"
+    }
   ]
 }
