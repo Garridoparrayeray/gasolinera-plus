@@ -3,5 +3,8 @@ android
 ios
 www
 tests
-tools
+tools/maps
+tools/graph/build-graph.mjs
+tools/graph/pbf.mjs
+tools/graph/write-graph.mjs
 .github
