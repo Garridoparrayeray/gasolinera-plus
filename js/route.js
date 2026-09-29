@@ -106,14 +106,19 @@ const GPRoute = (() => {
             state.pending.set(id, {
                 resolve,
                 reject,
-                onProgress: ({ received, total }) => {
+                onProgress: ({ received, total, done }) => {
                     el.progress.hidden = false;
+                    if (done) {
+                        el.progressBar.style.width = '100%';
+                        setStatus('Preparando el mapa de carreteras en tu móvil… puede tardar unos segundos.');
+                        return;
+                    }
                     let percent = 0;
                     if (total) {
-                        percent = Math.min(100, Math.round((received / total) * 100));
+                        percent = Math.min(99, Math.round((received / total) * 100));
                     }
                     el.progressBar.style.width = percent + '%';
-                    setStatus(`Descargando el mapa de carreteras (${number(total / 1e6, 0)} MB, solo la primera vez)… ${percent} %`);
+                    setStatus(`Cargando el mapa de carreteras (${number(total / 1e6, 0)} MB)… ${percent} %`);
                 },
             });
             worker().postMessage({ id, type: 'route', points });

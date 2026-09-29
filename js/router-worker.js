@@ -8,6 +8,10 @@ async function readBuffer(url, onProgress) {
     if (!response.ok) {
         throw new Error(`No se pudo descargar ${url} (${response.status})`);
     }
+    const contentType = response.headers.get('Content-Type') || '';
+    if (contentType.includes('text/html')) {
+        throw new Error(`No existe ${url}`);
+    }
     const total = Number(response.headers.get('Content-Length')) || 0;
     const reader = response.body.getReader();
     const chunks = [];
@@ -36,6 +40,14 @@ async function readBuffer(url, onProgress) {
     return bytes.buffer;
 }
 
+async function readGraphFile(path, onProgress) {
+    try {
+        return await readBuffer(BASE + path + '.gz', onProgress);
+    } catch (error) {
+        return readBuffer(BASE + path, onProgress);
+    }
+}
+
 function load(id) {
     if (!routerPromise) {
         routerPromise = (async () => {
@@ -44,10 +56,11 @@ function load(id) {
                 throw new Error(`El mapa de carreteras no está disponible en el servidor (${manifestResponse.status})`);
             }
             const manifest = await manifestResponse.json();
-            const main = await readBuffer(BASE + 'main.bin.gz', (received, total) => {
+            const main = await readGraphFile('main.bin', (received, total) => {
                 postMessage({ id, progress: { received, total: total || manifest.mainBytes } });
             });
-            return new GPRouter.Router(manifest, main, (key) => readBuffer(`${BASE}tiles/${key}.bin.gz`));
+            postMessage({ id, progress: { done: true } });
+            return new GPRouter.Router(manifest, main, (key) => readGraphFile(`tiles/${key}.bin`));
         })();
         routerPromise.catch(() => {
             routerPromise = null;
