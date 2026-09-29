@@ -1,7 +1,9 @@
 :root {
     --bg: #F4F6EF;
     --surface: #ffffff;
-    --border: #D8DEC9;
+    --border: #C5CCB8;
+    --field-bg: #ffffff;
+    --field-border: #8A917F;
     --primary: #4B6B00;
     --primary-light: #C6FF00;
     --primary-dark: #2F4400;
@@ -739,9 +741,11 @@ dialog::backdrop { background: rgba(34, 29, 18, 0.5); }
     :root {
         --bg: #111417;
         --surface: #1A1E22;
-        --border: #2A3036;
+        --border: #3D464F;
+        --field-bg: #262C33;
+        --field-border: #6A747E;
         --text: #EDF1E8;
-        --text-secondary: #9AA396;
+        --text-secondary: #B7C0B1;
         --primary: #C6FF00;
         --primary-dark: #B5E000;
         --primary-tint: #202816;
@@ -1152,3 +1156,19 @@ html.is-driving { overflow: hidden; }
 #garage-compare-list small { color: var(--text-secondary); font-size: 0.82rem; }
 #refuel-picker { margin: 8px 0; }
 #refuel-station-clear { margin-top: 6px; }
+
+/* Contraste: campos y botones se distinguen del fondo en claro y oscuro */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="button"]):not([type="submit"]),
+select,
+textarea {
+    background-color: var(--field-bg) !important;
+    border: 1px solid var(--field-border) !important;
+    color: var(--text) !important;
+}
+.pill { border-color: var(--field-border); }
+
+/* Enlaces: siempre del mismo color, sin morado de visitados */
+a { color: var(--primary); }
+
+/* Los puntos del mapa siguen siendo redondos */
+.marker-cluster, .marker-cluster div, .leaflet-marker-icon.marker-cluster { border-radius: 50% !important; }

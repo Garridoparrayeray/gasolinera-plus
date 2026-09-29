@@ -137,6 +137,7 @@
         chart: null,
         nationalChart: null,
         nationalSeries: {},
+        statsAvailable: null,
         statsGroup: 'day',
         statsNationalChart: null,
         statsByFuelChart: null,
@@ -1122,6 +1123,7 @@
 
     async function renderStatsNationalChart() {
         const fuel = el.statsFuel.value;
+        await loadStatsAvailability(fuel);
         let data;
         try {
             data = await Api.nationalStats(fuel, el.statsFrom.value, el.statsTo.value, state.statsGroup);
@@ -1239,12 +1241,46 @@
         });
     }
 
-    function updateStatsRangeNote(effectiveFrom, effectiveTo) {
-        if (effectiveFrom === el.statsFrom.value && effectiveTo === el.statsTo.value) {
-            el.statsRangeNote.textContent = '';
+    function isoToEs(iso) {
+        const [year, month, day] = iso.split('-');
+        return `${day}/${month}/${year}`;
+    }
+
+    async function loadStatsAvailability(fuel) {
+        if (state.statsAvailable) {
             return;
         }
-        el.statsRangeNote.textContent = `Rango ajustado a los datos disponibles: ${effectiveFrom} a ${effectiveTo}.`;
+        let data;
+        try {
+            data = await Api.nationalStats(fuel, '2000-01-01', todayIso(), 'day');
+        } catch (e) {
+            return;
+        }
+        if (!data.serie.length) {
+            return;
+        }
+        state.statsAvailable = { from: data.from, to: data.to };
+        el.statsFrom.min = data.from;
+        el.statsTo.min = data.from;
+        el.statsFrom.max = data.to;
+        el.statsTo.max = data.to;
+        if (el.statsFrom.value < data.from) {
+            el.statsFrom.value = data.from;
+        }
+        if (el.statsTo.value > data.to) {
+            el.statsTo.value = data.to;
+        }
+    }
+
+    function updateStatsRangeNote(effectiveFrom, effectiveTo) {
+        let note = '';
+        if (state.statsAvailable) {
+            note = `Hay datos de ${isoToEs(state.statsAvailable.from)} a ${isoToEs(state.statsAvailable.to)}. El histórico se amplía cada día.`;
+        }
+        if (effectiveFrom !== el.statsFrom.value || effectiveTo !== el.statsTo.value) {
+            note += ` Rango ajustado a los datos disponibles: ${isoToEs(effectiveFrom)} a ${isoToEs(effectiveTo)}.`;
+        }
+        el.statsRangeNote.textContent = note.trim();
     }
 
     const FUEL_CHART_COLORS = {
