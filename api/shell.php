@@ -647,8 +647,8 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 <h4>1. Buscar gasolinera</h4>
                 <p id="refuel-station" class="garage-note" hidden></p>
                 <div id="refuel-picker">
-                    <label>Gasolinera <input id="refuel-station-search" type="search" placeholder="Busca por nombre, calle o municipio" autocomplete="off"></label>
                     <ul id="refuel-station-results" class="route-suggestions" hidden></ul>
+                    <label>Gasolinera <input id="refuel-station-search" type="search" placeholder="Busca por nombre, calle o municipio" autocomplete="off"></label>
                     <div class="refuel-inline">
                         <button id="refuel-station-map" type="button" class="pill">Elegir en el mapa</button>
                         <button id="refuel-station-clear" type="button" class="pill" hidden>Quitar la gasolinera</button>

@@ -909,6 +909,7 @@ const GPGarage = (() => {
             el.refuelNext.textContent = 'Seguir sin nombre';
         }
         if (step === 4 && !edit) {
+            el.refuelNext.textContent = 'Sí, es correcto';
             prepareLitersStep();
         }
         if (step === LAST_STEP && !edit) {
@@ -1348,6 +1349,7 @@ const GPGarage = (() => {
         state.priceTouched = true;
     });
     el.refuelDate.addEventListener('change', () => {
+        el.refuelDate.blur();
         state.priceTouched = false;
         updateDayPrice();
     });

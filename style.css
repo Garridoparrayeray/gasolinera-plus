@@ -1309,3 +1309,9 @@ html[data-view="stats"] #stations-search-btn { display: none !important; }
 .splash__plus { width: 0.5em; height: 0.5em; margin-left: 0.05em; font-size: 1em; align-self: flex-start; margin-top: 0.14em; }
 .splash__plus::before { height: 0.13em; }
 .splash__plus::after { width: 0.13em; }
+
+/* Asistente: sugerencias sobre el campo, confirmacion unica y cierre abajo */
+#refuel-station-results { max-height: 38vh; overflow-y: auto; margin: 0 0 8px; }
+.refuel-inline.refuel-confirm { display: none; }
+.refuel-done { display: flex; flex-direction: column; justify-content: space-between; gap: 24px; min-height: 42vh; text-align: center; }
+.refuel-done .pill { width: 100%; min-height: 52px; }
