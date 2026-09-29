@@ -1068,9 +1068,8 @@ html.is-driving { overflow: hidden; }
     text-transform: none;
 }
 #view-toggle button + button { border-left: 0; }
-#view-toggle button svg { box-sizing: content-box; width: 24px; height: 24px; padding: 4px 18px; border-radius: 999px; }
-#view-toggle button[aria-selected="true"] { background: transparent; color: var(--text); font-weight: 700; }
-#view-toggle button[aria-selected="true"] svg { background: var(--primary-light); stroke: #0B0D0A; }
+#view-toggle button svg { width: 26px; height: 26px; padding: 0; }
+#view-toggle button[aria-selected="true"] { background: var(--primary-light); color: #0B0D0A; font-weight: 800; }
 
 #route-form-card h3 { margin-bottom: 12px; font-size: 1.4rem; }
 .route-field label { font-size: 0.8rem; font-weight: 600; }
@@ -1140,3 +1139,16 @@ html.is-driving { overflow: hidden; }
     #map { height: 40vh; height: 40dvh; min-height: 260px; border-radius: 16px; }
 }
 #garage-savings.is-saving { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--primary-tint); color: var(--text); font-size: 1rem !important; font-weight: 700; }
+
+/* Esquinas rectas en toda la app: los selectores y bloques ocupan el cuadrado completo */
+*, *::before, *::after { border-radius: 0 !important; }
+.garage-segment { display: flex; flex-wrap: wrap; gap: 0; margin-bottom: 12px; }
+.garage-segment .pill { flex: 1 1 0; padding: 12px 8px; border: 1px solid var(--text); font-weight: 700; text-align: center; }
+.garage-segment .pill + .pill { border-left: 0; }
+.garage-segment .pill[aria-pressed="true"] { background: var(--primary-light); border-color: var(--text); color: #0B0D0A; }
+#garage-compare-list { list-style: none; margin: 12px 0 0; padding: 0; }
+#garage-compare-list li { display: flex; flex-direction: column; gap: 2px; padding: 10px 0; }
+#garage-compare-list li + li { border-top: 1px solid var(--border); }
+#garage-compare-list small { color: var(--text-secondary); font-size: 0.82rem; }
+#refuel-picker { margin: 8px 0; }
+#refuel-station-clear { margin-top: 6px; }

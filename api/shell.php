@@ -390,8 +390,15 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 </div>
                 <div class="garage-card">
                     <h3>Lo que pagas frente a la media</h3>
+                    <div class="garage-segment" role="group" aria-label="Periodo de la comparación">
+                        <button id="garage-compare-day" type="button" class="pill" aria-pressed="true">Por repostaje</button>
+                        <button id="garage-compare-week" type="button" class="pill" aria-pressed="false">Por semana</button>
+                        <button id="garage-compare-month" type="button" class="pill" aria-pressed="false">Por mes</button>
+                    </div>
                     <canvas id="garage-price-chart" height="160"></canvas>
                     <p id="garage-savings" class="garage-note"></p>
+                    <p id="garage-savings-zone" class="garage-note"></p>
+                    <ul id="garage-compare-list"></ul>
                 </div>
                 <div class="garage-card">
                     <h3>Repostajes</h3>
@@ -617,6 +624,11 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         <form id="refuel-form" method="dialog">
             <h3>Anotar repostaje</h3>
             <p id="refuel-station" class="garage-note" hidden></p>
+            <div id="refuel-picker">
+                <label>Gasolinera <input id="refuel-station-search" type="search" placeholder="Busca por nombre, calle o municipio" autocomplete="off"></label>
+                <ul id="refuel-station-results" class="route-suggestions" hidden></ul>
+                <button id="refuel-station-clear" type="button" class="pill" hidden>Quitar la gasolinera</button>
+            </div>
             <label>Fecha y hora <input id="refuel-date" type="datetime-local" required></label>
             <label>Kilómetros del cuentakilómetros <input id="refuel-odometer" type="number" min="0" step="1" required></label>
             <div class="form-row">
@@ -737,6 +749,8 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <script src="/js/alerts-store.js"></script>
     <script src="/js/api.js"></script>
     <script src="/js/app.js"></script>
+    <script src="/js/price-index-core.js"></script>
+    <script src="/js/price-index.js"></script>
     <script src="/js/fuel-math.js"></script>
     <script src="/js/garage-store.js"></script>
     <script src="/js/backup.js"></script>
