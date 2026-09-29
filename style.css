@@ -17,7 +17,6 @@
     --status-down: #1B6B3A;
     --status-muted: #8A8A8A;
     --lockup-subtitle: #DCF58A;
-    --road-line: #0B0D0A;
     --font-display: 'Bricolage Grotesque', 'Inter', sans-serif;
     --font-body: 'Inter', sans-serif;
     --page-pad: 20px;
@@ -284,7 +283,6 @@ header {
     z-index: 1250;
     margin: 0;
     border: none;
-    border-top: 4px dashed var(--road-line);
     border-radius: 0;
     background: var(--surface);
     padding: 0 0 env(safe-area-inset-bottom);
@@ -752,7 +750,6 @@ dialog::backdrop { background: rgba(34, 29, 18, 0.5); }
         --btn-bg: #C6FF00;
         --btn-ink: #141A00;
         --lockup-subtitle: #B8C99A;
-        --road-line: #C6FF00;
     }
 }
 
@@ -1059,81 +1056,62 @@ html.is-driving { overflow: hidden; }
     #trip-drive-bar-fill { transition: none; }
 }
 
-/* Resumen tras el viaje */
-#trip-summary { max-width: 560px; }
-#trip-summary h3 { margin: 0 0 12px; font-family: var(--font-display); font-size: 2rem; font-style: italic; text-transform: uppercase; }
-#trip-summary h4 { margin: 16px 0 8px; font-size: 1rem; }
-#trip-summary-tiles strong { font-size: 1.5rem; }
-#trip-summary-cars { display: flex; flex-direction: column; gap: 8px; }
-#trip-summary-cars .pill { padding: 16px; border: 3px solid var(--text); border-radius: 0; font-size: 1.05rem; font-weight: 800; text-align: left; }
-#trip-summary-cars .pill[aria-pressed="true"] { background: var(--btn-bg); color: var(--btn-ink); }
-
-/* Ruta: entrada grande, ajustes plegados y resultados legibles */
-#route-form-card h3 { font-family: var(--font-display); font-size: 2rem; font-style: italic; text-transform: uppercase; margin-bottom: 14px; }
-.route-field label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; }
-.route-input input { min-height: 56px; border: 2px solid var(--text); border-radius: 0; font-size: 1.1rem; }
-.route-input .pill { border: 2px solid var(--text); border-radius: 0; font-weight: 800; }
-#route-settings { margin: 12px 0; }
-#route-settings summary { padding: 12px 0; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; }
-#route-submit {
-    min-height: 64px;
-    border: 3px solid var(--text);
-    border-radius: 0;
-    background: var(--btn-bg);
-    color: var(--btn-ink);
-    font-family: var(--font-display);
-    font-size: 1.7rem;
-    font-weight: 800;
-    font-style: italic;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+/* Estilo de app nativa: superficies limpias, esquinas suaves y jerarquia por tamano y peso */
+#view-toggle { border-top: 1px solid var(--border); box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06); }
+#view-toggle button {
+    min-height: 66px;
+    gap: 2px;
+    background: transparent;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
 }
-#route-map { height: 62vh; height: 62dvh; min-height: 380px; border: 2px solid var(--text); border-radius: 0; }
-#route-result .garage-tiles strong { font-size: 1.7rem; }
-#route-navigate { min-height: 56px; border: 2px solid var(--text); border-radius: 0; font-weight: 800; text-transform: uppercase; }
-.route-station { padding: 14px 0; }
-.route-station__main strong { font-size: 1.05rem; }
-.route-station__price { font-size: 1.3rem; font-family: var(--font-display); font-style: italic; }
+#view-toggle button + button { border-left: 0; }
+#view-toggle button svg { box-sizing: content-box; width: 24px; height: 24px; padding: 4px 18px; border-radius: 999px; }
+#view-toggle button[aria-selected="true"] { background: transparent; color: var(--text); font-weight: 700; }
+#view-toggle button[aria-selected="true"] svg { background: var(--primary-light); stroke: #0B0D0A; }
 
-/* Garaje: viajes arriba, cifras grandes y botones de accion */
+#route-form-card h3 { margin-bottom: 12px; font-size: 1.4rem; }
+.route-field label { font-size: 0.8rem; font-weight: 600; }
+.route-input input { min-height: 52px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); font-size: 1rem; }
+.route-input .pill { border-radius: 12px; font-weight: 700; }
+#route-settings { margin: 8px 0 12px; }
+#route-settings summary { padding: 10px 0; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+#route-submit { min-height: 56px; border: 0; border-radius: 14px; background: var(--btn-bg); color: var(--btn-ink); font-size: 1.05rem; font-weight: 700; }
+#route-map { height: 62vh; height: 62dvh; min-height: 380px; border: 1px solid var(--border); border-radius: 16px; }
+#route-navigate { min-height: 52px; border-radius: 14px; font-weight: 700; }
+.route-station { padding: 14px 0; }
+.route-station__main strong { font-size: 1.02rem; }
+.route-station__price { font-size: 1.25rem; font-weight: 800; }
+
 #garage-main { display: flex; flex-direction: column; }
 #garage-main > #garage-vehicles { order: -3; }
 #garage-main > #garage-trips-card { order: -2; }
 #garage-main > #garage-vehicle-card { order: -1; }
-#trip-start {
-    width: 100%;
-    min-height: 88px;
-    border: 3px solid var(--text);
-    border-radius: 0;
-    background: var(--primary-light);
-    color: #0B0D0A;
-    font-family: var(--font-display);
-    font-size: 2.2rem;
-    font-weight: 800;
-    font-style: italic;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-#trip-stop { width: 100%; min-height: 64px; border-radius: 0; font-weight: 800; text-transform: uppercase; }
-#garage-vehicle-card .garage-tiles strong { font-size: 1.9rem; font-family: var(--font-display); font-style: italic; }
-#garage-vehicle-name { font-family: var(--font-display); font-size: 1.6rem; font-style: italic; text-transform: uppercase; }
-#garage-refuel, #garage-odometer { min-height: 52px; border: 2px solid var(--text); border-radius: 0; font-weight: 800; text-transform: uppercase; }
+#trip-start { width: 100%; min-height: 84px; border: 0; border-radius: 16px; background: var(--primary-light); color: #0B0D0A; font-size: 1.6rem; font-weight: 800; letter-spacing: 0.01em; }
+#trip-stop { width: 100%; min-height: 56px; border-radius: 14px; font-weight: 700; }
+#garage-vehicle-card .garage-tiles strong { font-size: 1.6rem; }
+#garage-vehicle-name { font-size: 1.3rem; font-weight: 800; }
+#garage-refuel, #garage-odometer { min-height: 48px; border-radius: 12px; font-weight: 700; }
 
-/* Tipografia de Bide+: Bricolage Grotesque condensada en cifras y titulos de accion */
-#trip-drive-speed, #trip-drive-stats strong, #trip-drive-stop, #trip-start, .route-station__price { font-stretch: 75%; }
-#view-toggle button[aria-selected="true"] { background: var(--primary-light); color: #16130c; }
+#trip-summary { max-width: 560px; }
+#trip-summary h3 { margin: 0 0 12px; font-size: 1.6rem; }
+#trip-summary h4 { margin: 16px 0 8px; font-size: 1rem; }
+#trip-summary-tiles strong { font-size: 1.5rem; }
+#trip-summary-cars { display: flex; flex-direction: column; gap: 8px; }
+#trip-summary-cars .pill { padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; font-weight: 600; text-align: left; }
+#trip-summary-cars .pill[aria-pressed="true"] { background: var(--primary-light); border-color: var(--primary-light); color: #0B0D0A; font-weight: 700; }
+
+#view-list, #view-map, #view-stats, #view-about { margin-bottom: 24px; }
+.about-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.about-links .pill { flex: 1 1 140px; padding: 14px 12px; border-radius: 12px; font-size: 0.95rem; font-weight: 600; text-align: center; text-decoration: none; }
+#get-app-actions .pill { padding: 12px 16px; border-radius: 12px; font-weight: 600; }
 
 /* Ordenador: contenido ancho, lista y mapa lado a lado, ruta y garaje en dos columnas */
 @media (min-width: 1024px) {
     :root { --content-max: 1200px; --page-pad: 32px; }
-    #view-toggle {
-        left: 50%;
-        right: auto;
-        width: min(100%, var(--content-max));
-        transform: translateX(-50%);
-        border-left: 3px solid var(--text);
-        border-right: 3px solid var(--text);
-    }
+    #view-toggle { left: 50%; right: auto; width: min(100%, var(--content-max)); transform: translateX(-50%); border-radius: 16px 16px 0 0; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
     .app-container { display: grid; grid-template-columns: minmax(0, 460px) minmax(0, 1fr); column-gap: 24px; align-items: start; align-content: start; }
     #view-list { min-width: 0; }
     #stations-list { grid-template-columns: 1fr; }
@@ -1148,20 +1126,3 @@ html.is-driving { overflow: hidden; }
     #garage-main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
     #garage-main > #garage-vehicles, #garage-main > #garage-trips-card { grid-column: 1 / -1; }
 }
-.about-links .pill { border: 2px solid var(--text); border-radius: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
-#get-app-actions .pill { border: 2px solid var(--text); border-radius: 0; font-weight: 800; text-transform: uppercase; padding: 12px 16px; }
-
-/* Rotulos como las señales de carretera: 24 h en verde de autopista, distancia en azul de autovia */
-.badge--24h, .station-card__distance {
-    display: inline-block;
-    padding: 1px 7px;
-    border: 2px solid #fff;
-    border-radius: 3px;
-    color: #fff;
-    font-weight: 800;
-    letter-spacing: 0.03em;
-}
-.badge--24h { background: #0B6B3A; box-shadow: 0 0 0 1px #0B6B3A; }
-.station-card__distance { background: #0B5FA5; box-shadow: 0 0 0 1px #0B5FA5; }
-header { border-bottom: 4px dashed var(--road-line); }
-body { background-image: radial-gradient(rgba(127, 127, 127, 0.06) 1px, transparent 1px); background-size: 4px 4px; }
