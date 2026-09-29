@@ -52,6 +52,12 @@ jobs:
       - name: API smoke tests
         run: python tests/api-smoke.py
 
+      - name: Regenerate offline JSON from the database
+        run: php scripts/build-database.php --mode=lite
+
+      - name: JS and PHP parity
+        run: node tests/api-parity.mjs
+
       - name: UI battery
         env:
           CHROME_PATH: google-chrome
