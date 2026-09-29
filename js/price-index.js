@@ -45,6 +45,38 @@ const GPPriceIndex = (() => {
         return JSON.parse(file.data);
     }
 
+    async function seed() {
+        const info = readSyncInfo();
+        if (info.seeded || !available()) {
+            return;
+        }
+        try {
+            const response = await fetch('/data/price-index-seed/index.json');
+            if (!response.ok) {
+                writeSyncInfo({ ...info, seeded: true });
+                return;
+            }
+            const manifest = await response.json();
+            const months = info.months || {};
+            for (const entry of manifest.months) {
+                if (months[entry.month] === entry.lastDate) {
+                    continue;
+                }
+                const file = await fetch('/data/price-index-seed/' + entry.file);
+                if (!file.ok) {
+                    continue;
+                }
+                await filesystem().writeFile({ path: `${FOLDER}/${entry.file}`, directory: 'DATA', data: await file.text(), encoding: 'utf8', recursive: true });
+                months[entry.month] = entry.lastDate;
+            }
+            await filesystem().writeFile({ path: `${FOLDER}/index.json`, directory: 'DATA', data: JSON.stringify(manifest), encoding: 'utf8', recursive: true });
+            state.manifest = manifest;
+            writeSyncInfo({ ...info, months, seeded: true });
+        } catch (e) {
+            return;
+        }
+    }
+
     async function doSync(force) {
         const info = readSyncInfo();
         if (!force && info.checkedAt && Date.now() - info.checkedAt < SYNC_EVERY_MS) {
@@ -64,7 +96,7 @@ const GPPriceIndex = (() => {
             changed = true;
         }
         state.manifest = manifest;
-        writeSyncInfo({ checkedAt: Date.now(), months });
+        writeSyncInfo({ checkedAt: Date.now(), months, seeded: true });
         return changed;
     }
 
@@ -73,7 +105,7 @@ const GPPriceIndex = (() => {
             return false;
         }
         if (!state.syncing) {
-            state.syncing = doSync(Boolean(force)).catch(() => false).finally(() => {
+            state.syncing = seed().then(() => doSync(Boolean(force))).catch(() => false).finally(() => {
                 state.syncing = null;
             });
         }

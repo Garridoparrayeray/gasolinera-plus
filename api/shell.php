@@ -121,7 +121,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
 
         <p id="update-banner" role="status" hidden>Hay una versión nueva de Gasolinera+ (<span id="update-version"></span>). <a id="update-link" href="#">Descargar e instalar</a></p>
 
-        <p id="offline-banner" role="status" hidden>Estás en modo local sin conexión: precios del último día sincronizado, sin histórico ni tendencias. Cuando te conectes otra vez a internet se actualizarán automáticamente.</p>
+        <p id="offline-banner" role="status" hidden>Sin conexión: usas los datos guardados en tu móvil. El histórico y las estadísticas no están disponibles hasta que vuelvas a conectarte.</p>
 
         <dialog id="geo-ask">
             <span id="geo-ask-logomark" aria-hidden="true">
@@ -266,6 +266,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         </section>
 
         <section id="view-route" hidden>
+            <p class="offline-only offline-block" role="status">Sin conexión: la ruta usa los datos guardados. Si un lugar no aparece, necesitará conexión para encontrarlo.</p>
             <div class="garage-card" id="route-form-card">
                 <h3>¿A dónde vas?</h3>
                 <form id="route-form" autocomplete="off">
@@ -478,6 +479,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         </section>
 
         <section id="view-stats" hidden>
+            <p class="offline-only offline-block" role="status">Las estadísticas necesitan conexión. Cuando vuelvas a tener internet se activarán solas.</p>
             <div class="stats-block">
                 <h3>Filtros</h3>
                 <div class="stats-controls">
@@ -620,6 +622,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         <p id="modal-municipio"></p>
         <p id="modal-horario"></p>
         <ul id="modal-fuels"></ul>
+        <p class="offline-only garage-note" role="status">Sin conexión: el histórico de precios y la comparación con la zona no están disponibles.</p>
         <div id="modal-zone-comparison"></div>
         <canvas id="modal-chart" height="140"></canvas>
         <div id="modal-actions">

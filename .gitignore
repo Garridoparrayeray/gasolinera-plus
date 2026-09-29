@@ -16,3 +16,4 @@ keystore.properties
 *.aab
 data/road-graph/
 public/
+data/price-index-seed/

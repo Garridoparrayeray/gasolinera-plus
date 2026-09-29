@@ -47,6 +47,7 @@ const copies = [
     'privacidad.html',
     'data/stations-lite.json',
     'data/road-graph',
+    'data/price-index-seed',
 ];
 
 let bytes = html.length;

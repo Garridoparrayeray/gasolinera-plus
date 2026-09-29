@@ -1329,3 +1329,12 @@ html[data-view="stats"] #stations-search-btn { display: none !important; }
 #garage-tank-fill { background: #FFB020; }
 #garage-tank-fill[data-level="mid"] { background: #FF7A1A; }
 #garage-tank-fill[data-level="low"] { background: #D93025; }
+
+/* Modo sin conexión */
+.offline-only { display: none; }
+html.is-offline .offline-only { display: block; }
+.offline-block { margin: 0 0 12px; padding: 12px 14px; border: 1px solid #FFB020; background: var(--primary-tint); color: var(--text); font-weight: 700; }
+html.is-offline #view-stats > *:not(.offline-block) { opacity: 0.4; pointer-events: none; }
+#offline-banner { position: fixed; left: 12px; right: 12px; bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 60; margin: 0; padding: 10px 14px; background: #FFB020; color: #111111; font-size: 0.85rem; font-weight: 700; border: 1px solid #111111; }
+#offline-banner[hidden] { display: none; }
+@media (min-width: 1024px) { #offline-banner { left: 50%; right: auto; width: min(560px, 90vw); transform: translateX(-50%); bottom: 96px; } }

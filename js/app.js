@@ -1994,6 +1994,7 @@
     const offlineBanner = document.getElementById('offline-banner');
     function syncOfflineBanner() {
         offlineBanner.hidden = navigator.onLine;
+        document.documentElement.classList.toggle('is-offline', !navigator.onLine);
     }
     window.addEventListener('online', () => {
         syncOfflineBanner();
@@ -2208,6 +2209,8 @@
 
     restoreFuelPreference();
     GPNative.refreshOfflineData();
+    GPPriceIndex.sync(false);
+    window.addEventListener('online', () => GPPriceIndex.sync(false));
     GPNative.checkForUpdate(showUpdateBanner);
     initGeolocationFlow();
     handleDeepLink();

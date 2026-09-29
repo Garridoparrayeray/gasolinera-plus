@@ -50,6 +50,9 @@ jobs:
       - name: Download road graph
         run: node tools/graph/fetch-graph.mjs || echo "Sin grafo de carreteras publicado todavía"
 
+      - name: Download price index
+        run: node tools/price-index/fetch-index.mjs || echo "Sin índice de precios publicado todavía"
+
       - name: Build web bundle and sync
         run: npm run sync:android
 
@@ -140,6 +143,9 @@ jobs:
 
       - name: Download road graph
         run: node tools/graph/fetch-graph.mjs
+
+      - name: Download price index
+        run: node tools/price-index/fetch-index.mjs || echo "Sin índice de precios publicado todavía"
 
       - name: Build web bundle and sync
         run: npm run sync:ios
