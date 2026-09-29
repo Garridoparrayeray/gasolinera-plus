@@ -6,6 +6,9 @@ const GPTripMetrics = (() => {
     const HARSH_BRAKE = -3.5;
     const SMOOTH_HALF_WINDOW = 2;
     const BANDS_KMH = [0, 30, 50, 80, 100, 120];
+    const BAND_FACTORS = [1.45, 1.1, 0.9, 0.95, 1.15, 1.4];
+    const MIN_RELATIVE_CONSUMPTION = 0.7;
+    const MAX_RELATIVE_CONSUMPTION = 1.5;
     const EARTH = 6371000;
     const RAD = Math.PI / 180;
 
@@ -109,9 +112,31 @@ const GPTripMetrics = (() => {
             harshAccelerations: 0, harshBrakes: 0,
             percentAbove100: 0, percentAbove120: 0,
             speedBands: BANDS_KMH.map((from, i) => ({ from, to: BANDS_KMH[i + 1] || null, seconds: 0 })),
-            ecoScore: null, fuelUsed: null, cost: null,
+            ecoScore: null, fuelUsed: null, cost: null, speedFactor: null,
             points: total, goodPoints: 0, lowQuality,
         };
+    }
+
+    function weightedSpeedFactor(bandMeters, meters) {
+        if (meters <= 0) {
+            return 1;
+        }
+        let weighted = 0;
+        for (let b = 0; b < bandMeters.length; b++) {
+            weighted += bandMeters[b] * BAND_FACTORS[b];
+        }
+        return weighted / meters;
+    }
+
+    function estimateFuel(distanceKm, speedFactor, options) {
+        if (!(options.consumption > 0)) {
+            return null;
+        }
+        let relative = 1;
+        if (options.referenceFactor > 0) {
+            relative = Math.min(MAX_RELATIVE_CONSUMPTION, Math.max(MIN_RELATIVE_CONSUMPTION, speedFactor / options.referenceFactor));
+        }
+        return (distanceKm * options.consumption * relative) / 100;
     }
 
     function compute(raw, options = {}) {
@@ -126,13 +151,15 @@ const GPTripMetrics = (() => {
         let above120 = 0;
         let maxSpeed = 0;
         const bands = BANDS_KMH.map(() => 0);
+        const bandMeters = BANDS_KMH.map(() => 0);
         for (let i = 1; i < good.length; i++) {
             const dt = (good[i].t - good[i - 1].t) / 1000;
             const isMoving = speed[i] >= MOVING_MS || speed[i - 1] >= MOVING_MS;
             if (!isMoving) {
                 continue;
             }
-            meters += distance(good[i - 1], good[i]);
+            const segment = distance(good[i - 1], good[i]);
+            meters += segment;
             moving += dt;
             const kmh = ((speed[i] + speed[i - 1]) / 2) * 3.6;
             if (kmh > 100) {
@@ -148,6 +175,7 @@ const GPTripMetrics = (() => {
                 }
             }
             bands[band] += dt;
+            bandMeters[band] += segment;
         }
         for (let i = 0; i < good.length; i++) {
             if (speed[i] > maxSpeed) {
@@ -202,13 +230,11 @@ const GPTripMetrics = (() => {
         if (distanceKm >= 1) {
             ecoScore = Math.max(0, Math.round(100 - Math.min(50, (harshAccelerations + harshBrakes) * 10) - Math.min(30, percentAbove120)));
         }
-        let fuelUsed = null;
+        const speedFactor = weightedSpeedFactor(bandMeters, meters);
+        const fuelUsed = estimateFuel(distanceKm, speedFactor, options);
         let cost = null;
-        if (options.consumption > 0) {
-            fuelUsed = (distanceKm * options.consumption) / 100;
-            if (options.pricePerUnit > 0) {
-                cost = fuelUsed * options.pricePerUnit;
-            }
+        if (fuelUsed !== null && options.pricePerUnit > 0) {
+            cost = fuelUsed * options.pricePerUnit;
         }
         return {
             startedAt: good[0].t,
@@ -227,6 +253,7 @@ const GPTripMetrics = (() => {
             ecoScore,
             fuelUsed,
             cost,
+            speedFactor,
             points: total,
             goodPoints: good.length,
             lowQuality: good.length < total * 0.5,

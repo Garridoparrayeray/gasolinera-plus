@@ -103,6 +103,17 @@ const approx = (actual, expected, tolerance, message) => assert.ok(Math.abs(actu
 }
 
 {
+    const calm = GPTripMetrics.compute(track(new Array(600).fill(70 / 3.6)), { consumption: 6, referenceFactor: 1 });
+    const fast = GPTripMetrics.compute(track(new Array(600).fill(130 / 3.6)), { consumption: 6, referenceFactor: 1 });
+    approx(calm.speedFactor, 0.9, 0.02, 'factor de velocidad a 70 km/h');
+    approx(fast.speedFactor, 1.4, 0.02, 'factor de velocidad a 130 km/h');
+    approx((calm.fuelUsed / calm.distanceKm) * 100, 5.4, 0.1, 'consumo a 70 km/h con referencia');
+    approx((fast.fuelUsed / fast.distanceKm) * 100, 8.4, 0.1, 'consumo a 130 km/h con referencia');
+    const flat = GPTripMetrics.compute(track(new Array(600).fill(130 / 3.6)), { consumption: 6 });
+    approx((flat.fuelUsed / flat.distanceKm) * 100, 6, 0.05, 'sin referencia se usa el consumo medio plano');
+}
+
+{
     const points = track(new Array(1200).fill(20));
     const thin = GPTripMetrics.thin(points);
     assert.ok(thin.length < 300 && thin.length > 150, `aligerado a ${thin.length} puntos`);

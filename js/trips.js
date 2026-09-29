@@ -49,6 +49,8 @@ const GPTrips = (() => {
     const SPEED_WARN_KMH = 100;
     const SPEED_OVER_KMH = 120;
     const SPEED_BAR_MAX_KMH = 160;
+    const MIN_REFERENCE_TRIPS = 3;
+    const MIN_REFERENCE_KM = 30;
 
     const WEB_TRIP_KEY = 'webTripInProgress';
     const state = {
@@ -162,9 +164,33 @@ const GPTrips = (() => {
         renderLive();
     }
 
-    function vehicleOptions() {
+    async function referenceFactorFor(vehicleId) {
+        if (!vehicleId) {
+            return null;
+        }
+        let km = 0;
+        let weighted = 0;
+        let count = 0;
+        for (const trip of await GarageStore.trips.forVehicle(vehicleId)) {
+            const m = trip.metrics;
+            if (m && m.speedFactor > 0 && m.distanceKm > 0) {
+                km += m.distanceKm;
+                weighted += m.speedFactor * m.distanceKm;
+                count++;
+            }
+        }
+        if (count < MIN_REFERENCE_TRIPS || km < MIN_REFERENCE_KM) {
+            return null;
+        }
+        return weighted / km;
+    }
+
+    function vehicleOptions(referenceFactor) {
         const summary = GPGarage.summary();
         const options = {};
+        if (referenceFactor > 0) {
+            options.referenceFactor = referenceFactor;
+        }
         if (summary) {
             options.consumption = summary.avgConsumption;
             if (summary.lastRefuel) {
@@ -175,14 +201,14 @@ const GPTrips = (() => {
     }
 
     async function saveTrip(points, info) {
-        const metrics = GPTripMetrics.compute(points, vehicleOptions());
-        if (info.auto && metrics.distanceKm < 0.5) {
-            return null;
-        }
         let vehicleId = info.vehicleId || null;
         const active = GPGarage.activeVehicle();
         if (!vehicleId && active) {
             vehicleId = active.id;
+        }
+        const metrics = GPTripMetrics.compute(points, vehicleOptions(await referenceFactorFor(vehicleId)));
+        if (info.auto && metrics.distanceKm < 0.5) {
+            return null;
         }
         const now = new Date().toISOString();
         let startedAt = now;
