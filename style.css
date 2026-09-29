@@ -10,8 +10,11 @@
     --primary-tint: #ECF5CC;
     --on-primary: #ffffff;
     --header-bg: #4B6B00;
-    --btn-bg: #0B0D0A;
-    --btn-ink: #C6FF00;
+    --btn-bg: #4B6B00;
+    --btn-ink: #ffffff;
+    --accent-bg: #4B6B00;
+    --accent-ink: #ffffff;
+    --highlight: #DCF58A;
     --text: #0B0D0A;
     --text-secondary: #59634A;
     --shadow-soft: 0 1px 3px rgba(75, 107, 0, 0.1), 0 1px 2px rgba(75, 107, 0, 0.08);
@@ -112,7 +115,7 @@ header {
     color: white;
 }
 .home-link-wrap strong .plus {
-    color: var(--primary-light); font-size: 1.15em; font-weight: 500;
+    color: var(--highlight); font-size: 1.15em; font-weight: 500;
     display: inline-block; transform: rotate(-8deg) translateY(-2px);
 }
 .home-link-wrap #app-subtitle {
@@ -306,8 +309,8 @@ header {
 }
 #view-toggle button + button { border-left: 1px solid var(--border); }
 #view-toggle button[aria-selected="true"] {
-    background: var(--primary-light);
-    color: #0B0D0A;
+    background: var(--accent-bg);
+    color: var(--accent-ink);
 }
 
 #geo-ask { text-align: center; }
@@ -753,6 +756,9 @@ dialog::backdrop { background: rgba(34, 29, 18, 0.5); }
         --header-bg: #1B2210;
         --btn-bg: #C6FF00;
         --btn-ink: #141A00;
+        --accent-bg: #C6FF00;
+        --accent-ink: #141A00;
+        --highlight: #C6FF00;
         --lockup-subtitle: #B8C99A;
     }
 }
@@ -800,7 +806,7 @@ html[data-view="route"] #filter-sort { display: none; }
 .garage-vehicle-head small { color: var(--text-secondary); font-size: 0.8rem; }
 #garage-tank-bar { height: 14px; border-radius: 999px; background: var(--primary-tint); border: 1px solid var(--border); overflow: hidden; }
 #garage-tank-fill { display: block; height: 100%; width: 0; background: var(--status-down); transition: width 0.4s ease; }
-#garage-tank-fill[data-level="mid"] { background: var(--primary-light); }
+#garage-tank-fill[data-level="mid"] { background: var(--accent-bg); }
 #garage-tank-fill[data-level="low"] { background: var(--status-up); }
 #garage-tank-text { margin: 8px 0 14px; font-size: 0.85rem; color: var(--text-secondary); }
 .garage-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
@@ -1073,7 +1079,7 @@ html.is-driving { overflow: hidden; }
 }
 #view-toggle button + button { border-left: 0; }
 #view-toggle button svg { width: 26px; height: 26px; padding: 0; }
-#view-toggle button[aria-selected="true"] { background: var(--primary-light); color: #0B0D0A; font-weight: 800; }
+#view-toggle button[aria-selected="true"] { background: var(--accent-bg); color: var(--accent-ink); font-weight: 800; }
 
 #route-form-card h3 { margin-bottom: 12px; font-size: 1.4rem; }
 .route-field label { font-size: 0.8rem; font-weight: 600; }
@@ -1092,7 +1098,7 @@ html.is-driving { overflow: hidden; }
 #garage-main > #garage-vehicles { order: -3; }
 #garage-main > #garage-trips-card { order: -2; }
 #garage-main > #garage-vehicle-card { order: -1; }
-#trip-start { width: 100%; min-height: 84px; border: 0; border-radius: 16px; background: var(--primary-light); color: #0B0D0A; font-size: 1.6rem; font-weight: 800; letter-spacing: 0.01em; }
+#trip-start { width: 100%; min-height: 84px; border: 0; border-radius: 16px; background: var(--accent-bg); color: var(--accent-ink); font-size: 1.6rem; font-weight: 800; letter-spacing: 0.01em; }
 #trip-stop { width: 100%; min-height: 56px; border-radius: 14px; font-weight: 700; }
 #garage-vehicle-card .garage-tiles strong { font-size: 1.6rem; }
 #garage-vehicle-name { font-size: 1.3rem; font-weight: 800; }
@@ -1104,7 +1110,7 @@ html.is-driving { overflow: hidden; }
 #trip-summary-tiles strong { font-size: 1.5rem; }
 #trip-summary-cars { display: flex; flex-direction: column; gap: 8px; }
 #trip-summary-cars .pill { padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; font-weight: 600; text-align: left; }
-#trip-summary-cars .pill[aria-pressed="true"] { background: var(--primary-light); border-color: var(--primary-light); color: #0B0D0A; font-weight: 700; }
+#trip-summary-cars .pill[aria-pressed="true"] { background: var(--accent-bg); border-color: var(--accent-bg); color: var(--accent-ink); font-weight: 700; }
 
 #view-list, #view-map, #view-stats, #view-about { margin-bottom: 24px; }
 .about-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
@@ -1133,10 +1139,10 @@ html.is-driving { overflow: hidden; }
 
 /* Precios: mapa y lista en una sola pantalla; elegir una gasolinera la marca en el mapa */
 .station-card { flex-wrap: wrap; }
-.station-card.is-selected { border-color: var(--primary-light); background: var(--primary-tint); box-shadow: 0 0 0 2px var(--primary-light); }
+.station-card.is-selected { border-color: var(--accent-bg); background: var(--primary-tint); box-shadow: 0 0 0 2px var(--accent-bg); }
 .station-card__open { display: none; flex: 1 1 100%; margin-top: 6px; padding: 10px; border-radius: 12px; font-weight: 700; text-align: center; }
 .station-card.is-selected .station-card__open { display: block; }
-#map-show-all { border-color: var(--primary-light); background: var(--primary-light); color: #0B0D0A; font-weight: 700; }
+#map-show-all { border-color: var(--accent-bg); background: var(--accent-bg); color: var(--accent-ink); font-weight: 700; }
 @media (max-width: 1023px) {
     #view-map { order: 1; margin-bottom: 12px; }
     #view-list { order: 2; }
@@ -1149,7 +1155,7 @@ html.is-driving { overflow: hidden; }
 .garage-segment { display: flex; flex-wrap: wrap; gap: 0; margin-bottom: 12px; }
 .garage-segment .pill { flex: 1 1 0; padding: 12px 8px; border: 1px solid var(--text); font-weight: 700; text-align: center; }
 .garage-segment .pill + .pill { border-left: 0; }
-.garage-segment .pill[aria-pressed="true"] { background: var(--primary-light); border-color: var(--text); color: #0B0D0A; }
+.garage-segment .pill[aria-pressed="true"] { background: var(--accent-bg); border-color: var(--text); color: var(--accent-ink); }
 #garage-compare-list { list-style: none; margin: 12px 0 0; padding: 0; }
 #garage-compare-list li { display: flex; flex-direction: column; gap: 2px; padding: 10px 0; }
 #garage-compare-list li + li { border-top: 1px solid var(--border); }
@@ -1184,3 +1190,5 @@ a { color: var(--primary); }
 /* Buscador: el boton mide lo mismo que el campo */
 #search-input { min-height: 52px; }
 #search-form > button { align-self: stretch; width: 52px; height: auto; }
+
+#app-logomark path, #geo-ask-logomark path { fill: var(--highlight); }

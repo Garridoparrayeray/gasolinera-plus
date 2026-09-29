@@ -582,7 +582,7 @@ const GPRoute = (() => {
         line.addTo(state.routeLayer);
         state.map.fitBounds(line.getBounds(), { padding: [30, 30] });
         if (state.stop) {
-            L.circleMarker([state.stop.station.lat, state.stop.station.lon], { radius: 11, color: '#1D4E89', weight: 3, fillColor: '#C6FF00', fillOpacity: 1 }).addTo(state.routeLayer);
+            L.circleMarker([state.stop.station.lat, state.stop.station.lon], { radius: 11, color: '#1D4E89', weight: 3, fillColor: GPNative.accentColor(), fillOpacity: 1 }).addTo(state.routeLayer);
         }
     }
 
