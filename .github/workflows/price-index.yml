@@ -1,0 +1,67 @@
+name: Price index
+
+on:
+  schedule:
+    - cron: '30 9 * * *'
+  push:
+    branches:
+      - 'feat/**'
+    paths:
+      - 'scripts/build-price-index.php'
+      - '.github/workflows/price-index.yml'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Dias hacia atras a cubrir (400 en la primera ejecucion)'
+        required: false
+        default: '400'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: price-index
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      TAG: price-index
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: curl, mbstring
+
+      - name: Download the published index
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/price-index"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release download "$TAG" --dir "$RUNNER_TEMP/price-index" --pattern '*.json' || true
+          fi
+          ls -la "$RUNNER_TEMP/price-index"
+
+      - name: Add the missing days
+        run: php scripts/build-price-index.php --out="$RUNNER_TEMP/price-index" --days="${{ inputs.days || '400' }}"
+
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          DIR="$RUNNER_TEMP/price-index"
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --target "$GITHUB_SHA" --latest=false \
+              --title "Indice de precios (historico agregado)" \
+              --notes "Medias diarias de carburantes por pais, provincia y cuadricula de 0,1 grados, un fichero por mes. La app las descarga y las guarda en el dispositivo. Fuente: Ministerio para la Transicion Ecologica."
+          fi
+          for file in "$DIR"/*.json; do
+            gh release upload "$TAG" "$file" --clobber
+          done
+          gh release view "$TAG" --json assets --jq '.assets[] | "\(.name) \(.size)"'

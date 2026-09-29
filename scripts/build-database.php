@@ -555,4 +555,6 @@ function generateLiteJson(string $dbPath): void
     echo "JSON offline guardado: $outputPath ($mb MB sin comprimir, " . count($stations) . " estaciones)\n";
 }
 
-main(array_slice($argv, 1));
+if (isset($argv[0]) && realpath($argv[0]) === realpath(__FILE__)) {
+    main(array_slice($argv, 1));
+}
