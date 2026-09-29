@@ -205,6 +205,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 <option value="24h">Abierto 24h</option>
             </select>
         </div>
+        <button id="stations-search-btn" type="button">Buscar gasolineras</button>
         <div id="stations-progress" hidden><span></span></div>
         <p id="stations-status" role="status" aria-live="polite"></p>
 

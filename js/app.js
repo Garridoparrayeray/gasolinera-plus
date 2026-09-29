@@ -1,9 +1,19 @@
 (function () {
     'use strict';
 
-    if (window.Chart) {
+    function applyChartTheme() {
+        if (!window.Chart) {
+            return;
+        }
+        const styles = getComputedStyle(document.documentElement);
         Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.font.size = 12;
+        Chart.defaults.color = styles.getPropertyValue('--text').trim();
+        Chart.defaults.borderColor = styles.getPropertyValue('--border').trim();
     }
+
+    applyChartTheme();
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyChartTheme);
 
     const fuelLabel = AlertsStore.labelFor;
     const priceText = AlertsStore.priceText;
@@ -41,6 +51,7 @@
         viewMap: document.getElementById('view-map'),
         stationsStatus: document.getElementById('stations-status'),
         stationsProgress: document.getElementById('stations-progress'),
+        stationsSearchBtn: document.getElementById('stations-search-btn'),
         mapShowAll: document.getElementById('map-show-all'),
         mapToggle: document.getElementById('map-toggle'),
         stationsList: document.getElementById('stations-list'),
@@ -583,6 +594,12 @@
         const loading = kind === 'loading';
         el.stationsProgress.hidden = !loading;
         el.stationsStatus.classList.toggle('is-loading', loading);
+        el.stationsSearchBtn.disabled = loading;
+        if (loading) {
+            el.stationsSearchBtn.textContent = 'Buscando…';
+        } else {
+            el.stationsSearchBtn.textContent = 'Buscar gasolineras';
+        }
         el.stationsList.classList.toggle('is-loading', loading);
         if (loading) {
             el.stationsStatus.textContent = `Buscando gasolineras… ${filterSummary()}`;
@@ -1428,7 +1445,7 @@
             data: { labels: labels.map(periodLabel), datasets },
             options: {
                 responsive: true,
-                plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } },
+                plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 12, font: { size: 12 } } } },
                 scales: { y: { ticks: { callback: (v) => v.toFixed(2) + ' €' } } },
             },
         });
@@ -1477,7 +1494,7 @@
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { ticks: { callback: (v) => v.toFixed(2) + ' €' } },
-                    y: { ticks: { autoSkip: false, font: { size: 9 } } },
+                    y: { ticks: { autoSkip: false, font: { size: 11 } } },
                 },
             },
         });
@@ -1513,7 +1530,7 @@
             options: {
                 responsive: true,
                 plugins: { legend: { display: false } },
-                scales: { x: { title: { display: true, text: '€/' + AlertsStore.unitFor(fuel), font: { size: 10 } } } },
+                scales: { x: { title: { display: true, text: '€/' + AlertsStore.unitFor(fuel), font: { size: 12 } } } },
             },
         });
     }
@@ -1843,6 +1860,14 @@
         }
     }
     el.mapShowAll.addEventListener('click', clearSelection);
+    el.stationsSearchBtn.addEventListener('click', () => {
+        const query = el.searchInput.value.trim();
+        if (query.length >= 2) {
+            performSearch(query);
+        } else {
+            loadNearby();
+        }
+    });
     el.mapToggle.addEventListener('click', toggleMap);
     applyMapVisibility();
     el.heatmapToggle.addEventListener('click', toggleHeatmap);

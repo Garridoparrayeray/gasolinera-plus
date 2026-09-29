@@ -1,9 +1,9 @@
 :root {
     --bg: #F6F5F3;
     --surface: #ffffff;
-    --border: #D9D6D0;
+    --border: #CFCBC3;
     --field-bg: #ffffff;
-    --field-border: #8E8A82;
+    --field-border: #7C786F;
     --primary: #C2540A;
     --primary-light: #FF7A1A;
     --primary-dark: #8A3A00;
@@ -16,7 +16,7 @@
     --accent-ink: #111111;
     --highlight: #FF7A1A;
     --text: #111111;
-    --text-secondary: #5F5C56;
+    --text-secondary: #45423D;
     --shadow-soft: 0 1px 3px rgba(17, 17, 17, 0.1), 0 1px 2px rgba(17, 17, 17, 0.08);
     --status-up: #B3261E;
     --status-down: #1B6B3A;
@@ -65,6 +65,7 @@ header {
     gap: 12px;
     margin-bottom: 16px;
     background: var(--header-bg);
+    border-bottom: 3px solid var(--accent-bg);
     border-radius: 12px;
     padding: 14px 16px;
 }
@@ -742,16 +743,16 @@ dialog::backdrop { background: rgba(34, 29, 18, 0.5); }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --bg: #0D0D0D;
-        --surface: #171717;
-        --border: #333333;
-        --field-bg: #262626;
-        --field-border: #6D6A63;
+        --bg: #0F0F0F;
+        --surface: #1E1E1E;
+        --border: #444444;
+        --field-bg: #2A2A2A;
+        --field-border: #7C7970;
         --text: #F4F2EE;
-        --text-secondary: #B5B0A6;
+        --text-secondary: #D0CCC4;
         --primary: #FF7A1A;
         --primary-dark: #FFB37A;
-        --primary-tint: #2A1B10;
+        --primary-tint: #2E1D0F;
         --on-primary: #111111;
         --header-bg: #000000;
         --btn-bg: #FF7A1A;
@@ -1219,3 +1220,11 @@ html[data-view="about"] #stations-status, html[data-view="about"] #stations-prog
 #stations-status.is-loading::before { content: ''; display: inline-block; width: 14px; height: 14px; margin-right: 8px; border: 3px solid var(--border); border-top-color: var(--accent-bg); border-radius: 50% !important; animation: gp-spin 0.8s linear infinite; vertical-align: -2px; }
 @keyframes gp-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { #stations-status.is-loading::before { animation: none; } }
+
+/* Boton grande de busqueda bajo los filtros */
+#stations-search-btn { display: block; width: 100%; min-height: 54px; margin: 0 0 12px; border: 0; background: var(--btn-bg); color: var(--btn-ink); font-family: var(--font-display); font-size: 1.05rem; font-weight: 800; letter-spacing: 0.01em; cursor: pointer; }
+#stations-search-btn:disabled { opacity: 0.7; cursor: progress; }
+html[data-view="garage"] #stations-search-btn,
+html[data-view="route"] #stations-search-btn,
+html[data-view="about"] #stations-search-btn,
+html[data-view="stats"] #stations-search-btn { display: none !important; }
