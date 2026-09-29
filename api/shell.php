@@ -267,7 +267,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
 
         <section id="view-route" hidden>
             <div class="garage-card" id="route-form-card">
-                <h3>Ruta con gasolineras</h3>
+                <h3>¿A dónde vas?</h3>
                 <form id="route-form" autocomplete="off">
                     <div class="route-field">
                         <label for="route-from">Desde</label>
@@ -279,7 +279,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                     </div>
                     <div class="route-field">
                         <div class="route-label-row">
-                            <label for="route-to">Hasta</label>
+                            <label for="route-to">Destino</label>
                             <button id="route-swap" type="button" class="btn-icon" aria-label="Intercambiar origen y destino">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 4 7 20"/><polyline points="3 8 7 4 11 8"/><polyline points="17 20 17 4"/><polyline points="13 16 17 20 21 16"/></svg>
                             </button>
@@ -289,6 +289,8 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                         </div>
                         <ul id="route-to-suggestions" class="route-suggestions" hidden></ul>
                     </div>
+                    <details id="route-settings">
+                    <summary>Ajustes: desvío y orden</summary>
                     <div class="route-options">
                         <label>Desvío máximo
                             <select id="route-detour">
@@ -304,6 +306,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                             </select>
                         </label>
                     </div>
+                    </details>
                     <button id="route-submit" type="submit" class="pill pill--primary">Calcular ruta</button>
                     <p id="route-status" class="garage-note" role="status"></p>
                     <div id="route-progress" hidden><span id="route-progress-bar"></span></div>

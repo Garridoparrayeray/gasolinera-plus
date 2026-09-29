@@ -1048,3 +1048,30 @@ html.is-driving { overflow: hidden; }
 #trip-summary-cars { display: flex; flex-direction: column; gap: 8px; }
 #trip-summary-cars .pill { padding: 16px; border: 3px solid var(--text); border-radius: 0; font-size: 1.05rem; font-weight: 800; text-align: left; }
 #trip-summary-cars .pill[aria-pressed="true"] { background: var(--text); color: var(--primary-light); }
+
+/* Ruta: entrada grande, ajustes plegados y resultados legibles */
+#route-form-card h3 { font-family: 'Barlow Condensed', 'Bricolage Grotesque', 'Inter', sans-serif; font-size: 2rem; font-style: italic; text-transform: uppercase; margin-bottom: 14px; }
+.route-field label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; }
+.route-input input { min-height: 56px; border: 3px solid var(--text); border-radius: 0; font-size: 1.1rem; }
+.route-input .pill { border: 3px solid var(--text); border-radius: 0; font-weight: 800; }
+#route-settings { margin: 12px 0; }
+#route-settings summary { padding: 12px 0; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; }
+#route-submit {
+    min-height: 64px;
+    border: 3px solid var(--text);
+    border-radius: 0;
+    background: var(--text);
+    color: var(--primary-light);
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: 1.7rem;
+    font-weight: 800;
+    font-style: italic;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+#route-map { height: 62vh; height: 62dvh; min-height: 380px; border: 3px solid var(--text); border-radius: 0; }
+#route-result .garage-tiles strong { font-size: 1.7rem; }
+#route-navigate { min-height: 56px; border: 3px solid var(--text); border-radius: 0; font-weight: 800; text-transform: uppercase; }
+.route-station { padding: 14px 0; }
+.route-station__main strong { font-size: 1.05rem; }
+.route-station__price { font-size: 1.3rem; font-family: 'Barlow Condensed', 'Inter', sans-serif; font-style: italic; }
