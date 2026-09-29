@@ -5,6 +5,7 @@ import { launch, sleep } from './cdp.mjs';
 
 const s = await launch(Number(process.env.CDP_PORT || 9374));
 const { ev, go, check, waitFor } = s;
+s.ignoreHttp = /zone-comparison/;
 const downloads = mkdtempSync(join(tmpdir(), 'gasolinera-descargas-'));
 
 async function fill(values) {

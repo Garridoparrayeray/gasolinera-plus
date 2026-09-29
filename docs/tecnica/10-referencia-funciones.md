@@ -33,7 +33,7 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `showToast` | `message` | Muestra un aviso breve (1,6 s) en la parte baja de la pantalla. |
 | `closeGeoAsk` | — | Cierra el diálogo de permiso de ubicación si está abierto. |
 | `requestGeolocation` | — | Pide la posición al dispositivo (10 s de espera, caché de 5 min). Si va bien guarda las coordenadas, emite `gp:location`, recuerda la preferencia «activada» y lanza la búsqueda; si falla muestra el aviso de reintento. |
-| `showSearchPrompt` | — | Estado «sin ubicación»: vacía la lista y explica que hay que activar la ubicación o buscar un lugar. |
+| `showSearchPrompt` | — | Estado «sin ubicación»: pasa al modo `cheapest` y carga la lista por defecto con las gasolineras más baratas de España para el carburante elegido. |
 | `initGeolocationFlow` | — | Decide al arrancar qué hacer con la ubicación según la preferencia guardada y el permiso del sistema: pedirla, respetar «no», o mostrar el diálogo de permiso tras la pantalla de carga. |
 | `loadLocationPref` | — | Lee la preferencia de ubicación (`on`, `off` o nula). |
 | `saveLocationPref` | `value` | Guarda esa preferencia. |
@@ -48,7 +48,7 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `placeSummary` | — | Texto del lugar de la búsqueda («Cerca de ti» o «texto buscado»). |
 | `flashStatus` | — | Reinicia la animación de destello de la línea de estado. |
 | `setStationsStatus` | `kind` | Actualiza la línea de estado y el botón de buscar según el estado de la carga (`loading`, `done`, `error`, `needs-location`). |
-| `loadNearby` | — | Carga la primera página de gasolineras cercanas al usuario (o pide ubicación si no hay). |
+| `loadNearby` | — | Carga la primera página de gasolineras cercanas al usuario; sin ubicación muestra las más baratas de España. |
 | `backToNearby` | — | Limpia la búsqueda por texto y vuelve a las gasolineras cercanas. |
 | `performSearch` | `query` | Inicia una búsqueda por texto (mínimo 2 letras) y carga la primera página. |
 | `hideSearchSuggestions` | — | Oculta y vacía la lista de sugerencias de lugares. |
@@ -240,6 +240,19 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `runner` | — | Plugin `BackgroundRunner` o nulo. |
 | `syncAlerts` | `favorites, enabled` | Envía al ejecutor las favoritas y el estado de los avisos. |
 | `checkNow` | — | Pide una comprobación inmediata de precios. |
+
+### `js/permissions.js`
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `recorder` | — | Plugin nativo `TripRecorder` o nulo en la web. |
+| `say` | — | Muestra un mensaje bajo la lista de permisos. |
+| `row` | — | Construye una fila de permiso: título, estado, explicación y botones. |
+| `openSystemSettings` | — | Abre los ajustes de la app (en el navegador explica cómo cambiar el permiso). |
+| `locationRow` | — | Fila de ubicación: bloqueada, activada o desactivada, con su botón. |
+| `alertsRow` | — | Fila de avisos de bajada de precio con su botón. |
+| `tripRows` | — | Filas de viajes automáticos, Bluetooth del coche y batería (solo app). |
+| `render` | — | Dibuja todas las filas al entrar en Info y tras cada acción. |
 
 ## Cliente · garaje, cálculos y viajes
 
@@ -1037,7 +1050,8 @@ Objetos globales y lo que exponen (lo que devuelve el módulo).
 | `Api` | `api.js` | `near`, `search`, `suggestPlaces`, `bbox`, `station`, `history`, `resolvePlace`, `zoneAverage`, `zoneComparison`, `nationalStats`, `statsByFuel`, `statsByProvince`, `priceDistribution` (ver [03](03-api.md) y [04](04-busqueda-y-paridad.md)) |
 | `AlertsStore` | `alerts-store.js` | `FUEL_LABELS`, `labelFor`, `unitFor`, `priceText`, `notificationFor`, `get`, `set`, `checkPrices` |
 | `GPBackground` | `background.js` | `syncAlerts`, `checkNow` |
-| `window.GP` | `app.js` | `showToast`, `switchView`, `currentView`, `openStationModal`, `userPosition`, `ensureMap`, `showMap` |
+| `GPPermissions` | `permissions.js` | `render` |
+| `window.GP` | `app.js` | `showToast`, `switchView`, `currentView`, `openStationModal`, `userPosition`, `ensureMap`, `showMap`, `locationActive`, `toggleLocation`, `alertsOn`, `setAlerts` |
 | `GPPriceIndexCore` | `price-index-core.js` | `cellKey`, `cellsAround`, `haversineKm`, `datesBetween`, `addDays`, `periodOf`, `average`, `nearestDay` |
 | `GPPriceIndex` | `price-index.js` | `available`, `sync`, `dayReference`, `periodReference`, `ZONE_RADIUS_KM` |
 | `GPFuel` | `fuel-math.js` | `intervals`, `summary`, `monthlySpend`, `savings`, `savingsBy`, `madridDate`, `madridMonth` |

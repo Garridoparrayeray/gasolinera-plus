@@ -27,6 +27,7 @@ const SHELL_FILES = [
     '/js/router-core.js',
     '/js/router-worker.js',
     '/js/route.js',
+    '/js/permissions.js',
     '/vendor/fonts/fonts.css',
     '/vendor/fonts/inter-latin-standard-normal.woff2',
     '/vendor/fonts/inter-latin-ext-standard-normal.woff2',

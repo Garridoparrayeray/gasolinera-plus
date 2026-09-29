@@ -1314,3 +1314,12 @@ html.is-offline #view-stats > *:not(.offline-block) { opacity: 0.4; pointer-even
 .guide-card summary::after { content: '+'; color: var(--primary); font-weight: 800; }
 .guide-card details[open] summary::after { content: '−'; }
 .guide-card details p { margin: 10px 0 0; color: var(--text-secondary); font-size: 0.95rem; }
+
+/* Permisos y privacidad en la pestaña Info */
+.permissions-card ul { list-style: none; margin: 12px 0 0; padding: 0; }
+.permissions-card li { padding: 14px 0; border-top: 1px solid var(--border); }
+.permission-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.permission-state { font-weight: 800; font-size: 0.85rem; padding: 2px 8px; background: var(--text); color: var(--bg); }
+.permissions-card li p { margin: 6px 0 10px; color: var(--text-secondary); font-size: 0.92rem; }
+.permission-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.permission-actions .pill { flex: 1 1 140px; text-align: center; }

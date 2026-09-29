@@ -206,6 +206,8 @@ Gráficos: media nacional, precios por carburante, por provincia (barras horizon
 | `legal-close` | Botón | Lo cierra |
 | `get-app-android` | Enlace | Descarga el APK de prueba (solo en web) |
 | `get-app-ios` | Botón | Muestra u oculta la ayuda para instalar en iPhone (solo en web) |
+| `permissions-list`, `permissions-note` | Lista y aviso | «Permisos y privacidad»: una fila por permiso (ubicación, avisos de bajada de precio y, en la app, detección de viajes, Bluetooth del coche y batería) con su estado y botones para activar, desactivar o abrir los ajustes del sistema. Los permisos del sistema solo se retiran desde los ajustes del móvil (`GPPermissions.render`) |
+| Acordeones de la guía | `<details>` | «Guía de uso» con seis apartados y el botón de descarga del PDF |
 
 La sección «Conseguir la app» se oculta dentro de la app y en modo instalado (`display-mode: standalone`).
 

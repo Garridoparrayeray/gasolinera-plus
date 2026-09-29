@@ -346,6 +346,9 @@
             showSearchPrompt();
             return;
         }
+        if (state.stationsMode === null) {
+            showSearchPrompt();
+        }
         GPNative.getPosition({ timeout: 10000, maximumAge: 5 * 60 * 1000 }).then(
             (position) => {
                 state.userLat = position.coords.latitude;
@@ -411,7 +414,10 @@
             return;
         }
 
-        const permission = await GPNative.locationPermission();
+        const permission = await Promise.race([
+            GPNative.locationPermission(),
+            new Promise((resolve) => setTimeout(() => resolve(null), 2000)),
+        ]);
         if (permission === 'granted') {
             requestGeolocation();
             return;
@@ -2188,6 +2194,13 @@
         ensureMap: () => {
             ensureMap();
             return state.map;
+        },
+        locationActive: () => state.userLat !== null,
+        toggleLocation,
+        alertsOn: () => alertsToggle.checked,
+        setAlerts: (enabled) => {
+            alertsToggle.checked = enabled;
+            alertsToggle.dispatchEvent(new Event('change'));
         },
         showMap: () => {
             switchView('list');

@@ -33,7 +33,7 @@ for (const size of sizes.filter((x) => !sizeFilter || sizeFilter.includes(x.n)))
     await go('/', 1500);
     await ev('localStorage.clear()');
     await go('/', 1500);
-    check(`${tag} carga la lista de cercanas con ubicacion`, await waitFor("document.querySelectorAll('#stations-list li').length > 0", 12000));
+    check(`${tag} carga la lista de cercanas con ubicacion`, await waitFor("document.querySelectorAll('#stations-list li').length > 0", 12000), await ev("document.getElementById('stations-status').textContent + ' | dialogo=' + document.getElementById('geo-ask').open + ' | pref=' + localStorage.getItem('gasolinera_location_pref')"));
     check(`${tag} sin scroll horizontal`, (await ev('document.documentElement.scrollWidth - document.documentElement.clientWidth')) <= 0);
     check(`${tag} paginador sin NaN`, !(await ev("document.getElementById('pagination-status').textContent")).includes('NaN'));
     check(`${tag} media nacional cargada`, await waitFor("/\\d/.test(document.getElementById('national-gasoleo-a').textContent)", 6000));
@@ -87,6 +87,9 @@ for (const size of sizes.filter((x) => !sizeFilter || sizeFilter.includes(x.n)))
     s.where = `${tag}/legal`;
     await ev("document.getElementById('legal-open').click()");
     check(`${tag} aviso legal abre`, (await ev("document.getElementById('legal-panel').open")) === true);
+    await ev("document.getElementById('legal-close').click()");
+    await ev("document.getElementById('view-about-btn').click()");
+    check(`${tag} permisos: lista ubicacion y avisos`, await waitFor("document.querySelectorAll('#permissions-list li').length >= 2", 5000));
     await ev("document.getElementById('legal-close').click()");
 }
 

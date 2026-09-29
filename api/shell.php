@@ -573,6 +573,12 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                     <button id="legal-open" type="button" class="pill">Aviso legal y privacidad</button>
                 </div>
             </div>
+            <div class="garage-card permissions-card">
+                <h3>Permisos y privacidad</h3>
+                <p class="garage-note">Aquí ves qué permisos usa la app y puedes activarlos o desactivarlos. Los permisos del sistema solo se retiran desde los ajustes del móvil: te llevamos con el botón «Abrir ajustes».</p>
+                <ul id="permissions-list"></ul>
+                <p id="permissions-note" class="garage-note" hidden></p>
+            </div>
             <div class="garage-card guide-card">
                 <h3>Guía de uso</h3>
                 <p class="garage-note">Lo esencial de cada pantalla. La guía completa, con imágenes y ejemplos, está en PDF.</p>
@@ -597,8 +603,8 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                     <p>Compara lo que pagas con la media de España y de tu zona por repostaje, por semana o por mes. La tarjeta «Tu resumen» genera una imagen o un PDF con tu gasto, consumo y dónde repostas más.</p>
                 </details>
                 <details>
-                    <summary>Viajes, sin conexión y copia de seguridad</summary>
-                    <p>Graba viajes a mano, de forma automática o al conectar el Bluetooth de tu coche (Android). Sin conexión, la app usa los datos guardados. Exporta una copia de seguridad de vez en cuando: tus datos solo están en tu dispositivo.</p>
+                    <summary>Permisos, viajes, sin conexión y copia de seguridad</summary>
+                    <p>Graba viajes a mano, de forma automática o al conectar el Bluetooth de tu coche (Android). Sin conexión, la app usa los datos guardados. En «Permisos y privacidad» (arriba) activas o desactivas la ubicación y los avisos. Exporta una copia de seguridad de vez en cuando: tus datos solo están en tu dispositivo.</p>
                 </details>
                 <div class="about-links">
                     <a class="pill" href="https://gasolineraplus.vercel.app/docs/guia-usuario.pdf" target="_blank" rel="noopener noreferrer">Descargar la guía en PDF</a>
@@ -881,6 +887,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <script src="/js/trips.js"></script>
     <script src="/js/router-core.js"></script>
     <script src="/js/route.js"></script>
+    <script src="/js/permissions.js"></script>
 <?php if (!$isNative): ?>
     <script>
         if ('serviceWorker' in navigator && !window.Capacitor) {

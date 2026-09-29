@@ -63,6 +63,10 @@ Si el texto parece un lugar (`looksLikePlaceQuery`: existe algún municipio o lo
 
 Si `total = 0` y **ninguna gasolinera coincidió por texto** (`textMatched` es falso), el servidor intenta geocodificar y devuelve las de **20 km** alrededor del lugar, con `geocodedFrom` para avisar al usuario. Si sí hubo coincidencias de texto pero el radio las descartó, **no** se hace ese salto: el usuario ve la lista vacía y la ayuda «Prueba con más radio o escribe otra ubicación».
 
+## Lista por defecto sin ubicación (`cheapest`)
+
+Si el usuario no da su ubicación (o la rechaza), la pantalla de precios no queda vacía: muestra **las gasolineras más baratas de España** para el carburante y el horario elegidos (`OfflineEngine.cheapest`, sobre el lite JSON, ordenadas por precio y paginadas). La línea de estado lo dice y sugiere activar la ubicación. Es el modo `stationsMode = 'cheapest'` de `app.js`; el radio no se aplica. En cuanto llega la ubicación se pasa a `nearby`. También se muestra mientras se espera la respuesta del GPS.
+
 ## Sugerencias de lugares
 
 `suggestPlaces` devuelve hasta 8 municipios y localidades cuyo nombre normalizado empieza por el texto (municipios primero, después localidades distintas del municipio), ordenados alfabéticamente. Servidor: SQL con `UNION` y `ORDER BY grupo, label`. Cliente: recorrido del lite JSON con dos `Map` para no repetir.
