@@ -149,6 +149,22 @@ code, headers, _ = fetch(f'/api/stations/near?lat={BILBAO[0]}&lon={BILBAO[1]}', 
 allow_origin = headers.get('Access-Control-Allow-Origin') or headers.get('access-control-allow-origin') or ''
 check(allow_origin in ('*', 'https://localhost'), f'CORS: la app nativa (https://localhost) no puede leer la API ({allow_origin!r})')
 
+zone = get(f'/api/stats/zone-average?lat={BILBAO[0]}&lon={BILBAO[1]}&radius=10&fuel=gasoleo_a') or {}
+check(zone.get('estaciones', 0) > 0, 'zone-average: sin estaciones en la zona de Bilbao')
+check(zone.get('minimo', 0) <= zone.get('media', 0) <= zone.get('maximo', 0), 'zone-average: la media no esta entre el minimo y el maximo')
+zone_rows = DB.execute(
+    '''SELECT ideess, lat, lon FROM stations
+       WHERE lat BETWEEN ? AND ? AND lon BETWEEN ? AND ?
+       AND last_seen_date >= date((SELECT MAX(last_seen_date) FROM stations), ?)''',
+    (BILBAO[0] - 0.2, BILBAO[0] + 0.2, BILBAO[1] - 0.3, BILBAO[1] + 0.3, f'-{STALE_DAYS} days')).fetchall()
+zone_ids = [row[0] for row in zone_rows if haversine(BILBAO[0], BILBAO[1], row[1], row[2]) <= 10]
+zone_prices = [row[0] for row in DB.execute(
+    f"SELECT precio FROM price_history WHERE fecha = ? AND carburante = 'gasoleo_a' AND ideess IN ({','.join('?' * len(zone_ids))})",
+    [zone.get('fecha'), *zone_ids])]
+check(bool(zone_prices) and abs(sum(zone_prices) / len(zone_prices) - zone.get('media', 0)) < 0.0002, 'zone-average: la media no coincide con la base de datos')
+get(f'/api/stats/zone-average?lat={BILBAO[0]}&lon={BILBAO[1]}&fuel=nada', expect=422)
+get('/api/stats/zone-average?fuel=gasoleo_a', expect=422)
+
 print(f'{count} peticiones, {len(fails)} fallos, {len(skips)} omitidas')
 for skipped in skips:
     print(' SKIP', skipped)

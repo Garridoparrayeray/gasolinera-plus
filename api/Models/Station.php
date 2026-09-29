@@ -424,7 +424,64 @@ class Station
         ];
     }
 
-    
+    public function zoneAverage(float $lat, float $lon, float $radiusKm, string $fuel, ?string $date, int $staleStationDays): ?array
+    {
+        $bbox = self::boundingBox($lat, $lon, $radiusKm);
+        $stmt = $this->pdo->prepare(
+            'SELECT ideess, lat, lon FROM stations WHERE lat BETWEEN :south AND :north AND lon BETWEEN :west AND :east'
+            . self::staleClause($staleStationDays)
+        );
+        $stmt->execute(['south' => $bbox['south'], 'north' => $bbox['north'], 'west' => $bbox['west'], 'east' => $bbox['east']]);
+
+        $ideessList = [];
+        foreach ($stmt->fetchAll() as $row) {
+            if (self::haversineKm($lat, $lon, (float)$row['lat'], (float)$row['lon']) <= $radiusKm) {
+                $ideessList[] = $row['ideess'];
+            }
+        }
+        if (!$ideessList) {
+            return null;
+        }
+
+        $latest = $this->pdo->query('SELECT MAX(fecha) FROM price_history')->fetchColumn();
+        if ($latest === false || $latest === null) {
+            return null;
+        }
+        $usedDate = $latest;
+        if ($date !== null && $date < $latest) {
+            $closest = $this->pdo->prepare(
+                'SELECT MAX(fecha) FROM price_history WHERE fecha <= :wanted AND julianday(:reference) - julianday(fecha) <= 3'
+            );
+            $closest->execute(['wanted' => $date, 'reference' => $date]);
+            $usedDate = $closest->fetchColumn();
+            if ($usedDate === false || $usedDate === null) {
+                return null;
+            }
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ideessList), '?'));
+        $priceStmt = $this->pdo->prepare(
+            "SELECT AVG(precio) AS media, MIN(precio) AS minimo, MAX(precio) AS maximo, COUNT(*) AS n
+             FROM price_history
+             WHERE fecha = ? AND carburante = ? AND ideess IN ($placeholders)"
+        );
+        $priceStmt->execute(array_merge([$usedDate, $fuel], $ideessList));
+        $row = $priceStmt->fetch();
+        if ($row === false || $row['media'] === null) {
+            return null;
+        }
+
+        return [
+            'fecha' => $usedDate,
+            'media' => round((float)$row['media'], 4),
+            'minimo' => (float)$row['minimo'],
+            'maximo' => (float)$row['maximo'],
+            'estaciones' => (int)$row['n'],
+            'radioKm' => $radiusKm,
+        ];
+    }
+
+
     private static function boundingBox(float $lat, float $lon, float $radiusKm): array
     {
         $deltaLat = $radiusKm / 111.0;

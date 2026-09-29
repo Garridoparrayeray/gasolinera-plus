@@ -438,6 +438,43 @@ class StationsController
         Response::json(['lat' => $place['lat'], 'lon' => $place['lon'], 'label' => $q]);
     }
 
+    public function zoneAverage(Request $request): void
+    {
+        $coordinates = $this->parseCoordinates($request->query('lat'), $request->query('lon'));
+        if ($coordinates === null) {
+            Response::error('lat y lon son obligatorios y deben ser coordenadas válidas', 422);
+            return;
+        }
+        $fuel = $this->normalizeFuel($request->query('fuel'));
+        if ($fuel === null) {
+            Response::error('Carburante no válido', 422);
+            return;
+        }
+        $date = $request->query('date');
+        if ($date !== null && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            Response::error('La fecha debe tener el formato AAAA-MM-DD', 422);
+            return;
+        }
+
+        $config = Config::current();
+        $radius = $request->queryInt('radius', 10);
+        if ($radius === null || $radius <= 0) {
+            $radius = 10;
+        }
+        if ($radius > $config['nearby_max_radius_km']) {
+            $radius = $config['nearby_max_radius_km'];
+        }
+
+        [$lat, $lon] = $coordinates;
+        $model = new Station(Database::connection());
+        $average = $model->zoneAverage($lat, $lon, (float)$radius, $fuel, $date, (int)$config['stale_station_days']);
+        if ($average === null) {
+            Response::error('Sin datos de precios en la zona para esa fecha', 404);
+            return;
+        }
+        Response::json($average);
+    }
+
     public function zoneComparison(Request $request, array $params): void
     {
         $fuel = $this->normalizeFuel($request->query('fuel'));
