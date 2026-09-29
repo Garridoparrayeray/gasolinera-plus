@@ -1,6 +1,10 @@
 (function () {
     'use strict';
 
+    if (window.Chart) {
+        Chart.defaults.font.family = "'Inter', sans-serif";
+    }
+
     const fuelLabel = AlertsStore.labelFor;
     const priceText = AlertsStore.priceText;
 
@@ -975,24 +979,35 @@
 
     const VIEWS = ['list', 'map', 'route', 'garage', 'stats', 'about'];
 
+    const DESKTOP_QUERY = window.matchMedia('(min-width: 1024px)');
+    const PRICE_VIEWS = ['list', 'map'];
+
+    function visibleViews(view) {
+        if (DESKTOP_QUERY.matches && PRICE_VIEWS.includes(view)) {
+            return PRICE_VIEWS;
+        }
+        return [view];
+    }
+
     function switchView(view) {
         if (!VIEWS.includes(view) || !document.getElementById('view-' + view)) {
             view = 'list';
         }
         state.currentView = view;
         document.documentElement.dataset.view = view;
+        const shown = visibleViews(view);
         for (const name of VIEWS) {
             const section = document.getElementById('view-' + name);
             const button = document.getElementById('view-' + name + '-btn');
             if (section) {
-                section.hidden = name !== view;
+                section.hidden = !shown.includes(name);
             }
             if (button) {
                 button.setAttribute('aria-selected', String(name === view));
             }
         }
         document.dispatchEvent(new CustomEvent('gp:view', { detail: view }));
-        if (view === 'map') {
+        if (shown.includes('map')) {
             refreshMapMarkers();
         }
         if (view === 'stats' && !state.statsNationalChart) {
@@ -1630,6 +1645,7 @@
             button.addEventListener('click', () => switchView(name));
         }
     }
+    DESKTOP_QUERY.addEventListener('change', () => switchView(state.currentView));
     el.heatmapToggle.addEventListener('click', toggleHeatmap);
     el.locateMe.addEventListener('click', locateOnMap);
 
