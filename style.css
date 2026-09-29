@@ -1192,3 +1192,5 @@ a { color: var(--primary); }
 #search-form > button { align-self: stretch; width: 52px; height: auto; }
 
 #app-logomark path, #geo-ask-logomark path { fill: var(--highlight); }
+
+#view-map.is-map-hidden #map-wrap, #view-map.is-map-hidden #map-note { display: none !important; }
