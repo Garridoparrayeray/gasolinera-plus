@@ -1,7 +1,7 @@
 {
   "installCommand": "true",
-  "buildCommand": "node tools/graph/fetch-graph.mjs || echo 'Sin grafo de carreteras publicado'",
-  "outputDirectory": ".",
+  "buildCommand": "node scripts/vercel-build.mjs",
+  "outputDirectory": "public",
   "regions": [
     "cdg1"
   ],
