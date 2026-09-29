@@ -1139,3 +1139,4 @@ html.is-driving { overflow: hidden; }
     #view-list { order: 2; }
     #map { height: 40vh; height: 40dvh; min-height: 260px; border-radius: 16px; }
 }
+#garage-savings.is-saving { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--primary-tint); color: var(--text); font-size: 1rem !important; font-weight: 700; }

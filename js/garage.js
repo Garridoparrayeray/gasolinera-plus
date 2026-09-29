@@ -370,10 +370,11 @@ const GPGarage = (() => {
         if (!saving.refuels) {
             el.savings.textContent = 'Sin datos de la media nacional para las fechas de tus repostajes.';
         } else if (saving.amount >= 0) {
-            el.savings.textContent = `Has ahorrado unos ${money(saving.amount)} frente a la media de España en ${saving.refuels} repostajes.`;
+            el.savings.textContent = `Gracias a Gasolinera+ llevas ahorrados unos ${money(saving.amount)} frente a la media de España en ${saving.refuels} repostajes.`;
         } else {
             el.savings.textContent = `Has pagado unos ${money(-saving.amount)} más que la media de España en ${saving.refuels} repostajes. Busca la más barata antes de repostar.`;
         }
+        el.savings.classList.toggle('is-saving', saving.refuels > 0 && saving.amount >= 0);
     }
 
     async function setActive(id) {
