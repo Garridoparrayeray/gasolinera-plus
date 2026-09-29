@@ -573,6 +573,37 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                     <button id="legal-open" type="button" class="pill">Aviso legal y privacidad</button>
                 </div>
             </div>
+            <div class="garage-card guide-card">
+                <h3>Guía de uso</h3>
+                <p class="garage-note">Lo esencial de cada pantalla. La guía completa, con imágenes y ejemplos, está en PDF.</p>
+                <details>
+                    <summary>Buscar gasolineras</summary>
+                    <p>En Listado elige carburante, radio, orden y horario y pulsa «Buscar gasolineras». Puedes buscar por pueblo, calle, código postal o marca, incluso juntando palabras («repsol amorebieta»). Con tu ubicación activada, las marcas y calles solo salen dentro del radio elegido.</p>
+                </details>
+                <details>
+                    <summary>La ficha, favoritas y comparador</summary>
+                    <p>«Ver ficha» muestra todos los precios con su tendencia, el horario, la media de la zona y el gráfico de 14 días. Desde ahí la guardas en favoritas (con avisos de bajada de precio), la añades al comparador (hasta 5) o abres «Cómo llegar».</p>
+                </details>
+                <details>
+                    <summary>Planificar una ruta</summary>
+                    <p>En Ruta indica origen y destino, elige cuánto puedes desviarte y pulsa «Calcular ruta». Verás las gasolineras del camino, la más barata resaltada, y podrás recalcular pasando por una. Con tu coche añadido, la app te dice dónde parar según tu depósito.</p>
+                </details>
+                <details>
+                    <summary>Tu coche y tus repostajes</summary>
+                    <p>En Coche añade tu coche y anota cada repostaje con el asistente de seis pasos: gasolinera, fecha y precio, total, litros, kilómetros y comprobación. Puedes cancelar en cualquier paso. La app calcula tu consumo real, tu coste por kilómetro y lo que te queda en el depósito.</p>
+                </details>
+                <details>
+                    <summary>Comparar con la media y tu resumen</summary>
+                    <p>Compara lo que pagas con la media de España y de tu zona por repostaje, por semana o por mes. La tarjeta «Tu resumen» genera una imagen o un PDF con tu gasto, consumo y dónde repostas más.</p>
+                </details>
+                <details>
+                    <summary>Viajes, sin conexión y copia de seguridad</summary>
+                    <p>Graba viajes a mano, de forma automática o al conectar el Bluetooth de tu coche (Android). Sin conexión, la app usa los datos guardados. Exporta una copia de seguridad de vez en cuando: tus datos solo están en tu dispositivo.</p>
+                </details>
+                <div class="about-links">
+                    <a class="pill" href="https://gasolineraplus.vercel.app/docs/guia-usuario.pdf" target="_blank" rel="noopener noreferrer">Descargar la guía en PDF</a>
+                </div>
+            </div>
 <?php if (!$isNative): ?>
         <section id="get-app" aria-labelledby="get-app-title">
             <h3 id="get-app-title">Gasolinera+ como app</h3>

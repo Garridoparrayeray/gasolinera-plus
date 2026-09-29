@@ -25,6 +25,7 @@ const copies = [
     'privacidad.html',
     'data/stations-lite.json',
     'data/road-graph',
+    'docs/guia-usuario.pdf',
 ];
 
 for (const entry of copies) {

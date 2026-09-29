@@ -1305,3 +1305,12 @@ html.is-offline #view-stats > *:not(.offline-block) { opacity: 0.4; pointer-even
 #offline-banner { position: fixed; left: 12px; right: 12px; bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 60; margin: 0; padding: 10px 14px; background: #FFB020; color: #111111; font-size: 0.85rem; font-weight: 700; border: 1px solid #111111; }
 #offline-banner[hidden] { display: none; }
 @media (min-width: 1024px) { #offline-banner { left: 50%; right: auto; width: min(560px, 90vw); transform: translateX(-50%); bottom: 96px; } }
+
+/* Guía de uso en la pestaña Info */
+.guide-card details { border-top: 1px solid var(--border); padding: 12px 0; }
+.guide-card details:last-of-type { border-bottom: 1px solid var(--border); }
+.guide-card summary { cursor: pointer; font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+.guide-card summary::-webkit-details-marker { display: none; }
+.guide-card summary::after { content: '+'; color: var(--primary); font-weight: 800; }
+.guide-card details[open] summary::after { content: '−'; }
+.guide-card details p { margin: 10px 0 0; color: var(--text-secondary); font-size: 0.95rem; }

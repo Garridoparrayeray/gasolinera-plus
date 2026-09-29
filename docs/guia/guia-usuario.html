@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Gasolinera+ · Guía de uso</title>
+<link rel="stylesheet" href="../../vendor/fonts/fonts.css">
+<style>
+    @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+    @page :first { margin: 0; }
+    :root { --orange: #FF7A1A; --orange-dark: #C2540A; --ink: #111111; --paper: #FFFFFF; --soft: #F6F5F3; --line: #CFCBC3; --muted: #45423D; }
+    * { box-sizing: border-box; }
+    html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { margin: 0; font-family: 'Inter', sans-serif; font-size: 10.5pt; line-height: 1.5; color: var(--ink); background: var(--paper); }
+    h1, h2, h3 { font-family: 'Bricolage Grotesque', 'Inter', sans-serif; margin: 0; letter-spacing: -0.01em; }
+    .cover { height: 297mm; padding: 26mm 20mm; background: var(--ink); color: #FFFFFF; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; break-after: page; }
+    .cover .bar { height: 8mm; background: var(--orange); margin: -26mm -20mm 0; }
+    .cover h1 { font-size: 46pt; line-height: 1; font-weight: 800; }
+    .cover h1 .plus { color: var(--orange); }
+    .cover .subtitle { font-family: 'Bricolage Grotesque', sans-serif; font-size: 22pt; font-weight: 500; margin-top: 8mm; }
+    .cover .lead { max-width: 120mm; color: #D0CCC4; font-size: 12pt; margin-top: 10mm; }
+    .cover .foot { color: #D0CCC4; font-size: 10pt; border-top: 1px solid #444444; padding-top: 6mm; }
+    .toc { page-break-after: always; break-after: page; }
+    .toc h2 { font-size: 24pt; margin-bottom: 8mm; border-bottom: 4px solid var(--orange); padding-bottom: 3mm; }
+    .toc ol { list-style: none; padding: 0; margin: 0; counter-reset: item; }
+    .toc li { counter-increment: item; display: flex; gap: 6mm; padding: 3mm 0; border-bottom: 1px solid var(--line); font-size: 12pt; }
+    .toc li::before { content: counter(item, decimal-leading-zero); font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; color: var(--orange-dark); min-width: 10mm; }
+    section.chapter { page-break-before: always; break-before: page; }
+    section.chapter:first-of-type { page-break-before: auto; break-before: auto; }
+    .chapter h2 { font-size: 22pt; margin-bottom: 6mm; padding-bottom: 3mm; border-bottom: 4px solid var(--orange); display: flex; gap: 5mm; align-items: baseline; }
+    .chapter h2 .num { color: var(--orange-dark); }
+    h3 { font-size: 13pt; margin: 6mm 0 2mm; }
+    p { margin: 0 0 3mm; }
+    ul, ol.steps { margin: 0 0 4mm; padding-left: 6mm; }
+    li { margin-bottom: 1.5mm; }
+    ol.steps { counter-reset: step; list-style: none; padding: 0; }
+    ol.steps li { counter-increment: step; display: flex; gap: 4mm; padding: 3mm 4mm; background: var(--soft); border-left: 4px solid var(--orange); margin-bottom: 2.5mm; break-inside: avoid; }
+    ol.steps li::before { content: counter(step); font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 14pt; color: var(--orange-dark); min-width: 6mm; }
+    .tip { border: 2px solid var(--ink); background: var(--soft); padding: 4mm 5mm; margin: 4mm 0; break-inside: avoid; }
+    .tip strong.label { display: inline-block; background: var(--ink); color: #FFFFFF; padding: 0.5mm 2.5mm; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 2mm; }
+    .warn { border-left: 5px solid var(--orange); background: #FFF0E3; padding: 4mm 5mm; margin: 4mm 0; break-inside: avoid; }
+    table { width: 100%; border-collapse: collapse; margin: 3mm 0 5mm; font-size: 10pt; break-inside: avoid; }
+    th { background: var(--ink); color: #FFFFFF; text-align: left; padding: 2.5mm 3mm; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; }
+    td { padding: 2.5mm 3mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+    td:first-child { font-weight: 700; white-space: nowrap; }
+    .pill { display: inline-block; background: var(--orange); color: var(--ink); font-weight: 700; padding: 0.4mm 2.5mm; font-size: 9.5pt; }
+    .pill.dark { background: var(--ink); color: #FFFFFF; }
+    .qa dt { font-weight: 700; margin-top: 4mm; }
+    .qa dd { margin: 1mm 0 0; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+    <div class="bar"></div>
+    <div>
+        <h1>GASOLINERA<span class="plus">+</span></h1>
+        <div class="subtitle">Guía de uso</div>
+        <p class="lead">Encuentra la gasolina más barata cerca de ti o en tu ruta, lleva las cuentas de tu coche y descubre cuánto ahorras. Todo lo personal se queda en tu móvil.</p>
+    </div>
+    <div class="foot">Precios oficiales del Ministerio para la Transición Ecológica · Mapas de OpenStreetMap · Proyecto independiente</div>
+</div>
+
+<div class="toc">
+    <h2>Contenido</h2>
+    <ol>
+        <li>Primeros pasos</li>
+        <li>Buscar gasolineras</li>
+        <li>La ficha de una gasolinera</li>
+        <li>Favoritas y comparador</li>
+        <li>Planificar una ruta</li>
+        <li>Tu coche y tus repostajes</li>
+        <li>Comparar lo que pagas con la media</li>
+        <li>Viajes</li>
+        <li>Tu resumen, para guardar y compartir</li>
+        <li>Estadísticas de precios</li>
+        <li>Sin conexión, avisos y copia de seguridad</li>
+        <li>Preguntas frecuentes</li>
+    </ol>
+</div>
+
+<section class="chapter">
+    <h2><span class="num">01</span> Primeros pasos</h2>
+    <p>Abajo tienes cinco botones grandes para moverte por la aplicación:</p>
+    <table>
+        <tr><th>Botón</th><th>Para qué sirve</th></tr>
+        <tr><td>Listado</td><td>Gasolineras cerca de ti, en lista y en mapa a la vez.</td></tr>
+        <tr><td>Ruta</td><td>Calcular un viaje y ver dónde te conviene repostar por el camino.</td></tr>
+        <tr><td>Coche</td><td>Tu coche, tus repostajes, tus viajes y tus comparaciones.</td></tr>
+        <tr><td>Estad.</td><td>Cómo evolucionan los precios en España.</td></tr>
+        <tr><td>Info</td><td>Quién hace la app, aviso legal y esta guía.</td></tr>
+    </table>
+    <h3>Al abrir la app por primera vez</h3>
+    <ol class="steps">
+        <li>Te pedirá permiso para usar tu ubicación. Con ella verás las gasolineras que tienes cerca. Si prefieres no darlo, puedes buscar por pueblo, calle o marca.</li>
+        <li>Elige tu carburante en el primer selector (Gasóleo A, Gasolina 95 E5…). La app lo recordará.</li>
+        <li>Si tienes coche, ve a <span class="pill dark">Coche</span> y añádelo: así la app adapta el carburante y hace todos los cálculos por ti.</li>
+    </ol>
+    <div class="tip"><strong class="label">Sin cuentas</strong> No hay registro ni contraseñas. Tus coches, repostajes y viajes se guardan solo en tu dispositivo.</div>
+</section>
+
+<section class="chapter">
+    <h2><span class="num">02</span> Buscar gasolineras</h2>
+    <p>En <span class="pill dark">Listado</span> ves las gasolineras cercanas ordenadas por precio y un mapa con todas ellas.</p>
+    <h3>Los filtros</h3>
+    <table>
+        <tr><th>Filtro</th><th>Opciones</th></tr>
+        <tr><td>Carburante</td><td>Gasóleo A, Gasolina 95 y 98, GLP y muchos más.</td></tr>
+        <tr><td>Radio</td><td>1, 3, 5, 10 o 25 km alrededor de ti.</td></tr>
+        <tr><td>Orden</td><td>Más barata o más cercana.</td></tr>
+        <tr><td>Horario</td><td>Cualquiera, abiertas 24 horas o abiertas ahora.</td></tr>
+    </table>
+    <p>Cambia cualquiera y pulsa <span class="pill">Buscar gasolineras</span>. Mientras busca, verás «Buscando…».</p>
+    <h3>Buscar por nombre</h3>
+    <p>Escribe en el buscador un pueblo, una calle, un código postal o una marca. Puedes juntar varias palabras: <em>repsol amorebieta</em> encuentra las REPSOL de Amorebieta.</p>
+    <div class="warn">Si buscas una marca o una calle con tu ubicación activada, solo salen las que están dentro del radio elegido. Si no aparece ninguna, sube el radio o escribe el nombre de otro lugar.</div>
+    <h3>El mapa</h3>
+    <ul>
+        <li><strong>Ocultar mapa</strong> lo esconde para desplazarte por la lista sin que estorbe. Tu elección se recuerda.</li>
+        <li>Los colores muestran el precio: verde barato, rojo caro.</li>
+        <li><strong>Mapa de calor de precio</strong> tiñe las zonas más baratas y más caras.</li>
+        <li><strong>Mi ubicación</strong> centra el mapa en ti.</li>
+        <li>En el móvil, toca «Toca para mover el mapa» para moverlo sin que la página se desplace.</li>
+        <li>Al tocar una gasolinera en la lista o en el mapa se marca en los dos sitios. <strong>Ver todas</strong> quita la selección.</li>
+    </ul>
+</section>
+
+<section class="chapter">
+    <h2><span class="num">03</span> La ficha de una gasolinera</h2>
+    <p>Pulsa <span class="pill dark">Ver ficha</span> en cualquier gasolinera. Mientras se prepara, verás «Cargando…» y la ficha se abrirá cuando esté completa, con su gráfico.</p>
+    <table>
+        <tr><th>Elemento</th><th>Qué muestra o hace</th></tr>
+        <tr><td>Marca</td><td>El nombre de la gasolinera en una etiqueta negra.</td></tr>
+        <tr><td>Precios</td><td>Todos los carburantes, con una flecha: ▲ sube, ▼ baja, = igual que ayer.</td></tr>
+        <tr><td>Horario</td><td>Si está abierta ahora, o cuándo abre.</td></tr>
+        <tr><td>Media de la zona</td><td>Cómo está su precio frente a las demás del mismo municipio.</td></tr>
+        <tr><td>Gráfico</td><td>Los precios de los últimos 14 días.</td></tr>
+        <tr><td>Cómo llegar</td><td>Abre Google Maps con el destino puesto.</td></tr>
+        <tr><td>Repostar aquí</td><td>Abre el asistente de repostaje con esta gasolinera ya elegida.</td></tr>
+    </table>
+</section>
+
+<section class="chapter">
+    <h2><span class="num">04</span> Favoritas y comparador</h2>
+    <h3>Favoritas ♥</h3>
+    <p>Pulsa el corazón de la ficha para guardar una gasolinera. Las tienes todas en el botón del corazón de arriba. Desde ahí puedes activar los <strong>avisos de bajada de precio</strong>: te avisaremos cuando una favorita baje.</p>
+    <h3>Comparador</h3>
+    <p>Añade hasta 5 gasolineras a comparar desde su ficha. En el botón de las barras de arriba verás una tabla con una columna por gasolinera y una fila por carburante, para ver los precios uno junto a otro. Quita cualquiera con el botón <strong>Quitar</strong>.</p>
+</section>
+
+<section class="chapter">
+    <h2><span class="num">05</span> Planificar una ruta</h2>
+    <p>En <span class="pill dark">Ruta</span> indica el origen y el destino. Puedes usar <strong>Mi ubicación</strong>, escribir un pueblo o una dirección, o tocar el mapa para elegir el destino.</p>
+    <ol class="steps">
+        <li>Elige hasta cuántos kilómetros de la ruta aceptas desviarte para repostar.</li>
+        <li>Pulsa <span class="pill">Calcular ruta</span>. La ruta se calcula en tu móvil; la primera vez descarga el mapa de carreteras.</li>
+        <li>Verás la distancia, el tiempo, un aviso si lleva peaje y las gasolineras del camino, de la más barata a la más cara o por kilómetro.</li>
+        <li>Pulsa <strong>Parar aquí</strong> en una gasolinera para recalcular la ruta pasando por ella y ver cuánto se alarga.</li>
+        <li>Con <strong>Iniciar en Google Maps</strong> sales a navegar con tu parada incluida.</li>
+    </ol>
+    <div class="tip"><strong class="label">Con tu coche</strong> Si has añadido tu coche, la app calcula cuánto combustible gastarás, el coste aproximado y te dice dónde parar según lo que te quede en el depósito. Puedes mover el deslizador del depósito si sabes cuánto llevas.</div>
+</section>
+
+<section class="chapter">
+    <h2><span class="num">06</span> Tu coche y tus repostajes</h2>
+    <h3>Añadir tu coche</h3>
+    <p>En <span class="pill dark">Coche</span> pulsa <strong>Añadir mi coche</strong> y rellena nombre, carburante, capacidad del depósito, consumo homologado y kilómetros actuales. Puedes tener varios coches y cambiar de uno a otro.</p>
+    <h3>Lo que ves</h3>
+    <ul>
+        <li>Una barra con lo que te queda en el depósito y tu autonomía estimada.</li>
+        <li><strong>Consumo medio</strong>: al principio el del fabricante; después, el tuyo real.</li>
+        <li><strong>Coste por km</strong>, <strong>gasto de este mes</strong> y <strong>cuentakilómetros</strong>.</li>
+        <li>Gráficos de consumo y de gasto por meses.</li>
+    </ul>
+    <h3>Anotar un repostaje, paso a paso</h3>
+    <p>Pulsa <span class="pill">Anotar repostaje</span>. Un asistente te guía por seis pasos y puedes <strong>cancelar</strong> en cualquier momento.</p>
+    <ol class="steps">
+        <li><strong>Gasolinera.</strong> Al tocar el campo verás tus favoritas y las más cercanas. Busca por nombre o sigue sin nombre si no te acuerdas. Con el nombre, tu resumen dirá dónde repostas más.</li>
+        <li><strong>Fecha, hora y precio.</strong> El precio se rellena solo con el de ese día; puedes cambiarlo.</li>
+        <li><strong>Total pagado.</strong> Lo que marcó el surtidor.</li>
+        <li><strong>Litros.</strong> Se calculan solos. Te preguntamos si son correctos: <em>Sí, es correcto</em> o <em>No, editar</em>.</li>
+        <li><strong>Kilómetros.</strong> Te proponemos una cifra según tu ritmo; corrígela con la del cuentakilómetros. Si algo no cuadra, te lo diremos y decides tú.</li>
+        <li><strong>Comprobación.</strong> Revisas todo, marcas si llenaste el depósito y guardas.</li>
+    </ol>
+    <div class="warn">Si marcas «He llenado el depósito» pero los litros son muy pocos para llenarlo, la app desmarca la casilla sola: así tu consumo no se calcula mal.</div>
+    <h3>Corregir o borrar</h3>
+    <p>Toca cualquier repostaje de la lista para editarlo entero o borrarlo. <strong>Actualizar km</strong> pone al día el cuentakilómetros sin anotar repostaje.</p>
+</section>
+
+<section class="chapter">
+    <h2><span class="num">07</span> Comparar lo que pagas con la media</h2>
+    <p>La app guarda en tu móvil la media de precios de cada día. Así sabe si lo que pagaste estuvo por encima o por debajo.</p>
+    <table>
+        <tr><th>Botón</th><th>Qué compara</th></tr>
+        <tr><td>Por repostaje</td><td>Cada repostaje frente a la media de España y de tu zona ese día.</td></tr>
+        <tr><td>Por semana</td><td>Todo lo que repostaste cada semana frente a la media de esa semana.</td></tr>
+        <tr><td>Por mes</td><td>Lo mismo por meses.</td></tr>
+    </table>
+    <p>Debajo del gráfico verás un texto claro: «Gracias a Gasolinera+ llevas ahorrados unos X €» o «Vas unos X € por encima de la media», por separado frente a España y frente a tu zona.</p>
+    <div class="tip"><strong class="label">Para que salga bien</strong> Elige siempre la gasolinera al anotar el repostaje: sin ella no se puede comparar con tu zona. La comparación por semanas y meses funciona en la app instalada.</div>
+</section>
+
+<section class="chapter">
+    <h2><span class="num">08</span> Viajes</h2>
+    <p>La app puede grabar tus viajes con el GPS para saber cuántos kilómetros haces, a qué velocidad y cuánto combustible gastas.</p>
+    <table>
+        <tr><th>Forma</th><th>Cómo funciona</th></tr>
+        <tr><td>Manual</td><td>Pulsa <em>Empezar viaje</em> y <em>Terminar viaje</em>. En la app puedes bloquear el móvil; en el navegador debes dejar la pantalla encendida.</td></tr>
+        <tr><td>Automática</td><td>Activa <em>Detectar mis viajes en coche automáticamente</em>. Empieza y termina sola. Necesita ubicación «todo el tiempo» y actividad física.</td></tr>
+        <tr><td>Bluetooth (Android)</td><td>Activa <em>Empezar al conectarme al Bluetooth de mi coche</em> y elige tu coche entre los dispositivos emparejados. Empieza al conectar y termina al desconectar.</td></tr>
+    </table>
+    <h3>Al terminar</h3>
+    <p>Verás un resumen: distancia, duración, velocidad media y máxima, un recorrido en el mapa coloreado por velocidad, frenazos y acelerones, una puntuación de conducción eficiente y el consumo y coste estimados. Los kilómetros se suman a tu cuentakilómetros.</p>
+    <div class="warn">Para que los viajes automáticos funcionen con la app cerrada, deja que Gasolinera+ ignore el ahorro de batería. Un botón te lleva a los ajustes.</div>
+</section>
+
+<section class="chapter">
+    <h2><span class="num">09</span> Tu resumen, para guardar y compartir</h2>
+    <p>En <span class="pill dark">Coche</span>, la tarjeta <strong>Tu resumen</strong> convierte tu gasto en una imagen vertical con los datos clave.</p>
+    <ol class="steps">
+        <li>Elige el periodo: <em>Este mes</em>, <em>Este año</em> o <em>Todo</em>.</li>
+        <li><strong>Guardar imagen</strong> o <strong>Guardar PDF</strong> las deja en tu dispositivo.</li>
+        <li><strong>Compartir imagen</strong> abre el menú de compartir de tu móvil.</li>
+    </ol>
+    <p>La imagen incluye lo gastado, litros, precio medio, kilómetros, consumo, coste por km, tu repostaje más barato, dónde has repostado más veces y a qué precio, y cuánto ahorras o pagas de más frente a la media de España.</p>
+</section>
+
+<section class="chapter">
+    <h2><span class="num">10</span> Estadísticas de precios</h2>
+    <p>En <span class="pill dark">Estad.</span> ves cómo se mueven los precios:</p>
+    <ul>
+        <li>Media nacional de un carburante, por día o por mes, con la variación del periodo.</li>
+        <li>Comparación de los carburantes principales.</li>
+        <li>Precio medio por provincia, de la más barata a la más cara.</li>
+        <li>Cuántas gasolineras hay en cada tramo de precio.</li>
+        <li>El histórico de una gasolinera concreta: búscala por nombre.</li>
+    </ul>
+    <p>Las estadísticas necesitan conexión a internet.</p>
+</section>
+
+<section class="chapter">
+    <h2><span class="num">11</span> Sin conexión, avisos y copia de seguridad</h2>
+    <h3>Sin conexión</h3>
+    <p>Cuando pierdes la cobertura verás un aviso amarillo. En la app, las gasolineras cercanas, el mapa, tu garaje y tus rutas siguen funcionando con los datos guardados. El histórico de precios y las estadísticas necesitan internet.</p>
+    <h3>Mapas sin conexión</h3>
+    <p>En <span class="pill dark">Coche</span>, más abajo, puedes descargar el mapa de tu comunidad para verlo sin cobertura. Ocupa bastante: hazlo con Wi-Fi.</p>
+    <h3>Avisos de bajada de precio</h3>
+    <p>En el panel de favoritas, activa el interruptor. Te avisaremos como mucho una vez al día si baja el precio de alguna favorita.</p>
+    <h3>Copia de seguridad</h3>
+    <p>Como tus datos solo están en tu dispositivo, guarda una copia de vez en cuando con <strong>Exportar copia</strong>. Si cambias de móvil, usa <strong>Importar copia</strong>. Puedes incluir o no los recorridos de los viajes.</p>
+    <div class="tip"><strong class="label">Importante</strong> Si borras los datos de la aplicación sin haber exportado una copia, se pierden tus coches, repostajes y viajes.</div>
+</section>
+
+<section class="chapter">
+    <h2><span class="num">12</span> Preguntas frecuentes</h2>
+    <dl class="qa">
+        <dt>¿Por qué no sale la gasolinera que busco?</dt>
+        <dd>Comprueba el radio y el carburante. Si buscas por nombre, prueba con la marca y el pueblo juntos. Algunas gasolineras no venden todos los carburantes.</dd>
+        <dt>¿Los precios son de hoy?</dt>
+        <dd>Se actualizan cada día con los datos oficiales del Ministerio. Pueden haber cambiado en el surtidor durante el día.</dd>
+        <dt>¿Por qué mi consumo aparece como «homologado»?</dt>
+        <dd>Para medir tu consumo real hacen falta al menos dos repostajes con el depósito lleno. Hasta entonces usamos el del fabricante.</dd>
+        <dt>Me salté anotar un repostaje. ¿Qué hago?</dt>
+        <dd>Anota el siguiente igualmente. Si los kilómetros indican que falta uno, la app lo detecta y no cuenta ese tramo para tu consumo.</dd>
+        <dt>¿Guardan mi ubicación?</dt>
+        <dd>No. No hay cuentas ni servidor con tus datos. Tus viajes y tu garaje se quedan en tu móvil.</dd>
+        <dt>¿Funciona en iPhone?</dt>
+        <dd>Sí. En iPhone la detección automática usa el movimiento del teléfono; el arranque por Bluetooth del coche solo existe en Android.</dd>
+        <dt>Los mapas o los gráficos no cargan.</dt>
+        <dd>Comprueba la conexión. Si es muy lenta verás «Cargando…» hasta que termine.</dd>
+    </dl>
+    <div class="tip"><strong class="label">Proyecto</strong> Gasolinera+ es un proyecto independiente y sin ánimo de lucro. No está afiliado al Ministerio ni a ninguna marca de gasolineras.</div>
+</section>
+
+</body>
+</html>
