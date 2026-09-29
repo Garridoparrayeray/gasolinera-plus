@@ -221,11 +221,11 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             </button>
             <button id="view-garage-btn" type="button" role="tab" aria-selected="false">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14v-5l-2-5H7l-2 5v5z"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/></svg>
-                <span>Mi coche</span>
+                <span>Coche</span>
             </button>
             <button id="view-stats-btn" type="button" role="tab" aria-selected="false">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/></svg>
-                <span>Estadísticas</span>
+                <span>Datos</span>
             </button>
         </nav>
 

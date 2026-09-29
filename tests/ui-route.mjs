@@ -48,7 +48,7 @@ await waitFor("document.querySelectorAll('#route-stations li').length > 0", 1500
 const count = await ev("document.querySelectorAll('#route-stations li').length");
 check('lista gasolineras del camino', count > 10, `${count}`);
 check('marca la mas barata', (await ev("document.querySelectorAll('.route-station--cheapest').length")) >= 1);
-check('invita a anadir coche para el consejo', (await ev("document.getElementById('route-refuel-advice').textContent")).includes('Mi coche'));
+check('invita a anadir coche para el consejo', (await ev("document.getElementById('route-refuel-advice').textContent")).includes('"Coche"'));
 
 s.where = 'parada';
 await ev("document.querySelector('#route-stations .route-station__stop').click()");

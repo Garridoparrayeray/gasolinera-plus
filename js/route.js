@@ -433,7 +433,7 @@ const GPRoute = (() => {
                 }
                 return best;
             }, null);
-            let text = 'Añade tu coche en "Mi coche" y te diré hasta dónde llegas y dónde te conviene parar.';
+            let text = 'Añade tu coche en "Coche" y te diré hasta dónde llegas y dónde te conviene parar.';
             if (cheapest) {
                 text += ` La más barata del camino es ${cheapest.station.rotulo} (km ${number(cheapest.alongKm, 0)}) a ${number(cheapest.price, 3)} €/${unit}.`;
             }
