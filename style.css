@@ -1197,4 +1197,5 @@ a { color: var(--primary); }
 
 /* Mapas: en pantallas tactiles se activan al tocarlos para no atrapar el scroll de la pagina */
 .map-shield { position: absolute; inset: 0; z-index: 1100; display: flex; align-items: flex-end; justify-content: center; padding: 12px; border: 0; background: rgba(0, 0, 0, 0.04); cursor: pointer; }
-.map-shield span { padding: 10px 16px; background: var(--surface); color: var(--text); border: 1px solid var(--field-border); font-size: 0.9rem; font-weight: 700; }.map-guard-wrap { position: relative; }
+.map-shield span { padding: 10px 16px; background: var(--surface); color: var(--text); border: 1px solid var(--field-border); font-size: 0.9rem; font-weight: 700; }
+.map-guard-wrap { position: relative; width: 100%; }
