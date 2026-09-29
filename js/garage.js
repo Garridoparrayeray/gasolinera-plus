@@ -803,7 +803,7 @@ const GPGarage = (() => {
             el.stationResults.hidden = true;
             return;
         }
-        const params = { q: query, sort: 'price', fuel: vehicle.fuel, limit: 6 };
+        const params = { q: query, sort: 'price', fuel: vehicle.fuel, limit: 25 };
         const here = await currentLocation();
         if (here) {
             params.lat = here.lat;
@@ -860,7 +860,7 @@ const GPGarage = (() => {
         const here = await currentLocation();
         if (here) {
             try {
-                const data = await Api.near({ lat: here.lat, lon: here.lon, fuel: vehicle.fuel, sort: 'distance', radius: 25, limit: 10, offset: 0 });
+                const data = await Api.near({ lat: here.lat, lon: here.lon, fuel: vehicle.fuel, sort: 'distance', radius: 25, limit: 15, offset: 0 });
                 nearby = data.stations || [];
             } catch (error) {
                 nearby = [];
