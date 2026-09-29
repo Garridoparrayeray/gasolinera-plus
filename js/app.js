@@ -56,7 +56,6 @@
         mapToggle: document.getElementById('map-toggle'),
         stationsList: document.getElementById('stations-list'),
         stationsEmpty: document.getElementById('stations-empty'),
-        stationsEmptyAnywhere: document.getElementById('stations-empty-anywhere'),
         stationsGeocodedNote: document.getElementById('stations-geocoded-note'),
         paginationNav: document.getElementById('stations-pagination'),
         paginationPrev: document.getElementById('pagination-prev'),
@@ -730,11 +729,7 @@
             if (state.stationsMode === 'search') {
                 data = await Api.search({ q: state.stationsQuery, lat: state.userLat, lon: state.userLon, ...filters, ...page });
             } else {
-                let nearRadius = filters.radius;
-                if (nearRadius === '0') {
-                    nearRadius = '50';
-                }
-                data = await Api.near({ lat: state.userLat, lon: state.userLon, ...filters, radius: nearRadius, ...page });
+                data = await Api.near({ lat: state.userLat, lon: state.userLon, ...filters, ...page });
             }
         } catch (e) {
             state.stationsLoading = false;
@@ -913,10 +908,8 @@
         el.stationsList.innerHTML = '';
         el.stationsEmpty.textContent = 'No hay gasolineras que coincidan con la búsqueda.';
         el.stationsEmpty.hidden = stations.length > 0;
-        el.stationsEmptyAnywhere.hidden = true;
-        if (stations.length === 0 && el.filterRadius.value !== '0' && state.userLat !== null) {
-            el.stationsEmpty.textContent = `No hay gasolineras a ${el.filterRadius.value} km de ti. Prueba sin límite de distancia o escribe otra ubicación en el buscador.`;
-            el.stationsEmptyAnywhere.hidden = false;
+        if (stations.length === 0 && state.userLat !== null) {
+            el.stationsEmpty.textContent = `No hay gasolineras a ${el.filterRadius.value} km de ti. Prueba con más radio o escribe otra ubicación en el buscador.`;
         }
 
         const filterFuel = el.filterFuel.value;
@@ -1912,10 +1905,6 @@
         }
     }
     el.mapShowAll.addEventListener('click', clearSelection);
-    el.stationsEmptyAnywhere.addEventListener('click', () => {
-        el.filterRadius.value = '0';
-        el.filterRadius.dispatchEvent(new Event('change'));
-    });
     el.stationsSearchBtn.addEventListener('click', () => {
         const query = el.searchInput.value.trim();
         if (query.length >= 2) {

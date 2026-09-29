@@ -193,7 +193,6 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 <option value="5" selected>5 km</option>
                 <option value="10">10 km</option>
                 <option value="25">25 km</option>
-                <option value="0">Sin límite</option>
             </select>
             <select id="filter-sort" aria-label="Ordenar por">
                 <option value="price">Más barata</option>
@@ -241,7 +240,6 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             <p id="stations-geocoded-note" hidden></p>
             <ul id="stations-list"></ul>
             <p id="stations-empty" hidden>No hay gasolineras que coincidan con la búsqueda.</p>
-            <button id="stations-empty-anywhere" type="button" class="pill" hidden>Buscar sin límite de distancia</button>
             <nav id="stations-pagination" hidden aria-label="Paginación de resultados">
                 <button id="pagination-prev" type="button" class="pill">« Anterior</button>
                 <span id="pagination-status"></span>
