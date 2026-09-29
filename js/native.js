@@ -14,7 +14,7 @@ const GPNative = (() => {
         if (value) {
             return value;
         }
-        return '#4B6B00';
+        return '#FF7A1A';
     }
 
     function platform() {

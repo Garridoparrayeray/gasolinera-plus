@@ -68,7 +68,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <meta name="twitter:card" content="summary">
     <meta name="twitter:image" content="https://gasolineraplus.vercel.app/icons/icon-512.png">
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#4B6B00">
+    <meta name="theme-color" content="#111111">
     <link rel="apple-touch-icon" href="/icons/icon-maskable-192.png">
     <link rel="icon" href="/icons/icon-192.png">
     <link rel="stylesheet" href="/vendor/fonts/fonts.css">
@@ -91,9 +91,9 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             <div class="home-link-wrap">
                 <span id="app-logomark" aria-hidden="true">
                     <svg class="logo-gasolinera" viewBox="0 0 512 512">
-                        <rect width="512" height="512" rx="116" fill="#4B6B00"/>
+                        <rect width="512" height="512" rx="116" fill="#FF7A1A"/>
                         <g transform="translate(112,112) scale(4.5)">
-                            <path d="M32 3c1.6 11.6 10.4 16.2 15.6 24.6 5.6 9.1 2.4 22.3-7.3 27.7-2.7 1.6-5.5 2.3-8.3 2.4 5.5-4.6 7.1-11 3.7-16.3-2.1-3.2-5.6-5.1-5.8-10-3.3 3.3-4.6 7.3-3.9 11.5-4.4-2.7-6.4-6.9-6.5-11.8-4.2 4.6-5.6 10-4.2 15.9C10.8 41.5 10.2 33.8 13.5 26.5 17.4 18 30 14.7 32 3z" fill="#C6FF00"/>
+                            <path d="M32 3c1.6 11.6 10.4 16.2 15.6 24.6 5.6 9.1 2.4 22.3-7.3 27.7-2.7 1.6-5.5 2.3-8.3 2.4 5.5-4.6 7.1-11 3.7-16.3-2.1-3.2-5.6-5.1-5.8-10-3.3 3.3-4.6 7.3-3.9 11.5-4.4-2.7-6.4-6.9-6.5-11.8-4.2 4.6-5.6 10-4.2 15.9C10.8 41.5 10.2 33.8 13.5 26.5 17.4 18 30 14.7 32 3z" fill="#111111"/>
                         </g>
                     </svg>
                 </span>
@@ -124,9 +124,9 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         <dialog id="geo-ask">
             <span id="geo-ask-logomark" aria-hidden="true">
                 <svg class="logo-gasolinera" viewBox="0 0 512 512">
-                    <rect width="512" height="512" rx="116" fill="#4B6B00"/>
+                    <rect width="512" height="512" rx="116" fill="#FF7A1A"/>
                     <g transform="translate(112,112) scale(4.5)">
-                        <path d="M32 3c1.6 11.6 10.4 16.2 15.6 24.6 5.6 9.1 2.4 22.3-7.3 27.7-2.7 1.6-5.5 2.3-8.3 2.4 5.5-4.6 7.1-11 3.7-16.3-2.1-3.2-5.6-5.1-5.8-10-3.3 3.3-4.6 7.3-3.9 11.5-4.4-2.7-6.4-6.9-6.5-11.8-4.2 4.6-5.6 10-4.2 15.9C10.8 41.5 10.2 33.8 13.5 26.5 17.4 18 30 14.7 32 3z" fill="#C6FF00"/>
+                        <path d="M32 3c1.6 11.6 10.4 16.2 15.6 24.6 5.6 9.1 2.4 22.3-7.3 27.7-2.7 1.6-5.5 2.3-8.3 2.4 5.5-4.6 7.1-11 3.7-16.3-2.1-3.2-5.6-5.1-5.8-10-3.3 3.3-4.6 7.3-3.9 11.5-4.4-2.7-6.4-6.9-6.5-11.8-4.2 4.6-5.6 10-4.2 15.9C10.8 41.5 10.2 33.8 13.5 26.5 17.4 18 30 14.7 32 3z" fill="#111111"/>
                     </g>
                 </svg>
             </span>

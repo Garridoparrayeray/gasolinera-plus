@@ -314,8 +314,8 @@ const GPGarage = (() => {
                     {
                         label: `Real (${unit}/100 km)`,
                         data: intervals.map((interval) => +interval.lPer100.toFixed(2)),
-                        borderColor: '#5F8A00',
-                        backgroundColor: 'rgba(95, 138, 0, 0.14)',
+                        borderColor: '#E8710A',
+                        backgroundColor: 'rgba(232, 113, 10, 0.14)',
                         tension: 0.2,
                         fill: true,
                     },
@@ -341,7 +341,7 @@ const GPGarage = (() => {
             type: 'bar',
             data: {
                 labels: Object.keys(months).map(monthLabel),
-                datasets: [{ label: 'Gasto (€)', data: Object.values(months), backgroundColor: '#5F8A00' }],
+                datasets: [{ label: 'Gasto (€)', data: Object.values(months), backgroundColor: '#E8710A' }],
             },
             options: { responsive: true, plugins: { legend: { display: false } } },
         });
@@ -489,11 +489,11 @@ const GPGarage = (() => {
 
     function drawComparison(vehicle, rows) {
         const datasets = [
-            { label: 'Lo que pagaste', data: rows.map((row) => row.pricePerUnit), borderColor: '#5F8A00', tension: 0.2 },
+            { label: 'Lo que pagaste', data: rows.map((row) => row.pricePerUnit), borderColor: '#E8710A', tension: 0.2 },
             { label: 'Media de España', data: rows.map((row) => row.national), borderColor: '#1D4E89', borderDash: [6, 4], spanGaps: true },
         ];
         if (rows.some((row) => row.zone !== null)) {
-            datasets.push({ label: `Media de tu zona (${ZONE_RADIUS_KM} km)`, data: rows.map((row) => row.zone), borderColor: '#C77700', borderDash: [2, 3], spanGaps: true });
+            datasets.push({ label: `Media de tu zona (${ZONE_RADIUS_KM} km)`, data: rows.map((row) => row.zone), borderColor: '#0F8B8D', borderDash: [2, 3], spanGaps: true });
         }
         replaceChart('price', el.priceChart, {
             type: 'line',

@@ -527,8 +527,8 @@
                 datasets: [{
                     label: `Media nacional · ${fuelLabel(fuel)}`,
                     data: data.serie.map((p) => p.media),
-                    borderColor: '#5F8A00',
-                    backgroundColor: 'rgba(95, 138, 0, 0.14)',
+                    borderColor: '#E8710A',
+                    backgroundColor: 'rgba(232, 113, 10, 0.14)',
                     tension: 0.15,
                     fill: true,
                 }],
@@ -1239,8 +1239,8 @@
                 datasets: [{
                     label: `Media nacional · ${fuelLabel(fuel)}`,
                     data: data.serie.map((p) => p.media),
-                    borderColor: '#5F8A00',
-                    backgroundColor: 'rgba(95, 138, 0, 0.14)',
+                    borderColor: '#E8710A',
+                    backgroundColor: 'rgba(232, 113, 10, 0.14)',
                     tension: 0.15,
                     fill: true,
                 }],
@@ -1320,8 +1320,8 @@
                 datasets: [{
                     label: fuelLabel(fuel),
                     data: data.serie.map((p) => p.precio),
-                    borderColor: '#5F8A00',
-                    backgroundColor: 'rgba(95, 138, 0, 0.14)',
+                    borderColor: '#E8710A',
+                    backgroundColor: 'rgba(232, 113, 10, 0.14)',
                     tension: 0.15,
                     fill: true,
                 }],
@@ -1377,9 +1377,9 @@
     }
 
     const FUEL_CHART_COLORS = {
-        gasoleo_a: '#5F8A00',
+        gasoleo_a: '#E8710A',
         gasolina_95_e5: '#1D4E89',
-        gasoleo_premium: '#2F4400',
+        gasoleo_premium: '#8A3A00',
         gasolina_98_e5: '#4A90D9',
         adblue: '#5B8C5A',
         glp: '#B3261E',
@@ -1466,7 +1466,7 @@
                         if (p.provincia === priciest.provincia) {
                             return '#B3261E';
                         }
-                        return '#5F8A00';
+                        return '#E8710A';
                     }),
                 }],
             },
@@ -1507,7 +1507,7 @@
                 datasets: [{
                     label: 'Gasolineras',
                     data: data.buckets.map((b) => b.estaciones),
-                    backgroundColor: '#5F8A00',
+                    backgroundColor: '#E8710A',
                 }],
             },
             options: {
@@ -1664,8 +1664,8 @@
                 datasets: [{
                     label: fuelLabel(fuel),
                     data: data.serie.map((p) => p.precio),
-                    borderColor: '#5F8A00',
-                    backgroundColor: 'rgba(95, 138, 0, 0.14)',
+                    borderColor: '#E8710A',
+                    backgroundColor: 'rgba(232, 113, 10, 0.14)',
                     tension: 0.15,
                     fill: true,
                 }],

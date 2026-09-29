@@ -506,7 +506,7 @@ const GPRoute = (() => {
 
     function priceColor(price, min, max) {
         if (max === min) {
-            return '#5F8A00';
+            return '#E8710A';
         }
         const ratio = (price - min) / (max - min);
         return `hsl(${120 - ratio * 120}, 70%, 42%)`;
