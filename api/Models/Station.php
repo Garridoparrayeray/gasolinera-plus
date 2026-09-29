@@ -473,7 +473,7 @@ class Station
     
     private static function staleClause(int $staleStationDays): string
     {
-        return " AND last_seen_date >= date('now', '-$staleStationDays days')";
+        return " AND last_seen_date >= date((SELECT MAX(last_seen_date) FROM stations), '-$staleStationDays days')";
     }
 
     private function buildListItem(array $row, ?float $distanceKm, array $showFuels, array $pricesById, array $trends): array

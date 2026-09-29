@@ -53,14 +53,19 @@ function main(array $argv): void
 {
     $opts = parseArgs($argv);
     $mode = $opts['mode'];
-    if ($mode !== 'daily' && $mode !== 'backfill') {
-        fwrite(STDERR, "Error: --mode debe ser 'daily' o 'backfill'\n");
+    if ($mode !== 'daily' && $mode !== 'backfill' && $mode !== 'lite') {
+        fwrite(STDERR, "Error: --mode debe ser 'daily', 'backfill' o 'lite'\n");
         exit(1);
     }
 
     $output = $opts['output'];
     if ($output === null) {
         $output = DEFAULT_OUTPUT;
+    }
+
+    if ($mode === 'lite') {
+        generateLiteJson($output);
+        return;
     }
 
     echo "== Gasolinera+ database build (mode=$mode) ==\n";

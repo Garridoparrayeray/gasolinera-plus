@@ -88,8 +88,9 @@ const OfflineEngine = (() => {
         near: async ({ lat, lon, radius = 10, sort = 'price', fuel = 'gasoleo_a', open, offset = 0, limit = 20 }) => {
             const data = applyFilters(await loadData(), fuel, open);
             const withDist = data
-                .map((s) => ({ station: s, distanciaKm: Math.round(haversine(lat, lon, s.lat, s.lon) * 100) / 100 }))
-                .filter((entry) => entry.distanciaKm <= Number(radius));
+                .map((s) => ({ station: s, exactKm: haversine(lat, lon, s.lat, s.lon) }))
+                .filter((entry) => entry.exactKm <= Number(radius))
+                .map((entry) => ({ station: entry.station, distanciaKm: Math.round(entry.exactKm * 100) / 100 }));
             if (sort === 'distance') {
                 withDist.sort((a, b) => a.distanciaKm - b.distanciaKm);
             } else {
