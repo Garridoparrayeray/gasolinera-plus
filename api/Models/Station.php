@@ -54,15 +54,17 @@ class Station
         int $offset,
         int $limit,
         ?array $mergePlace = null,
-        float $mergeRadiusKm = 10.0
+        float $mergeRadiusKm = 10.0,
+        ?float $radiusKm = null
     ): array {
         $normalized = Search::normalize($query);
         $like = '%' . $normalized . '%';
+        $compactLike = '%' . str_replace(' ', '', $normalized) . '%';
         $rawQuery = trim($query);
         $cpLike = $rawQuery . '%';
 
-        $where = 'WHERE (municipio_normalizado LIKE :q1 OR direccion_normalizada LIKE :q2 OR rotulo_normalizado LIKE :q3 OR cp LIKE :q4 OR localidad_normalizada LIKE :q5)';
-        $params = ['q1' => $like, 'q2' => $like, 'q3' => $like, 'q4' => $cpLike, 'q5' => $like];
+        $where = 'WHERE (municipio_normalizado LIKE :q1 OR direccion_normalizada LIKE :q2 OR rotulo_normalizado LIKE :q3 OR REPLACE(rotulo_normalizado, \' \', \'\') LIKE :q6 OR cp LIKE :q4 OR localidad_normalizada LIKE :q5)';
+        $params = ['q1' => $like, 'q2' => $like, 'q3' => $like, 'q4' => $cpLike, 'q5' => $like, 'q6' => $compactLike];
         $where .= self::staleClause($staleStationDays);
         if ($open24h) {
             $where .= ' AND is_24h = 1';
@@ -90,13 +92,18 @@ class Station
             if ($openNow && $this->isOpenNow($row['horario_raw']) !== true) {
                 continue;
             }
+            $relevance = $this->relevanceScore($row, $normalized, $rawQuery);
+            if ($radiusKm !== null && $distanceKm !== null && $relevance > 3 && $distanceKm > $radiusKm) {
+                continue;
+            }
             $seenIdeess[$row['ideess']] = true;
             $candidates[] = [
                 'row' => $row,
                 'distanceKm' => $distanceKm,
-                'relevance' => $this->relevanceScore($row, $normalized, $rawQuery),
+                'relevance' => $relevance,
             ];
         }
+        $textMatched = count($rows) > 0;
 
         if ($mergePlace !== null) {
             $bbox = self::boundingBox($mergePlace['lat'], $mergePlace['lon'], $mergeRadiusKm);
@@ -125,7 +132,9 @@ class Station
             }
         }
 
-        return $this->sortPaginateAndBuild($candidates, $sort, $fuel, $offset, $limit);
+        $result = $this->sortPaginateAndBuild($candidates, $sort, $fuel, $offset, $limit);
+        $result['textMatched'] = $textMatched;
+        return $result;
     }
 
     

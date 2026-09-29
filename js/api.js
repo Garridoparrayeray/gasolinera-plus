@@ -135,11 +135,13 @@ const OfflineEngine = (() => {
                 });
             return capForMap(stations);
         },
-        search: async ({ q, lat, lon, sort = 'price', fuel = 'gasoleo_a', open, offset = 0, limit = 20 }) => {
+        search: async ({ q, lat, lon, radius, sort = 'price', fuel = 'gasoleo_a', open, offset = 0, limit = 20 }) => {
             const data = applyFilters(await loadData(), fuel, open);
             const nq = normalize(q);
             const rawQuery = (q || '').trim();
             const hasLocation = lat !== undefined && lat !== null && lon !== undefined && lon !== null;
+            const compactQuery = nq.replace(/ /g, '');
+            const radiusKm = Number(radius);
 
             function relevance(s) {
                 const muni = normalize(s.municipio);
@@ -165,7 +167,7 @@ const OfflineEngine = (() => {
 
             const matches = [];
             for (const s of data) {
-                const hit = normalize(s.rotulo).includes(nq) || normalize(s.municipio).includes(nq)
+                const hit = normalize(s.rotulo).includes(nq) || normalize(s.rotulo).replace(/ /g, '').includes(compactQuery) || normalize(s.municipio).includes(nq)
                     || normalize(s.localidad).includes(nq) || normalize(s.direccion).includes(nq)
                     || (rawQuery !== '' && String(s.cp || '').startsWith(rawQuery));
                 if (!hit) {
@@ -175,7 +177,11 @@ const OfflineEngine = (() => {
                 if (hasLocation) {
                     distanciaKm = Math.round(haversine(lat, lon, s.lat, s.lon) * 100) / 100;
                 }
-                matches.push({ station: s, relevance: relevance(s), distanciaKm });
+                const rel = relevance(s);
+                if (hasLocation && radiusKm > 0 && rel > 3 && distanciaKm > radiusKm) {
+                    continue;
+                }
+                matches.push({ station: s, relevance: rel, distanciaKm });
             }
 
             matches.sort((a, b) => {
@@ -326,9 +332,12 @@ const Api = (() => {
             }
         },
         search: async (params) => {
-            const { q, lat, lon, sort, fuel, open, offset, limit } = params;
+            const { q, lat, lon, radius, sort, fuel, open, offset, limit } = params;
             const hasLocation = lat !== undefined && lat !== null && lon !== undefined && lon !== null;
             const p = new URLSearchParams({ q, sort });
+            if (hasLocation && radius) {
+                p.set('radius', radius);
+            }
             if (hasLocation) {
                 p.set('lat', roundCoord(lat));
                 p.set('lon', roundCoord(lon));

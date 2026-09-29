@@ -118,6 +118,12 @@ class StationsController
             $sortForText = 'price';
         }
 
+        $searchRadius = null;
+        $radiusParam = $request->queryInt('radius', 0);
+        if ($userLat !== null && $radiusParam !== null && $radiusParam > 0) {
+            $searchRadius = (float)min($radiusParam, $config['nearby_max_radius_km']);
+        }
+
         $page = $model->search(
             $q,
             $userLat,
@@ -130,11 +136,12 @@ class StationsController
             $offset,
             $limit,
             $place,
-            10.0
+            10.0,
+            $searchRadius
         );
 
         $geocodedFrom = null;
-        if ($page['total'] === 0) {
+        if ($page['total'] === 0 && !$page['textMatched']) {
             if ($place === null) {
                 $place = PlaceGeocoder::resolve($q);
             }
