@@ -40,6 +40,7 @@
         viewList: document.getElementById('view-list'),
         viewMap: document.getElementById('view-map'),
         mapShowAll: document.getElementById('map-show-all'),
+        mapToggle: document.getElementById('map-toggle'),
         stationsList: document.getElementById('stations-list'),
         stationsEmpty: document.getElementById('stations-empty'),
         stationsGeocodedNote: document.getElementById('stations-geocoded-note'),
@@ -130,6 +131,7 @@
         map: null,
         markerLayer: null,
         selectedLayer: null,
+        mapHidden: readMapHidden(),
         selectedId: null,
         heatLayer: null,
         heatVisible: false,
@@ -712,6 +714,41 @@
         return label;
     }
 
+    function readMapHidden() {
+        try {
+            return localStorage.getItem('gp_map_hidden') === '1';
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function applyMapVisibility() {
+        el.viewMap.classList.toggle('is-map-hidden', state.mapHidden);
+        el.mapToggle.setAttribute('aria-pressed', String(state.mapHidden));
+        if (state.mapHidden) {
+            el.mapToggle.textContent = 'Mostrar mapa';
+            return;
+        }
+        el.mapToggle.textContent = 'Ocultar mapa';
+        if (state.currentView === 'list') {
+            refreshMapMarkers();
+        }
+    }
+
+    function toggleMap() {
+        state.mapHidden = !state.mapHidden;
+        let stored = '0';
+        if (state.mapHidden) {
+            stored = '1';
+        }
+        try {
+            localStorage.setItem('gp_map_hidden', stored);
+        } catch (e) {
+            // sin almacenamiento el estado solo dura la sesion
+        }
+        applyMapVisibility();
+    }
+
     function markSelectedCard() {
         for (const card of el.stationsList.children) {
             card.classList.toggle('is-selected', card.dataset.ideess === state.selectedId);
@@ -763,7 +800,6 @@
         state.map.flyTo([station.lat, station.lon], 16);
         marker.openPopup();
         el.mapShowAll.hidden = false;
-        el.viewMap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function bindStationPopup(marker, station, priceLabel) {
@@ -1008,6 +1044,9 @@
     }
 
     function refreshMapMarkers() {
+        if (state.mapHidden) {
+            return;
+        }
         ensureMap();
         state.map.invalidateSize();
         if (state.userLat !== null && !state.mapCentered) {
@@ -1750,6 +1789,8 @@
         }
     }
     el.mapShowAll.addEventListener('click', clearSelection);
+    el.mapToggle.addEventListener('click', toggleMap);
+    applyMapVisibility();
     el.heatmapToggle.addEventListener('click', toggleHeatmap);
     el.locateMe.addEventListener('click', locateOnMap);
 

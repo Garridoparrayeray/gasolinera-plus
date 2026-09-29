@@ -247,6 +247,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
 
         <section id="view-map">
             <div id="map-controls">
+                <button id="map-toggle" type="button" class="pill" aria-pressed="false">Ocultar mapa</button>
                 <button id="heatmap-toggle" type="button" class="pill" aria-pressed="false">Mapa de calor de precio</button>
                 <button id="locate-me" type="button" class="pill">Mi ubicación</button>
                 <button id="map-show-all" type="button" class="pill" hidden>Ver todas</button>
