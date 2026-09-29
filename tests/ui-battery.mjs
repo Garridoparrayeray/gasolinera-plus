@@ -100,7 +100,7 @@ check('sin ubicacion: aparece el dialogo', await waitFor("document.getElementByI
 await ev("document.getElementById('geo-skip').click()");
 await sleep(1500);
 check('sin ubicacion: paginador sin NaN', !(await ev("document.getElementById('pagination-status').textContent")).includes('NaN'));
-check('sin ubicacion: invita a buscar', (await ev("document.getElementById('stations-empty').hidden")) === false);
+check('sin ubicacion: muestra las mas baratas de Espana', await waitFor("document.querySelectorAll('#stations-list li').length > 0 && document.getElementById('stations-status').textContent.includes('más baratas')", 8000));
 check('sin ubicacion: se puede buscar', await search('valladolid'));
 
 s.where = 'enlace-directo';

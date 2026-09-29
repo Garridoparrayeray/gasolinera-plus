@@ -376,16 +376,12 @@
     }
 
     function showSearchPrompt() {
-        state.stationsMode = 'search';
+        state.stationsMode = 'cheapest';
         state.stationsQuery = '';
-        state.currentStations = [];
-        state.stationsTotal = 0;
         state.stationsPage = 1;
         el.backToNearby.hidden = true;
         el.stationsGeocodedNote.hidden = true;
-        renderList([]);
-        el.stationsEmpty.textContent = 'Activa la ubicación o busca un municipio, dirección o marca para ver gasolineras.';
-        updatePaginationControls();
+        loadStationsPage(1);
     }
 
     
@@ -427,6 +423,9 @@
                 showSearchPrompt();
             }
             return;
+        }
+        if (state.stationsMode === null) {
+            showSearchPrompt();
         }
         GPSplash.whenHidden().then(() => {
             if (!el.geoAsk.open) {
@@ -470,9 +469,7 @@
             state.userLat = null;
             state.userLon = null;
             if (state.stationsMode !== 'search') {
-                state.currentStations = [];
-                renderList(state.currentStations);
-                updatePaginationControls();
+                showSearchPrompt();
             }
             if (state.userMarker && state.map) {
                 state.map.removeLayer(state.userMarker);
@@ -576,7 +573,11 @@
     }
 
     function filterSummary() {
-        const parts = [selectedText(el.filterFuel), selectedText(el.filterRadius), selectedText(el.filterSort)];
+        const parts = [selectedText(el.filterFuel)];
+        if (state.stationsMode !== 'cheapest') {
+            parts.push(selectedText(el.filterRadius));
+        }
+        parts.push(selectedText(el.filterSort));
         if (el.filterOpen.value) {
             parts.push(selectedText(el.filterOpen));
         }
@@ -586,6 +587,9 @@
     function placeSummary() {
         if (state.stationsMode === 'search') {
             return `«${state.stationsQuery}»`;
+        }
+        if (state.stationsMode === 'cheapest') {
+            return 'Las más baratas de España';
         }
         return 'Cerca de ti';
     }
@@ -619,13 +623,16 @@
             el.stationsStatus.textContent = `${placeSummary()}: no hay gasolineras con estos filtros. Prueba con más kilómetros u otro carburante.`;
         } else {
             el.stationsStatus.textContent = `${placeSummary()}: ${state.stationsTotal.toLocaleString('es-ES')} gasolineras · ${filterSummary()}`;
+            if (state.stationsMode === 'cheapest') {
+                el.stationsStatus.textContent += '. Activa tu ubicación para ver las de tu zona.';
+            }
         }
         flashStatus();
     }
 
     async function loadNearby() {
         if (state.userLat === null || state.userLon === null) {
-            setStationsStatus('needs-location');
+            showSearchPrompt();
             return;
         }
         state.stationsMode = 'nearby';
@@ -728,6 +735,8 @@
         try {
             if (state.stationsMode === 'search') {
                 data = await Api.search({ q: state.stationsQuery, lat: state.userLat, lon: state.userLon, ...filters, ...page });
+            } else if (state.stationsMode === 'cheapest') {
+                data = await OfflineEngine.cheapest({ ...filters, ...page });
             } else {
                 data = await Api.near({ lat: state.userLat, lon: state.userLon, ...filters, ...page });
             }
@@ -2197,8 +2206,6 @@
 
     restoreFuelPreference();
     GPNative.refreshOfflineData();
-    GPPriceIndex.sync(false);
-    window.addEventListener('online', () => GPPriceIndex.sync(false));
     GPNative.checkForUpdate(showUpdateBanner);
     initGeolocationFlow();
     handleDeepLink();

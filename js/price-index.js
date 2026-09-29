@@ -164,3 +164,6 @@ const GPPriceIndex = (() => {
 
     return { available, sync, dayReference, periodReference, ZONE_RADIUS_KM };
 })();
+
+GPPriceIndex.sync(false);
+window.addEventListener('online', () => GPPriceIndex.sync(false));

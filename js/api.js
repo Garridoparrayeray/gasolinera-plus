@@ -122,6 +122,11 @@ const OfflineEngine = (() => {
             }
             return page(withDist.map((entry) => listItem(entry.station, entry.distanciaKm)), offset, limit);
         },
+        cheapest: async ({ fuel = 'gasoleo_a', open, offset = 0, limit = 20 }) => {
+            const data = applyFilters(await loadData(), fuel, open);
+            const sorted = [...data].sort((a, b) => priceOrMax(a, fuel) - priceOrMax(b, fuel));
+            return page(sorted.map((station) => listItem(station, null)), offset, limit);
+        },
         bbox: async ({ north, south, east, west, fuel, open }) => {
             const data = applyFilters(await loadData(), fuel, open);
             const stations = data
