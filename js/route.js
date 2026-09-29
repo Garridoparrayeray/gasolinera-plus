@@ -272,10 +272,7 @@ const GPRoute = (() => {
             return;
         }
         state.map = L.map(el.map).setView([40.2, -3.7], 5);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>',
-            maxZoom: 19,
-        }).addTo(state.map);
+        GPMaps.addBaseLayers(state.map);
         state.routeLayer = L.layerGroup().addTo(state.map);
         state.stationLayer = L.layerGroup().addTo(state.map);
         state.pointLayer = L.layerGroup().addTo(state.map);

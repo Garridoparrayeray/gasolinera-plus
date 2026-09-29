@@ -485,10 +485,7 @@ const GPTrips = (() => {
 
         if (!state.map) {
             state.map = L.map(el.map, { zoomControl: false });
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>',
-                maxZoom: 19,
-            }).addTo(state.map);
+            GPMaps.addBaseLayers(state.map);
             state.mapLayer = L.layerGroup().addTo(state.map);
         }
         state.map.invalidateSize();

@@ -1,12 +1,14 @@
 importScripts('/js/alerts-store.js');
 
-const CACHE_VERSION = 'v10';
+const CACHE_VERSION = 'v11';
 const CACHE_NAME = 'gasolinera-shell-' + CACHE_VERSION;
 const API_CACHE_NAME = 'gasolinera-api-' + CACHE_VERSION;
 const SHELL_FILES = [
     '/',
     '/style.css',
     '/js/native.js',
+    '/js/offline-maps.js',
+    '/vendor/protomaps-leaflet/protomaps-leaflet.js',
     '/js/background.js',
     '/js/api.js',
     '/js/alerts-store.js',
