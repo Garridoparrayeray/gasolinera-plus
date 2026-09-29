@@ -334,6 +334,7 @@ const Api = (() => {
             }
         },
         resolvePlace: async (q) => request('/places/resolve?q=' + encodeURIComponent(q)),
+        zoneAverage: async ({ lat, lon, radius, fuel, date }) => request(`/stats/zone-average?lat=${lat}&lon=${lon}&radius=${radius}&fuel=${fuel}&date=${date}`),
         zoneComparison: async (ideess, fuel) => request('/stations/' + encodeURIComponent(ideess) + '/zone-comparison?fuel=' + fuel),
         nationalStats: async (fuel, from, to, group = 'day') => request('/stats/national?fuel=' + fuel + '&from=' + from + '&to=' + to + '&group=' + group),
         statsByFuel: async (from, to, group = 'day') => request('/stats/by-fuel?from=' + from + '&to=' + to + '&group=' + group),

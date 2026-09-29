@@ -104,6 +104,17 @@ const approx = (actual, expected, digits = 2) => assert.equal(+actual.toFixed(di
     assert.equal(saving.refuels, 2);
 }
 
+{
+    const rows = [
+        { pricePerUnit: 1.5, liters: 40, zone: 1.6 },
+        { pricePerUnit: 1.7, liters: 30, zone: 1.6 },
+        { pricePerUnit: 1.7, liters: 30, zone: null },
+    ];
+    const saving = GPFuel.savingsBy(rows, (row) => row.zone);
+    approx(saving.amount, 40 * 0.1 - 30 * 0.1);
+    assert.equal(saving.refuels, 2, 'las filas sin referencia no cuentan');
+}
+
 assert.equal(GPFuel.madridDate('2026-09-30T23:30:00Z'), '2026-10-01');
 assert.equal(GPFuel.madridMonth('2026-12-31T23:30:00Z'), '2027-01');
 

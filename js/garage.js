@@ -22,6 +22,14 @@ const GPGarage = (() => {
         spendChart: $('garage-spend-chart'),
         priceChart: $('garage-price-chart'),
         savings: $('garage-savings'),
+        savingsZone: $('garage-savings-zone'),
+        compareList: $('garage-compare-list'),
+        compareDay: $('garage-compare-day'),
+        compareWeek: $('garage-compare-week'),
+        compareMonth: $('garage-compare-month'),
+        stationSearch: $('refuel-station-search'),
+        stationResults: $('refuel-station-results'),
+        stationClear: $('refuel-station-clear'),
         refuels: $('garage-refuels'),
         refuelsEmpty: $('garage-refuels-empty'),
         backupIncludeTrips: $('backup-include-trips'),
@@ -75,7 +83,14 @@ const GPGarage = (() => {
         pendingStation: null,
         charts: {},
         nationalCache: {},
+        compareMode: 'day',
+        userLoc: null,
     };
+
+    const MAX_PERIODS = 12;
+    const REFERENCE_TIMEOUT_MS = 5000;
+    const ZONE_RADIUS_KM = 10;
+    const COMPARE_NOUN = { day: 'repostajes', week: 'semanas', month: 'meses' };
 
     const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
@@ -335,46 +350,255 @@ const GPGarage = (() => {
         if (!sortedRefuels.length) {
             replaceChart('price', el.priceChart, { type: 'line', data: { labels: [], datasets: [] } });
             el.savings.textContent = '';
+            el.savingsZone.textContent = '';
+            el.compareList.innerHTML = '';
             return;
         }
-        const national = await nationalByDate(vehicle.fuel, GPFuel.madridDate(sortedRefuels[0].date));
+        await renderComparison(vehicle, sortedRefuels);
+    }
+
+    function hasCoords(refuel) {
+        return typeof refuel.stationLat === 'number' && typeof refuel.stationLon === 'number';
+    }
+
+    async function refuelReferences(vehicle, refuel, nationalMap) {
+        const date = GPFuel.madridDate(refuel.date);
+        const refs = { national: null, zone: null };
+        if (typeof refuel.nationalAvg === 'number') {
+            refs.national = refuel.nationalAvg;
+        }
+        if (typeof refuel.zoneAvg === 'number') {
+            refs.zone = refuel.zoneAvg;
+        }
+        const needsZone = refs.zone === null && hasCoords(refuel);
+        if ((refs.national === null || needsZone) && GPPriceIndex.available()) {
+            const ref = await GPPriceIndex.dayReference({ fuel: vehicle.fuel, date, lat: refuel.stationLat, lon: refuel.stationLon });
+            if (ref && refs.national === null && ref.national) {
+                refs.national = ref.national.avg;
+            }
+            if (ref && refs.zone === null && ref.zone) {
+                refs.zone = ref.zone.avg;
+            }
+        }
+        if (refs.national === null && typeof nationalMap[date] === 'number') {
+            refs.national = nationalMap[date];
+        }
+        return refs;
+    }
+
+    async function dayRows(vehicle, sortedRefuels) {
+        let nationalMap = {};
+        if (!GPPriceIndex.available()) {
+            nationalMap = await nationalByDate(vehicle.fuel, GPFuel.madridDate(sortedRefuels[0].date));
+        }
+        const rows = [];
+        for (const refuel of sortedRefuels) {
+            const refs = await refuelReferences(vehicle, refuel, nationalMap);
+            rows.push({ label: shortDate(refuel.date).slice(0, 5), pricePerUnit: refuel.pricePerUnit, liters: refuel.liters, national: refs.national, zone: refs.zone });
+        }
+        return rows;
+    }
+
+    function groupByPeriod(sortedRefuels, kind) {
+        const groups = new Map();
+        for (const refuel of sortedRefuels) {
+            const period = GPPriceIndexCore.periodOf(GPFuel.madridDate(refuel.date), kind);
+            if (!groups.has(period.key)) {
+                groups.set(period.key, { period, refuels: [] });
+            }
+            groups.get(period.key).refuels.push(refuel);
+        }
+        return [...groups.values()].slice(-MAX_PERIODS);
+    }
+
+    async function periodRows(vehicle, sortedRefuels, kind) {
+        const rows = [];
+        for (const group of groupByPeriod(sortedRefuels, kind)) {
+            let liters = 0;
+            let spent = 0;
+            const points = [];
+            for (const refuel of group.refuels) {
+                liters += refuel.liters;
+                spent += refuel.pricePerUnit * refuel.liters;
+                if (hasCoords(refuel)) {
+                    points.push({ lat: refuel.stationLat, lon: refuel.stationLon, liters: refuel.liters });
+                }
+            }
+            const ref = await GPPriceIndex.periodReference({ fuel: vehicle.fuel, from: group.period.from, to: group.period.to, points });
+            let zone = null;
+            if (ref.zones.length) {
+                let weighted = 0;
+                let weight = 0;
+                for (const entry of ref.zones) {
+                    weighted += entry.avg * entry.liters;
+                    weight += entry.liters;
+                }
+                zone = weighted / weight;
+            }
+            let national = null;
+            if (ref.national) {
+                national = ref.national.avg;
+            }
+            rows.push({ label: group.period.label, pricePerUnit: spent / liters, liters, national, zone });
+        }
+        return rows;
+    }
+
+    function chartLabel(label) {
+        return label.split(' · ')[0];
+    }
+
+    function savingsText(saving, reference, noun, hook) {
+        if (saving.amount >= 0) {
+            return `${hook} ${money(saving.amount)} frente a ${reference} en ${saving.refuels} ${noun}.`;
+        }
+        return `Has pagado unos ${money(-saving.amount)} más que ${reference} en ${saving.refuels} ${noun}.`;
+    }
+
+    function differenceText(paid, reference, unit) {
+        const diff = paid - reference;
+        if (diff <= 0) {
+            return `${number(-diff, 3)} € por debajo`;
+        }
+        return `${number(diff, 3)} € por encima (€/${unit})`;
+    }
+
+    function renderCompareList(vehicle, rows) {
+        const unit = unitOf(vehicle.fuel);
+        el.compareList.innerHTML = '';
+        for (const row of [...rows].reverse()) {
+            const item = document.createElement('li');
+            const title = document.createElement('strong');
+            title.textContent = row.label;
+            item.appendChild(title);
+            const lines = [`Pagaste ${number(row.pricePerUnit, 3)} €/${unit} de media · ${number(row.liters, 1)} ${unit}`];
+            if (row.national !== null) {
+                lines.push(`España ${number(row.national, 3)}: ${differenceText(row.pricePerUnit, row.national, unit)}`);
+            }
+            if (row.zone !== null) {
+                lines.push(`Tu zona ${number(row.zone, 3)}: ${differenceText(row.pricePerUnit, row.zone, unit)}`);
+            }
+            for (const line of lines) {
+                const small = document.createElement('small');
+                small.textContent = line;
+                item.appendChild(small);
+            }
+            el.compareList.appendChild(item);
+        }
+    }
+
+    function drawComparison(vehicle, rows) {
+        const datasets = [
+            { label: 'Lo que pagaste', data: rows.map((row) => row.pricePerUnit), borderColor: '#5F8A00', tension: 0.2 },
+            { label: 'Media de España', data: rows.map((row) => row.national), borderColor: '#1D4E89', borderDash: [6, 4], spanGaps: true },
+        ];
+        if (rows.some((row) => row.zone !== null)) {
+            datasets.push({ label: `Media de tu zona (${ZONE_RADIUS_KM} km)`, data: rows.map((row) => row.zone), borderColor: '#C77700', borderDash: [2, 3], spanGaps: true });
+        }
         replaceChart('price', el.priceChart, {
             type: 'line',
-            data: {
-                labels: sortedRefuels.map((refuel) => shortDate(refuel.date).slice(0, 5)),
-                datasets: [
-                    {
-                        label: 'Lo que pagaste',
-                        data: sortedRefuels.map((refuel) => refuel.pricePerUnit),
-                        borderColor: '#5F8A00',
-                        tension: 0.2,
-                    },
-                    {
-                        label: 'Media de España ese día',
-                        data: sortedRefuels.map((refuel) => {
-                            const value = national[GPFuel.madridDate(refuel.date)];
-                            if (typeof value === 'number') {
-                                return value;
-                            }
-                            return null;
-                        }),
-                        borderColor: '#1D4E89',
-                        borderDash: [6, 4],
-                        spanGaps: true,
-                    },
-                ],
-            },
+            data: { labels: rows.map((row) => chartLabel(row.label)), datasets },
             options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } },
         });
-        const saving = GPFuel.savings(sortedRefuels, national);
-        if (!saving.refuels) {
-            el.savings.textContent = 'Sin datos de la media nacional para las fechas de tus repostajes.';
-        } else if (saving.amount >= 0) {
-            el.savings.textContent = `Gracias a Gasolinera+ llevas ahorrados unos ${money(saving.amount)} frente a la media de España en ${saving.refuels} repostajes.`;
+
+        const noun = COMPARE_NOUN[state.compareMode];
+        const national = GPFuel.savingsBy(rows, (row) => row.national);
+        const zone = GPFuel.savingsBy(rows, (row) => row.zone);
+        el.savings.classList.toggle('is-saving', national.refuels > 0 && national.amount >= 0);
+        if (!national.refuels) {
+            el.savings.textContent = 'Sin datos de la media nacional para estas fechas.';
+        } else if (national.amount >= 0) {
+            el.savings.textContent = savingsText(national, 'la media de España', noun, 'Gracias a Gasolinera+ llevas ahorrados unos');
         } else {
-            el.savings.textContent = `Has pagado unos ${money(-saving.amount)} más que la media de España en ${saving.refuels} repostajes. Busca la más barata antes de repostar.`;
+            el.savings.textContent = savingsText(national, 'la media de España', noun, '') + ' Busca la más barata antes de repostar.';
         }
-        el.savings.classList.toggle('is-saving', saving.refuels > 0 && saving.amount >= 0);
+        if (zone.refuels) {
+            el.savingsZone.textContent = savingsText(zone, `la media de tu zona (${ZONE_RADIUS_KM} km)`, noun, 'Llevas ahorrados unos');
+        } else {
+            el.savingsZone.textContent = 'Elige la gasolinera al anotar el repostaje para compararte también con tu zona.';
+        }
+        el.compareList.innerHTML = '';
+        if (state.compareMode !== 'day') {
+            renderCompareList(vehicle, rows);
+        }
+    }
+
+    async function renderComparison(vehicle, sortedRefuels) {
+        const buttons = [['day', el.compareDay], ['week', el.compareWeek], ['month', el.compareMonth]];
+        for (const [mode, button] of buttons) {
+            button.setAttribute('aria-pressed', String(mode === state.compareMode));
+        }
+        if (state.compareMode !== 'day' && !GPPriceIndex.available()) {
+            replaceChart('price', el.priceChart, { type: 'line', data: { labels: [], datasets: [] } });
+            el.savings.classList.remove('is-saving');
+            el.savings.textContent = 'La comparación por semanas y meses usa el histórico que guarda la app instalada.';
+            el.savingsZone.textContent = '';
+            el.compareList.innerHTML = '';
+            return;
+        }
+        let rows;
+        if (state.compareMode === 'day') {
+            rows = await dayRows(vehicle, sortedRefuels);
+        } else {
+            rows = await periodRows(vehicle, sortedRefuels, state.compareMode);
+        }
+        drawComparison(vehicle, rows);
+    }
+
+    function withTimeout(promise, ms) {
+        return Promise.race([promise, new Promise((resolve, reject) => setTimeout(() => reject(new Error('tiempo agotado')), ms))]);
+    }
+
+    async function loadReferences(refuel, fuel) {
+        const date = GPFuel.madridDate(refuel.date);
+        if (GPPriceIndex.available()) {
+            const ref = await GPPriceIndex.dayReference({ fuel, date, lat: refuel.stationLat, lon: refuel.stationLon });
+            if (ref && ref.national) {
+                refuel.nationalAvg = ref.national.avg;
+            }
+            if (ref && ref.zone) {
+                refuel.zoneAvg = ref.zone.avg;
+                refuel.zoneRadiusKm = ZONE_RADIUS_KM;
+            }
+        }
+        if (refuel.nationalAvg === null) {
+            const map = await nationalByDate(fuel, date);
+            if (typeof map[date] === 'number') {
+                refuel.nationalAvg = map[date];
+            }
+        }
+        if (refuel.zoneAvg === null && hasCoords(refuel)) {
+            const zone = await Api.zoneAverage({ lat: refuel.stationLat, lon: refuel.stationLon, radius: ZONE_RADIUS_KM, fuel, date });
+            refuel.zoneAvg = zone.media;
+            refuel.zoneRadiusKm = zone.radioKm;
+        }
+    }
+
+    async function attachReferences(refuel, fuel) {
+        refuel.nationalAvg = null;
+        refuel.zoneAvg = null;
+        refuel.zoneRadiusKm = null;
+        try {
+            await withTimeout(loadReferences(refuel, fuel), REFERENCE_TIMEOUT_MS);
+        } catch (error) {
+            return;
+        }
+    }
+
+    function applyStation(refuel, station) {
+        refuel.stationId = null;
+        refuel.stationName = null;
+        refuel.stationLat = null;
+        refuel.stationLon = null;
+        if (!station) {
+            return;
+        }
+        refuel.stationId = station.ideess;
+        refuel.stationName = station.rotulo;
+        if (typeof station.lat === 'number' && typeof station.lon === 'number') {
+            refuel.stationLat = station.lat;
+            refuel.stationLon = station.lon;
+        }
     }
 
     async function setActive(id) {
@@ -482,7 +706,74 @@ const GPGarage = (() => {
         if (station && station.combustibles && station.combustibles[fuel]) {
             return station.combustibles[fuel].precio;
         }
+        if (station && station.precios && typeof station.precios[fuel] === 'number') {
+            return station.precios[fuel];
+        }
         return null;
+    }
+
+    function showRefuelStation() {
+        const station = state.refuelStation;
+        el.stationClear.hidden = !station;
+        if (!station) {
+            el.refuelStation.hidden = true;
+            return;
+        }
+        let where = `En ${station.rotulo}`;
+        if (station.direccion) {
+            where += ', ' + station.direccion;
+        }
+        el.refuelStation.textContent = where;
+        el.refuelStation.hidden = false;
+    }
+
+    function renderStationResults(stations) {
+        el.stationResults.innerHTML = '';
+        for (const station of stations) {
+            const item = document.createElement('li');
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = `${station.rotulo} · ${station.municipio}`;
+            const small = document.createElement('small');
+            small.textContent = station.direccion;
+            button.appendChild(small);
+            button.addEventListener('click', () => pickStation(station));
+            item.appendChild(button);
+            el.stationResults.appendChild(item);
+        }
+        el.stationResults.hidden = stations.length === 0;
+    }
+
+    async function searchStations() {
+        const query = el.stationSearch.value.trim();
+        const vehicle = activeVehicle();
+        if (query.length < 3 || !vehicle) {
+            el.stationResults.hidden = true;
+            return;
+        }
+        const params = { q: query, sort: 'price', fuel: vehicle.fuel, limit: 6 };
+        if (state.userLoc) {
+            params.lat = state.userLoc.lat;
+            params.lon = state.userLoc.lon;
+            params.sort = 'distance';
+        }
+        try {
+            const data = await Api.search(params);
+            renderStationResults(data.stations);
+        } catch (error) {
+            el.stationResults.hidden = true;
+        }
+    }
+
+    function pickStation(station) {
+        state.refuelStation = station;
+        const price = stationPrice(station, activeVehicle().fuel);
+        if (price !== null) {
+            el.refuelPrice.value = price;
+        }
+        el.stationSearch.value = '';
+        el.stationResults.hidden = true;
+        showRefuelStation();
     }
 
     function openRefuelDialog(refuel, station) {
@@ -512,7 +803,7 @@ const GPGarage = (() => {
             el.refuelDelete.hidden = false;
             state.refuelStation = null;
             if (refuel.stationId) {
-                state.refuelStation = { ideess: refuel.stationId, rotulo: refuel.stationName };
+                state.refuelStation = { ideess: refuel.stationId, rotulo: refuel.stationName, lat: refuel.stationLat, lon: refuel.stationLon };
             }
         } else {
             el.refuelForm.reset();
@@ -527,16 +818,9 @@ const GPGarage = (() => {
                 el.refuelPrice.value = price;
             }
         }
-        if (state.refuelStation) {
-            let where = `En ${state.refuelStation.rotulo}`;
-            if (state.refuelStation.direccion) {
-                where += ', ' + state.refuelStation.direccion;
-            }
-            el.refuelStation.textContent = where;
-            el.refuelStation.hidden = false;
-        } else {
-            el.refuelStation.hidden = true;
-        }
+        el.stationSearch.value = '';
+        el.stationResults.hidden = true;
+        showRefuelStation();
         el.refuelDialog.showModal();
     }
 
@@ -602,12 +886,10 @@ const GPGarage = (() => {
         if (refuel) {
             refuel = { ...refuel, ...fields };
         } else {
-            refuel = { id: GarageStore.newId(), vehicleId: vehicle.id, createdAt: fields.updatedAt, stationId: null, stationName: null, ...fields };
-            if (state.refuelStation) {
-                refuel.stationId = state.refuelStation.ideess;
-                refuel.stationName = state.refuelStation.rotulo;
-            }
+            refuel = { id: GarageStore.newId(), vehicleId: vehicle.id, createdAt: fields.updatedAt, ...fields };
         }
+        applyStation(refuel, state.refuelStation);
+        await attachReferences(refuel, vehicle.fuel);
         await GarageStore.refuels.save(refuel);
         if (odometer > vehicle.odometer) {
             await GarageStore.vehicles.save({ ...vehicle, odometer, odometerAt: fields.updatedAt });

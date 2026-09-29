@@ -77,18 +77,22 @@ const GPFuel = (() => {
         return ordered;
     }
 
-    function savings(refuels, nationalByDate) {
+    function savingsBy(items, referenceOf) {
         let amount = 0;
         let counted = 0;
-        for (const refuel of refuels) {
-            const reference = nationalByDate[madridDate(refuel.date)];
+        for (const item of items) {
+            const reference = referenceOf(item);
             if (typeof reference !== 'number') {
                 continue;
             }
-            amount += (reference - refuel.pricePerUnit) * refuel.liters;
+            amount += (reference - item.pricePerUnit) * item.liters;
             counted++;
         }
         return { amount, refuels: counted };
+    }
+
+    function savings(refuels, nationalByDate) {
+        return savingsBy(refuels, (refuel) => nationalByDate[madridDate(refuel.date)]);
     }
 
     function estimateTank(vehicle, list, consumption) {
@@ -177,5 +181,5 @@ const GPFuel = (() => {
         };
     }
 
-    return { intervals, summary, monthlySpend, savings, madridDate, madridMonth };
+    return { intervals, summary, monthlySpend, savings, savingsBy, madridDate, madridMonth };
 })();

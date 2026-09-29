@@ -13,6 +13,8 @@ const SHELL_FILES = [
     '/js/api.js',
     '/js/alerts-store.js',
     '/js/app.js',
+    '/js/price-index-core.js',
+    '/js/price-index.js',
     '/js/fuel-math.js',
     '/js/garage-store.js',
     '/js/backup.js',
