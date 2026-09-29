@@ -52,8 +52,6 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         manager.pausesLocationUpdatesAutomatically = false
     }
 
-    // MARK: Almacenamiento
-
     private var directory: URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         let dir = base.appendingPathComponent("trips", isDirectory: true)
@@ -117,8 +115,6 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         try? FileManager.default.removeItem(at: pointsURL(id))
     }
 
-    // MARK: Permisos
-
     var autoDetectEnabled: Bool {
         return defaults.bool(forKey: keyAutoDetect)
     }
@@ -153,7 +149,6 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         if status == .authorizedWhenInUse || status == .notDetermined {
             authCallbacks.append(done)
             manager.requestAlwaysAuthorization()
-            // iOS no siempre vuelve a avisar si el usuario ya rechazó el aviso: no dejamos la llamada colgada.
             DispatchQueue.main.asyncAfter(deadline: .now() + 20) { [weak self] in
                 self?.flushAuthCallbacks()
             }
@@ -188,8 +183,6 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         flushAuthCallbacks()
     }
 
-    // MARK: Estado
-
     func snapshot() -> [String: Any] {
         if !recording {
             return ["recording": false]
@@ -209,8 +202,6 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
     private func publish() {
         onUpdate?(snapshot())
     }
-
-    // MARK: Grabación
 
     func start(auto: Bool, vehicleId: String?) -> Bool {
         if recording {
@@ -356,10 +347,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        // Un fallo puntual de GPS no debe cortar el viaje.
     }
-
-    // MARK: Detección automática
 
     func setAutoDetect(_ enabled: Bool) {
         defaults.set(enabled, forKey: keyAutoDetect)
@@ -424,8 +412,6 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             }
         }
     }
-
-    // MARK: Arranque de la app
 
     func resumeAtLaunch() {
         if let id = defaults.string(forKey: keyCurrent), let meta = readMeta(id) {

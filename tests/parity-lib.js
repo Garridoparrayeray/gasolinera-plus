@@ -119,7 +119,6 @@
                 const php = await collectPages((offset, limit) => getJson(`/api/stations/search?q=${encodeURIComponent(q)}&lat=${center.lat}&lon=${center.lon}&sort=price&fuel=${fuel}&offset=${offset}&limit=${limit}`));
                 counter.count++;
                 if (place) {
-                    // El PHP añade las gasolineras a menos de 10 km del lugar buscado; el JS sin conexion no.
                     const missing = difference(ids(js), ids(php));
                     if (missing.length) {
                         failures.push(`${label}: el JS devuelve ${missing.length} que el PHP no [${missing.slice(0, 3)}]`);

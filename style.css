@@ -33,7 +33,6 @@ html { font-size: 118%; }
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 
-
 svg[viewBox] path, svg[viewBox] line, svg[viewBox] circle, svg[viewBox] rect {
     stroke-linecap: square;
     stroke-linejoin: miter;
@@ -446,7 +445,6 @@ header {
     border-radius: 999px;
     background: linear-gradient(to right, hsl(120, 70%, 42%), hsl(60, 70%, 42%), hsl(0, 70%, 42%));
 }
-
 
 .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
     background: rgba(255, 122, 26, 0.25);
@@ -951,7 +949,6 @@ body { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
 #trip-live .garage-tiles { margin-bottom: 10px; }
 #trip-live strong { font-variant-numeric: tabular-nums; }
 
-/* Viaje en curso: pantalla completa, alto contraste */
 html.is-driving { overflow: hidden; }
 #trip-drive {
     position: fixed;
@@ -1067,7 +1064,6 @@ html.is-driving { overflow: hidden; }
     #trip-drive-bar-fill { transition: none; }
 }
 
-/* Estilo de app nativa: superficies limpias, esquinas suaves y jerarquia por tamano y peso */
 #view-toggle { border-top: 1px solid var(--border); box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06); }
 #view-toggle button {
     min-height: 66px;
@@ -1118,7 +1114,6 @@ html.is-driving { overflow: hidden; }
 .about-links .pill { flex: 1 1 140px; padding: 14px 12px; border-radius: 12px; font-size: 0.95rem; font-weight: 600; text-align: center; text-decoration: none; }
 #get-app-actions .pill { padding: 12px 16px; border-radius: 12px; font-weight: 600; }
 
-/* Ordenador: contenido ancho, lista y mapa lado a lado, ruta y garaje en dos columnas */
 @media (min-width: 1024px) {
     :root { --content-max: 1200px; --page-pad: 32px; }
     #view-toggle { left: 50%; right: auto; width: min(100%, var(--content-max)); transform: translateX(-50%); border-radius: 16px 16px 0 0; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
@@ -1138,7 +1133,6 @@ html.is-driving { overflow: hidden; }
 }
 #trip-drive-speed, #trip-drive-stats strong, #trip-drive-stop { font-stretch: 75%; }
 
-/* Precios: mapa y lista en una sola pantalla; elegir una gasolinera la marca en el mapa */
 .station-card { flex-wrap: wrap; }
 .station-card.is-selected { border-color: var(--accent-bg); background: var(--primary-tint); box-shadow: 0 0 0 2px var(--accent-bg); }
 .station-card__open { display: none; flex: 1 1 100%; margin-top: 6px; padding: 10px; border-radius: 12px; font-weight: 700; text-align: center; }
@@ -1151,7 +1145,6 @@ html.is-driving { overflow: hidden; }
 }
 #garage-savings.is-saving { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--primary-tint); color: var(--text); font-size: 1rem !important; font-weight: 700; }
 
-/* Esquinas rectas en toda la app: los selectores y bloques ocupan el cuadrado completo */
 *, *::before, *::after { border-radius: 0 !important; }
 .garage-segment { display: flex; flex-wrap: wrap; gap: 0; margin-bottom: 12px; }
 .garage-segment .pill { flex: 1 1 0; padding: 12px 8px; border: 1px solid var(--text); font-weight: 700; text-align: center; }
@@ -1164,7 +1157,6 @@ html.is-driving { overflow: hidden; }
 #refuel-picker { margin: 8px 0; }
 #refuel-station-clear { margin-top: 6px; }
 
-/* Contraste: campos y botones se distinguen del fondo en claro y oscuro */
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="button"]):not([type="submit"]),
 select,
 textarea {
@@ -1174,13 +1166,10 @@ textarea {
 }
 .pill { border-color: var(--field-border); }
 
-/* Enlaces: siempre del mismo color, sin morado de visitados */
 a { color: var(--primary); }
 
-/* Los puntos del mapa siguen siendo redondos */
 .marker-cluster, .marker-cluster div, .leaflet-marker-icon.marker-cluster { border-radius: 50% !important; }
 
-/* Pestañas: etiqueta completa en pantallas anchas y abreviada en el movil */
 .tab-short { display: none; }
 @media (max-width: 599px) {
     .tab-long { display: none; }
@@ -1188,19 +1177,15 @@ a { color: var(--primary); }
     #view-toggle button { font-size: 0.68rem; }
 }
 
-/* Buscador: el boton mide lo mismo que el campo */
 #search-input { min-height: 52px; }
 #search-form > button { align-self: stretch; width: 52px; height: auto; }
 
-
 #view-map.is-map-hidden #map-wrap, #view-map.is-map-hidden #map-note { display: none !important; }
 
-/* Mapas: en pantallas tactiles se activan al tocarlos para no atrapar el scroll de la pagina */
 .map-shield { position: absolute; inset: 0; z-index: 1100; display: flex; align-items: flex-end; justify-content: center; padding: 12px; border: 0; background: rgba(0, 0, 0, 0.04); cursor: pointer; }
 .map-shield span { padding: 10px 16px; background: var(--surface); color: var(--text); border: 1px solid var(--field-border); font-size: 0.9rem; font-weight: 700; }
 .map-guard-wrap { position: relative; width: 100%; }
 
-/* Estado de la busqueda: se ve cuando se esta buscando y cuantos resultados hay */
 #stations-progress { height: 4px; margin: 0 0 8px; background: var(--border); overflow: hidden; }
 #stations-progress span { display: block; width: 35%; height: 100%; background: var(--accent-bg); animation: stations-slide 1s linear infinite; }
 @keyframes stations-slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
@@ -1216,12 +1201,10 @@ html[data-view="about"] #stations-status, html[data-view="about"] #stations-prog
     #stations-progress span, #stations-status.is-flash { animation: none; }
 }
 
-/* Simbolo que gira mientras se busca */
 #stations-status.is-loading::before { content: ''; display: inline-block; width: 14px; height: 14px; margin-right: 8px; border: 3px solid var(--border); border-top-color: var(--accent-bg); border-radius: 50% !important; animation: gp-spin 0.8s linear infinite; vertical-align: -2px; }
 @keyframes gp-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { #stations-status.is-loading::before { animation: none; } }
 
-/* Boton grande de busqueda bajo los filtros */
 #stations-search-btn { display: block; width: 100%; min-height: 54px; margin: 0 0 12px; border: 0; background: var(--btn-bg); color: var(--btn-ink); font-family: var(--font-display); font-size: 1.05rem; font-weight: 800; letter-spacing: 0.01em; cursor: pointer; }
 #stations-search-btn:disabled { opacity: 0.7; cursor: progress; }
 html[data-view="garage"] #stations-search-btn,
@@ -1229,7 +1212,6 @@ html[data-view="route"] #stations-search-btn,
 html[data-view="about"] #stations-search-btn,
 html[data-view="stats"] #stations-search-btn { display: none !important; }
 
-/* Cifras y textos alineados a la izquierda y con un tamano que cabe en el movil */
 #national-stats-toggle { text-align: left; }
 .national-stats__figures span { text-align: left; }
 .metric-unit { font-size: 0.62em; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
@@ -1241,7 +1223,6 @@ html[data-view="stats"] #stations-search-btn { display: none !important; }
 .garage-tiles > div { min-width: 0; }
 .garage-tiles .metric-unit { display: inline; }
 
-/* Pantalla de carga: GASOLINERA con el + girando (solo si la carga tarda) */
 .splash { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: var(--bg); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s ease, visibility 0s linear 0.3s; }
 .splash__word { display: flex; align-items: center; font-family: var(--font-display); font-size: clamp(2rem, 10vw, 3.4rem); font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
 .splash__plus { position: relative; display: inline-block; width: 0.72em; height: 0.72em; margin-left: 0.14em; font-size: 1.15em; color: transparent; overflow: hidden; }
@@ -1257,10 +1238,8 @@ html[data-view="stats"] #stations-search-btn { display: none !important; }
 }
 @media (prefers-reduced-motion: reduce) { .is-loading .splash { display: none; } }
 
-/* Precios de las tarjetas: alineados a la izquierda y en fila que se ajusta al ancho */
 .station-card__prices { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; text-align: left; }
 
-/* Tarjetas de gasolineras: cuadricula que no se sale de su columna */
 .station-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-items: start; }
 .station-card__main { min-width: 0; }
 .station-card__prices { display: flex; flex-flow: row wrap; gap: 4px 16px; text-align: left; white-space: normal; }
@@ -1271,28 +1250,23 @@ html[data-view="stats"] #stations-search-btn { display: none !important; }
     .station-card__prices { flex-direction: column; align-items: flex-end; gap: 4px; text-align: right; }
 }
 
-/* Cargando en cualquier seccion que tarde */
 .view-loading { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 12px 14px; border: 1px solid var(--accent-bg); background: var(--primary-tint); color: var(--text); font-weight: 700; }
 .view-loading::before { content: ''; flex: none; width: 16px; height: 16px; border: 3px solid var(--border); border-top-color: var(--accent-bg); border-radius: 50% !important; animation: gp-spin 0.8s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .view-loading::before { animation: none; } }
 
-/* Botones de los dialogos: mismo tamano, guardar arriba a todo el ancho y borrar en rojo con texto blanco */
 .pill--danger { background: #C62828; border-color: #C62828; color: #ffffff; }
 .dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: stretch; }
 .dialog-actions .pill { flex: 1 1 calc(50% - 4px); min-height: 48px; margin: 0; padding: 12px 14px; text-align: center; font-weight: 700; }
 .dialog-actions .pill--primary { flex-basis: 100%; order: -1; }
 
-/* Acciones en tarjetas: botones del mismo ancho que llenan la fila */
 .garage-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
 .garage-actions .pill { width: 100%; min-height: 48px; padding: 12px 14px; text-align: center; font-weight: 700; }
 
-/* La pantalla de carga se ve desde el primer instante; si el script no llega a ocultarla, se retira sola a los 10 s */
 .is-loading .splash { animation: splash-safety 0s linear 10s forwards; }
 @keyframes splash-safety { to { opacity: 0; visibility: hidden; pointer-events: none; } }
 
 .view-loading--float { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 10001; margin: 0; background: #111111; color: #FFFFFF; border-color: #FF7A1A; }
 
-/* Asistente de repostaje por pasos */
 .refuel-step h4 { margin: 8px 0 10px; font-family: var(--font-display); font-size: 1.15rem; }
 .refuel-step[hidden] { display: none; }
 .refuel-inline { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
@@ -1305,18 +1279,15 @@ html[data-view="stats"] #stations-search-btn { display: none !important; }
 #refuel-progress { margin: 0 0 4px; font-weight: 700; }
 #recap-image, #recap-pdf { flex: 1 1 0; }
 
-/* + de la pantalla de carga: mismo tamano que el del titulo */
 .splash__plus { width: 0.5em; height: 0.5em; margin-left: 0.05em; font-size: 1em; align-self: flex-start; margin-top: 0.14em; }
 .splash__plus::before { height: 0.13em; }
 .splash__plus::after { width: 0.13em; }
 
-/* Asistente: sugerencias sobre el campo, confirmacion unica y cierre abajo */
 #refuel-station-results { max-height: 38vh; overflow-y: auto; margin: 0 0 8px; }
 .refuel-done { display: flex; flex-direction: column; justify-content: space-between; gap: 24px; min-height: 42vh; text-align: center; }
 .refuel-done .pill { width: 100%; min-height: 52px; }
 #recap-share { grid-column: 1 / -1; }
 
-/* Sugerencias de gasolinera dentro del formulario, sin reborde flotante */
 #refuel-station-results { position: static; border: 0; box-shadow: none; background: transparent; margin: 0 0 8px; }
 #refuel-station-results li button { border: 1px solid var(--border); margin-bottom: 6px; }
 #stations-empty-anywhere { display: block; margin: 0 0 12px; }
@@ -1325,12 +1296,10 @@ html[data-view="stats"] #stations-search-btn { display: none !important; }
 .garage-check[hidden] { display: none; }
 .refuel-ask { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 4px 0 12px; }
 
-/* Depósito en ámbar y naranja en vez de verde */
 #garage-tank-fill { background: #FFB020; }
 #garage-tank-fill[data-level="mid"] { background: #FF7A1A; }
 #garage-tank-fill[data-level="low"] { background: #D93025; }
 
-/* Modo sin conexión */
 .offline-only { display: none; }
 html.is-offline .offline-only { display: block; }
 .offline-block { margin: 0 0 12px; padding: 12px 14px; border: 1px solid #FFB020; background: var(--primary-tint); color: var(--text); font-weight: 700; }

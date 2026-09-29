@@ -5,7 +5,6 @@ namespace Services;
 use Core\Cache;
 use Core\Http;
 
-
 class PlaceGeocoder
 {
     private const CONTACT = 'garridoparrayeraytx@gmail.com';

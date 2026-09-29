@@ -827,7 +827,6 @@
         try {
             localStorage.setItem('gp_map_hidden', stored);
         } catch (e) {
-            // sin almacenamiento el estado solo dura la sesion
         }
         applyMapVisibility();
     }
@@ -1090,7 +1089,6 @@
 
         for (const station of stations) {
             const color = priceColor(station.precio, min, max);
-            // El trazo transparente y ancho agranda la zona pulsable sin cambiar el punto.
             const marker = L.circleMarker([station.lat, station.lon], {
                 radius: 7,
                 color,

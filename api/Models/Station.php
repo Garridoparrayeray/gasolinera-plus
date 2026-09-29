@@ -512,7 +512,6 @@ class Station
         ];
     }
 
-
     private static function boundingBox(float $lat, float $lon, float $radiusKm): array
     {
         $deltaLat = $radiusKm / 111.0;

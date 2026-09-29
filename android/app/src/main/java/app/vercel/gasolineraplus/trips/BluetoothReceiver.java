@@ -44,7 +44,6 @@ public class BluetoothReceiver extends BroadcastReceiver {
         try {
             TripService.start(context, true, null);
         } catch (RuntimeException error) {
-            // Android puede negar arrancar el servicio en segundo plano si la app tiene ahorro de batería
         }
     }
 }

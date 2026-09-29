@@ -2,7 +2,6 @@
 
 namespace Models;
 
-
 class Search
 {
     public static function normalize(string $text): string
