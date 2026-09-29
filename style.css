@@ -1228,3 +1228,31 @@ html[data-view="garage"] #stations-search-btn,
 html[data-view="route"] #stations-search-btn,
 html[data-view="about"] #stations-search-btn,
 html[data-view="stats"] #stations-search-btn { display: none !important; }
+
+/* Cifras y textos alineados a la izquierda y con un tamano que cabe en el movil */
+#national-stats-toggle { text-align: left; }
+.national-stats__figures span { text-align: left; }
+.metric-unit { font-size: 0.62em; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
+.garage-tiles strong,
+#garage-vehicle-card .garage-tiles strong,
+#route-result .garage-tiles strong,
+#trip-summary-tiles strong { font-size: clamp(1.1rem, 5.2vw, 1.5rem); line-height: 1.15; overflow-wrap: anywhere; }
+.garage-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.garage-tiles > div { min-width: 0; }
+.garage-tiles .metric-unit { display: inline; }
+
+/* Pantalla de carga: GASOLINERA con el + girando (solo si la carga tarda) */
+.splash { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: var(--bg); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s ease, visibility 0s linear 0.3s; }
+.splash__word { display: flex; align-items: center; font-family: var(--font-display); font-size: clamp(2rem, 10vw, 3.4rem); font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+.splash__plus { display: inline-block; margin-left: 0.06em; color: var(--accent-bg); }
+.is-loading .splash { opacity: 1; visibility: visible; pointer-events: auto; transition: none; }
+.is-loading .splash__plus { animation: splash-plus-spin 0.8s ease-in-out infinite; }
+@keyframes splash-plus-spin {
+    0% { transform: rotate(0deg) scale(1); }
+    60% { transform: rotate(360deg) scale(1.15); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .is-loading .splash { display: none; } }
+
+/* Precios de las tarjetas: alineados a la izquierda y en fila que se ajusta al ancho */
+.station-card__prices { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; text-align: left; }

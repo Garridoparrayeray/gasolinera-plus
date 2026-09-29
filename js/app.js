@@ -707,6 +707,7 @@
         state.stationsPendingPage = null;
         updatePaginationControls();
         setStationsStatus('loading');
+        GPSplash.begin();
 
         const filters = currentFilters();
         const page = { offset: (pageNumber - 1) * PAGE_SIZE, limit: PAGE_SIZE };
@@ -721,6 +722,7 @@
             state.stationsLoading = false;
             updatePaginationControls();
             setStationsStatus('error');
+            GPSplash.end();
             showToast('No se pudieron cargar las gasolineras: ' + e.message);
             return;
         }
@@ -740,6 +742,7 @@
         renderList(state.currentStations);
         updatePaginationControls();
         setStationsStatus('done');
+        GPSplash.end();
         if (state.currentView === 'list') {
             refreshMapMarkers();
         }

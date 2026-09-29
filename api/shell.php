@@ -85,6 +85,8 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
 </head>
 <body>
 
+    <div class="splash" aria-hidden="true"><span class="splash__word">GASOLINERA<span class="splash__plus">+</span></span></div>
+
     <main class="app-container">
 
         <header>
@@ -154,9 +156,6 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
 
         <form id="search-form" autocomplete="off">
             <input id="search-input" type="search" placeholder="Municipio, calle o marca" aria-label="Buscar gasolinera" autocomplete="off">
-            <button type="submit" class="btn-icon" aria-label="Buscar">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            </button>
             <ul id="search-suggestions" hidden></ul>
         </form>
         <button id="back-to-nearby" type="button" hidden>« Volver a gasolineras cerca de mí</button>
@@ -748,6 +747,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <script src="/vendor/chartjs/chart.umd.js"></script>
     <script src="/vendor/protomaps-leaflet/protomaps-leaflet.js"></script>
     <script src="/js/native.js"></script>
+    <script src="/js/splash.js"></script>
     <script src="/js/map-guard.js"></script>
     <script src="/js/offline-maps.js"></script>
     <script src="/js/background.js"></script>

@@ -102,6 +102,14 @@ const GPGarage = (() => {
         return number(value, 2) + ' €';
     }
 
+    function setMetric(element, value, unit) {
+        element.textContent = value;
+        const small = document.createElement('small');
+        small.className = 'metric-unit';
+        small.textContent = ' ' + unit;
+        element.appendChild(small);
+    }
+
     function unitOf(fuel) {
         return AlertsStore.unitFor(fuel);
     }
@@ -219,7 +227,7 @@ const GPGarage = (() => {
             el.tankText.textContent = `Quedan unos ${number(s.tankLiters, 0)} ${unit} (${Math.round(s.tankPercent)} %) · autonomía estimada de ${number(Math.max(0, s.autonomyKm), 0)} km`;
         }
 
-        el.consumption.textContent = `${number(s.avgConsumption, 1)} ${unit}/100 km`;
+        setMetric(el.consumption, number(s.avgConsumption, 1), `${unit}/100 km`);
         if (s.consumptionSource === 'real') {
             el.consumptionSource.textContent = `real, medido en ${number(s.trackedKm, 0)} km`;
         } else {
@@ -228,11 +236,11 @@ const GPGarage = (() => {
         if (s.costPerKm === null) {
             el.costKm.textContent = '—';
         } else {
-            el.costKm.textContent = `${number(s.costPerKm, 3)} €/km`;
+            setMetric(el.costKm, number(s.costPerKm, 3), '€/km');
         }
         const month = GPFuel.madridMonth(new Date().toISOString());
-        el.monthSpend.textContent = money(s.months[month] || 0);
-        el.odometerValue.textContent = `${number(s.odometer, 0)} km`;
+        setMetric(el.monthSpend, number(s.months[month] || 0, 2), '€');
+        setMetric(el.odometerValue, number(s.odometer, 0), 'km');
     }
 
     function renderRefuels(vehicle) {
