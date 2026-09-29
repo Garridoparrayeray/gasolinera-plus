@@ -745,6 +745,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <script src="/vendor/chartjs/chart.umd.js"></script>
     <script src="/vendor/protomaps-leaflet/protomaps-leaflet.js"></script>
     <script src="/js/native.js"></script>
+    <script src="/js/map-guard.js"></script>
     <script src="/js/offline-maps.js"></script>
     <script src="/js/background.js"></script>
     <script src="/js/alerts-store.js"></script>

@@ -99,6 +99,7 @@ const GPMaps = (() => {
     }
 
     function addBaseLayers(map) {
+        GPMapGuard.install(map);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: ATTRIBUTION,
             maxZoom: 19,

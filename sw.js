@@ -7,6 +7,7 @@ const SHELL_FILES = [
     '/',
     '/style.css',
     '/js/native.js',
+    '/js/map-guard.js',
     '/js/offline-maps.js',
     '/vendor/protomaps-leaflet/protomaps-leaflet.js',
     '/js/background.js',

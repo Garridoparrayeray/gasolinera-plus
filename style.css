@@ -1194,3 +1194,7 @@ a { color: var(--primary); }
 #app-logomark path, #geo-ask-logomark path { fill: var(--highlight); }
 
 #view-map.is-map-hidden #map-wrap, #view-map.is-map-hidden #map-note { display: none !important; }
+
+/* Mapas: en pantallas tactiles se activan al tocarlos para no atrapar el scroll de la pagina */
+.map-shield { position: absolute; inset: 0; z-index: 1100; display: flex; align-items: flex-end; justify-content: center; padding: 12px; border: 0; background: rgba(0, 0, 0, 0.04); cursor: pointer; }
+.map-shield span { padding: 10px 16px; background: var(--surface); color: var(--text); border: 1px solid var(--field-border); font-size: 0.9rem; font-weight: 700; }.map-guard-wrap { position: relative; }
