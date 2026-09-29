@@ -369,8 +369,12 @@ const GPTrips = (() => {
             perms = await plugin.requestActivity();
         }
         if (perms.location && perms.activity && !perms.background) {
-            const always = GPNative.platform() === 'ios' ? '"Siempre"' : '"Todo el tiempo"';
-            const system = GPNative.platform() === 'ios' ? 'iOS' : 'Android';
+            let always = '"Todo el tiempo"';
+            let system = 'Android';
+            if (GPNative.platform() === 'ios') {
+                always = '"Siempre"';
+                system = 'iOS';
+            }
             const ok = window.confirm('Para detectar tus viajes con la app cerrada, ' + system + ' te pedirá permitir la ubicación ' + always + '. Gasolinera+ solo la usa mientras vas en coche y los recorridos se quedan en tu móvil. ¿Continuar?');
             if (ok) {
                 perms = await plugin.requestBackground();
@@ -385,7 +389,11 @@ const GPTrips = (() => {
         try {
             await plugin.setAutoDetect({ enabled: true });
             GP.showToast('Detección automática activada');
-            note('Cuando ' + (GPNative.platform() === 'ios' ? 'el iPhone' : 'Android') + ' detecte que vas en coche, Gasolinera+ empezará a grabar el viaje y parará al bajarte.');
+            let detector = 'Android';
+            if (GPNative.platform() === 'ios') {
+                detector = 'el iPhone';
+            }
+            note('Cuando ' + detector + ' detecte que vas en coche, Gasolinera+ empezará a grabar el viaje y parará al bajarte.');
         } catch (error) {
             el.auto.checked = false;
             note(error.message);
