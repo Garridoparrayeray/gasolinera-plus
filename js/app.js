@@ -582,6 +582,7 @@
     function setStationsStatus(kind) {
         const loading = kind === 'loading';
         el.stationsProgress.hidden = !loading;
+        el.stationsStatus.classList.toggle('is-loading', loading);
         el.stationsList.classList.toggle('is-loading', loading);
         if (loading) {
             el.stationsStatus.textContent = `Buscando gasolineras… ${filterSummary()}`;

@@ -513,6 +513,24 @@ function fetchLocalOrRemote(string $source): array
     return fetchSnapshot($source);
 }
 
+function trendCodes(array $today, array $previous): array
+{
+    $codes = [];
+    foreach ($previous as $fuel => $before) {
+        if (!isset($today[$fuel])) {
+            continue;
+        }
+        $code = 'd';
+        if (abs($today[$fuel] - $before) < 0.0005) {
+            $code = 's';
+        } elseif ($today[$fuel] > $before) {
+            $code = 'u';
+        }
+        $codes[$fuel] = $code;
+    }
+    return $codes;
+}
+
 function generateLiteJson(string $dbPath): void
 {
     echo "Generando JSON offline con todos los datos de hoy...\n";
@@ -531,10 +549,29 @@ function generateLiteJson(string $dbPath): void
         $pricesById[$price['ideess']][$price['carburante']] = (float)$price['precio'];
     }
 
+    $previousById = [];
+    $previousRows = $pdo->query('
+        SELECT ideess, carburante, precio FROM (
+            SELECT ideess, carburante, precio,
+                   ROW_NUMBER() OVER (PARTITION BY ideess, carburante ORDER BY fecha DESC) AS rn
+            FROM price_history
+        ) WHERE rn = 2
+    ')->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($previousRows as $row) {
+        $previousById[$row['ideess']][$row['carburante']] = (float)$row['precio'];
+    }
+
     foreach ($stations as &$station) {
         $station['precios'] = new stdClass();
         if (isset($pricesById[$station['ideess']])) {
             $station['precios'] = $pricesById[$station['ideess']];
+        }
+        $trends = [];
+        if (isset($pricesById[$station['ideess']], $previousById[$station['ideess']])) {
+            $trends = trendCodes($pricesById[$station['ideess']], $previousById[$station['ideess']]);
+        }
+        if ($trends) {
+            $station['t'] = $trends;
         }
         $station['is_24h'] = (int)$station['is_24h'];
         $station['lat'] = round((float)$station['lat'], 5);

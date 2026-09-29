@@ -21,6 +21,12 @@ use Controllers\StationsController;
 
 $request = new Request();
 
+if (!\Core\RateLimit::allow(\Core\RateLimit::clientIp(), 240, 60)) {
+    header('Retry-After: 60');
+    Response::error('Demasiadas peticiones, espera un momento', 429);
+    exit;
+}
+
 $router = new Router();
 
 $stations = new StationsController();

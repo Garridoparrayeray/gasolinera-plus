@@ -55,6 +55,30 @@ const OfflineEngine = (() => {
         return value;
     }
 
+    const TREND_NAMES = { u: 'up', d: 'down', s: 'same' };
+    const MAP_MAX_STATIONS = 4000;
+
+    function trendsOf(station) {
+        const trends = {};
+        for (const [fuel, code] of Object.entries(station.t || {})) {
+            trends[fuel] = TREND_NAMES[code];
+        }
+        return trends;
+    }
+
+    function capForMap(stations) {
+        const total = stations.length;
+        if (total <= MAP_MAX_STATIONS) {
+            return { stations, total, truncated: false, offline: true };
+        }
+        const step = total / MAP_MAX_STATIONS;
+        const sampled = [];
+        for (let i = 0; i < MAP_MAX_STATIONS; i++) {
+            sampled.push(stations[Math.floor(i * step)]);
+        }
+        return { stations: sampled, total, truncated: true, offline: true };
+    }
+
     function listItem(station, distanciaKm) {
         return {
             ideess: String(station.ideess),
@@ -67,7 +91,7 @@ const OfflineEngine = (() => {
             horarioRaw: station.horario_raw || '',
             distanciaKm,
             precios: station.precios,
-            tendencias: {},
+            tendencias: trendsOf(station),
         };
     }
 
@@ -109,7 +133,7 @@ const OfflineEngine = (() => {
                     }
                     return { ideess: String(s.ideess), rotulo: s.rotulo, lat: s.lat, lon: s.lon, is24h: isOpen24h(s), precio };
                 });
-            return { stations, total: stations.length, truncated: false, offline: true };
+            return capForMap(stations);
         },
         search: async ({ q, lat, lon, sort = 'price', fuel = 'gasoleo_a', open, offset = 0, limit = 20 }) => {
             const data = applyFilters(await loadData(), fuel, open);
@@ -173,8 +197,9 @@ const OfflineEngine = (() => {
                 return null;
             }
             const combustibles = {};
+            const trends = trendsOf(s);
             for (const [slug, precio] of Object.entries(s.precios || {})) {
-                combustibles[slug] = { precio: Number(precio), tendencia: null };
+                combustibles[slug] = { precio: Number(precio), tendencia: trends[slug] || null };
             }
             let texto = 'Horario no disponible';
             if (isOpen24h(s)) {
@@ -250,16 +275,49 @@ const Api = (() => {
         return error.status === 0;
     }
 
+    function roundCoord(value) {
+        return Number(value).toFixed(3);
+    }
+
+    function snapDown(value) {
+        return (Math.floor(Number(value) * 100) / 100).toFixed(2);
+    }
+
+    function snapUp(value) {
+        return (Math.ceil(Number(value) * 100) / 100).toFixed(2);
+    }
+
+    function canUseLocal(params) {
+        return GPNative.isNative() && params.open !== 'now';
+    }
+
+    function localResult(data) {
+        return { ...data, offline: false };
+    }
+
+    function exactDistances(stations, lat, lon, sort) {
+        for (const station of stations) {
+            station.distanciaKm = Math.round(OfflineEngine.haversine(lat, lon, station.lat, station.lon) * 100) / 100;
+        }
+        if (sort === 'distance') {
+            stations.sort((a, b) => a.distanciaKm - b.distanciaKm);
+        }
+    }
     return {
         near: async (params) => {
+            if (canUseLocal(params)) {
+                return localResult(await OfflineEngine.near(params));
+            }
             const { lat, lon, radius, sort, fuel, open, offset, limit } = params;
-            const p = new URLSearchParams({ lat, lon, radius, sort });
+            const p = new URLSearchParams({ lat: roundCoord(lat), lon: roundCoord(lon), radius, sort });
             if (fuel) p.set('fuel', fuel);
             if (open) p.set('open', open);
             if (offset) p.set('offset', offset);
             if (limit) p.set('limit', limit);
             try {
-                return await request('/stations/near?' + p);
+                const data = await request('/stations/near?' + p);
+                exactDistances(data.stations, lat, lon, sort);
+                return data;
             } catch (e) {
                 if (isOffline(e)) {
                     return OfflineEngine.near(params);
@@ -269,15 +327,22 @@ const Api = (() => {
         },
         search: async (params) => {
             const { q, lat, lon, sort, fuel, open, offset, limit } = params;
+            const hasLocation = lat !== undefined && lat !== null && lon !== undefined && lon !== null;
             const p = new URLSearchParams({ q, sort });
-            if (lat !== undefined && lat !== null) p.set('lat', lat);
-            if (lon !== undefined && lon !== null) p.set('lon', lon);
+            if (hasLocation) {
+                p.set('lat', roundCoord(lat));
+                p.set('lon', roundCoord(lon));
+            }
             if (fuel) p.set('fuel', fuel);
             if (open) p.set('open', open);
             if (offset) p.set('offset', offset);
             if (limit) p.set('limit', limit);
             try {
-                return await request('/stations/search?' + p);
+                const data = await request('/stations/search?' + p);
+                if (hasLocation) {
+                    exactDistances(data.stations, lat, lon, sort);
+                }
+                return data;
             } catch (e) {
                 if (isOffline(e)) {
                     return OfflineEngine.search(params);
@@ -296,8 +361,11 @@ const Api = (() => {
             }
         },
         bbox: async (params, signal) => {
+            if (canUseLocal(params)) {
+                return localResult(await OfflineEngine.bbox(params));
+            }
             const { north, south, east, west, fuel, open } = params;
-            const p = new URLSearchParams({ north, south, east, west });
+            const p = new URLSearchParams({ north: snapUp(north), south: snapDown(south), east: snapUp(east), west: snapDown(west) });
             if (fuel) p.set('fuel', fuel);
             if (open) p.set('open', open);
             try {
