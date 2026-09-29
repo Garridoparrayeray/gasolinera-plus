@@ -1,6 +1,10 @@
 package app.vercel.gasolineraplus.trips;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -32,7 +36,8 @@ import java.util.List;
                 @Permission(alias = "location", strings = { Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION }),
                 @Permission(alias = "background", strings = { Manifest.permission.ACCESS_BACKGROUND_LOCATION }),
                 @Permission(alias = "activity", strings = { Manifest.permission.ACTIVITY_RECOGNITION }),
-                @Permission(alias = "notifications", strings = { Manifest.permission.POST_NOTIFICATIONS })
+                @Permission(alias = "notifications", strings = { Manifest.permission.POST_NOTIFICATIONS }),
+                @Permission(alias = "bluetooth", strings = { "android.permission.BLUETOOTH_CONNECT" })
         }
 )
 public class TripRecorderPlugin extends Plugin {
@@ -64,6 +69,11 @@ public class TripRecorderPlugin extends Plugin {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             notifications = granted(Manifest.permission.POST_NOTIFICATIONS);
         }
+        boolean bluetooth = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            bluetooth = granted("android.permission.BLUETOOTH_CONNECT");
+        }
+        out.put("bluetooth", bluetooth);
         out.put("background", background);
         out.put("activity", activity);
         out.put("notifications", notifications);
@@ -99,6 +109,10 @@ public class TripRecorderPlugin extends Plugin {
         out.put("trip", live);
         out.put("recording", recording);
         out.put("autoDetect", TripStore.isAutoDetectEnabled(getContext()));
+        JSObject bluetooth = new JSObject();
+        bluetooth.put("address", TripStore.bluetoothAddress(getContext()));
+        bluetooth.put("name", TripStore.bluetoothName(getContext()));
+        out.put("bluetooth", bluetooth);
         out.put("permissions", permissionsJson());
         out.put("sdk", Build.VERSION.SDK_INT);
         call.resolve(out);
@@ -180,6 +194,47 @@ public class TripRecorderPlugin extends Plugin {
                     call.resolve();
                 })
                 .addOnFailureListener((error) -> call.reject("No se pudo activar la detección de viajes: " + error.getMessage()));
+    }
+
+    @PluginMethod
+    public void requestBluetooth(PluginCall call) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            call.resolve(permissionsJson());
+            return;
+        }
+        requestPermissionForAlias("bluetooth", call, "afterPermissions");
+    }
+
+    @SuppressLint("MissingPermission")
+    @PluginMethod
+    public void bluetoothDevices(PluginCall call) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !granted("android.permission.BLUETOOTH_CONNECT")) {
+            call.reject("Falta el permiso de Bluetooth", "permissions");
+            return;
+        }
+        JSArray devices = new JSArray();
+        BluetoothManager manager = (BluetoothManager) getContext().getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter adapter = null;
+        if (manager != null) {
+            adapter = manager.getAdapter();
+        }
+        if (adapter != null) {
+            for (BluetoothDevice device : adapter.getBondedDevices()) {
+                JSObject item = new JSObject();
+                item.put("name", device.getName());
+                item.put("address", device.getAddress());
+                devices.put(item);
+            }
+        }
+        JSObject out = new JSObject();
+        out.put("devices", devices);
+        call.resolve(out);
+    }
+
+    @PluginMethod
+    public void setBluetoothDevice(PluginCall call) {
+        TripStore.setBluetoothDevice(getContext(), call.getString("address"), call.getString("name"));
+        call.resolve();
     }
 
     @PluginMethod

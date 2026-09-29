@@ -26,6 +26,8 @@ public final class TripStore {
     private static final String PREFS = "trip_recorder";
     private static final String KEY_CURRENT = "current_trip";
     private static final String KEY_AUTO_DETECT = "auto_detect";
+    private static final String KEY_BT_ADDRESS = "bt_address";
+    private static final String KEY_BT_NAME = "bt_name";
 
     private TripStore() {
     }
@@ -60,6 +62,24 @@ public final class TripStore {
 
     public static void setAutoDetectEnabled(Context context, boolean enabled) {
         prefs(context).edit().putBoolean(KEY_AUTO_DETECT, enabled).apply();
+    }
+
+    public static String bluetoothAddress(Context context) {
+        return prefs(context).getString(KEY_BT_ADDRESS, null);
+    }
+
+    public static String bluetoothName(Context context) {
+        return prefs(context).getString(KEY_BT_NAME, null);
+    }
+
+    public static void setBluetoothDevice(Context context, String address, String name) {
+        SharedPreferences.Editor editor = prefs(context).edit();
+        if (address == null || address.isEmpty()) {
+            editor.remove(KEY_BT_ADDRESS).remove(KEY_BT_NAME);
+        } else {
+            editor.putString(KEY_BT_ADDRESS, address).putString(KEY_BT_NAME, name);
+        }
+        editor.apply();
     }
 
     static synchronized String begin(Context context, boolean auto, String vehicleId) throws IOException, JSONException {

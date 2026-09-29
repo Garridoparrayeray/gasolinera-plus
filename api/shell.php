@@ -425,6 +425,13 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                     </div>
                     <p id="trip-note" class="garage-note"></p>
                     <label class="garage-check" id="trip-auto-wrap" hidden><input type="checkbox" id="trip-auto"> Detectar mis viajes en coche automáticamente</label>
+                    <div id="trip-bt-wrap" hidden>
+                        <label class="garage-check"><input type="checkbox" id="trip-bt"> Empezar al conectarme al Bluetooth de mi coche</label>
+                        <div id="trip-bt-picker" hidden>
+                            <label>Bluetooth de tu coche <select id="trip-bt-device"></select></label>
+                            <p class="garage-note">Empareja antes el móvil con el coche en los ajustes de Bluetooth. Necesita la ubicación "Permitir todo el tiempo" y quitar el ahorro de batería para Gasolinera+. El viaje termina al desconectarte.</p>
+                        </div>
+                    </div>
                     <div id="trip-permissions" hidden>
                         <p class="garage-note" id="trip-permissions-text"></p>
                         <div class="garage-actions">

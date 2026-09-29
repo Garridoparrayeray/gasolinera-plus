@@ -12,6 +12,10 @@ const GPTrips = (() => {
         note: $('trip-note'),
         autoWrap: $('trip-auto-wrap'),
         auto: $('trip-auto'),
+        btWrap: $('trip-bt-wrap'),
+        bt: $('trip-bt'),
+        btPicker: $('trip-bt-picker'),
+        btDevice: $('trip-bt-device'),
         permissions: $('trip-permissions'),
         permissionsText: $('trip-permissions-text'),
         permissionsFix: $('trip-permissions-fix'),
@@ -292,6 +296,7 @@ const GPTrips = (() => {
         el.auto.checked = status.autoDetect;
         renderLive();
         renderPermissions(status);
+        await renderBluetooth(status);
     }
 
     function renderPermissions(status) {
@@ -453,6 +458,96 @@ const GPTrips = (() => {
         await GarageStore.saveSetting(WEB_TRIP_KEY, null);
         await saveTrip(pending.points, { id: pending.id, auto: false });
         GP.showToast('Se ha guardado un viaje que quedó sin terminar');
+    }
+
+    async function renderBluetooth(status) {
+        el.btWrap.hidden = GPNative.platform() !== 'android';
+        if (el.btWrap.hidden) {
+            return;
+        }
+        const saved = status.bluetooth && status.bluetooth.address;
+        el.bt.checked = Boolean(saved) || el.btPicker.dataset.open === '1';
+        el.btPicker.hidden = !el.bt.checked;
+        if (!el.bt.checked) {
+            return;
+        }
+        await fillBluetoothDevices(saved);
+    }
+
+    async function fillBluetoothDevices(saved) {
+        const plugin = recorder();
+        let devices = [];
+        try {
+            devices = (await plugin.bluetoothDevices()).devices;
+        } catch (error) {
+            devices = [];
+        }
+        el.btDevice.innerHTML = '';
+        const empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = 'Elige tu coche';
+        el.btDevice.appendChild(empty);
+        for (const device of devices) {
+            const option = document.createElement('option');
+            option.value = device.address;
+            option.textContent = device.name || device.address;
+            el.btDevice.appendChild(option);
+        }
+        if (saved) {
+            el.btDevice.value = saved;
+        }
+        if (devices.length === 0) {
+            note('No hay dispositivos Bluetooth emparejados. Empareja tu coche en los ajustes de Bluetooth del móvil y vuelve aquí.');
+        }
+    }
+
+    async function setBluetooth(enabled) {
+        const plugin = recorder();
+        if (!plugin || typeof plugin.bluetoothDevices !== 'function') {
+            el.bt.checked = false;
+            note('Esta versión de la app no admite el Bluetooth del coche. Actualiza la app.');
+            return;
+        }
+        if (!enabled) {
+            el.btPicker.dataset.open = '0';
+            await plugin.setBluetoothDevice({ address: '', name: '' });
+            await refreshStatus();
+            return;
+        }
+        let perms = await plugin.requestForeground();
+        if (perms.location) {
+            perms = await plugin.requestBluetooth();
+        }
+        if (perms.location && perms.bluetooth && !perms.background) {
+            const ok = window.confirm('Para empezar el viaje al conectarte al coche con la app cerrada, Android te pedirá permitir la ubicación "Todo el tiempo". Gasolinera+ solo la usa mientras vas en coche y los recorridos se quedan en tu móvil. ¿Continuar?');
+            if (ok) {
+                perms = await plugin.requestBackground();
+            }
+        }
+        if (!perms.location || !perms.bluetooth || !perms.background) {
+            el.bt.checked = false;
+            note('No se ha activado: faltan permisos. Puedes darlos desde los ajustes de la app.');
+            await refreshStatus();
+            return;
+        }
+        el.btPicker.dataset.open = '1';
+        await refreshStatus();
+        if (!perms.unrestrictedBattery) {
+            note('Elige tu coche. Para que arranque con la app cerrada, quita también el ahorro de batería para Gasolinera+.');
+        }
+    }
+
+    async function chooseBluetoothDevice() {
+        const plugin = recorder();
+        const address = el.btDevice.value;
+        let name = '';
+        if (address !== '') {
+            name = el.btDevice.options[el.btDevice.selectedIndex].text;
+        }
+        await plugin.setBluetoothDevice({ address, name });
+        if (address !== '') {
+            GP.showToast('Los viajes empezarán al conectarte a ' + name);
+        }
     }
 
     async function setAuto(enabled) {
@@ -727,6 +822,8 @@ const GPTrips = (() => {
     el.driveMin.addEventListener('click', () => minimizeDrive(true));
     el.chip.addEventListener('click', () => minimizeDrive(false));
     el.auto.addEventListener('change', () => setAuto(el.auto.checked).catch((error) => note(error.message)));
+    el.bt.addEventListener('change', () => setBluetooth(el.bt.checked).catch((error) => note(error.message)));
+    el.btDevice.addEventListener('change', () => chooseBluetoothDevice().catch((error) => note(error.message)));
     el.permissionsFix.addEventListener('click', () => {
         const plugin = recorder();
         if (plugin) {
