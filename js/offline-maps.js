@@ -311,7 +311,44 @@ const GPMaps = (() => {
         });
     }
 
-    document.addEventListener('DOMContentLoaded', initCard);
+    async function firstRunHint() {
+        if (!available()) {
+            return;
+        }
+        let seen = false;
+        try {
+            seen = localStorage.getItem('gp_maps_hint') === '1';
+        } catch (e) {
+            seen = true;
+        }
+        const connection = navigator.connection;
+        if (seen || !connection || connection.type !== 'wifi') {
+            return;
+        }
+        await verifyInstalled();
+        if (Object.keys(state.installed).length > 0) {
+            return;
+        }
+        try {
+            localStorage.setItem('gp_maps_hint', '1');
+        } catch (e) {
+            return;
+        }
+        await GPSplash.whenHidden();
+        const ok = window.confirm('Estás con Wi-Fi. ¿Quieres descargar ahora el mapa de tu zona para usarlo sin conexión? Ocupa desde decenas hasta varios cientos de MB.');
+        if (ok) {
+            GP.switchView('garage');
+            const card = document.getElementById('offline-maps-card');
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initCard();
+        setTimeout(() => firstRunHint().catch(() => {}), 3000);
+    });
 
     return { addBaseLayers, available };
 })();
