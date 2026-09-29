@@ -7,11 +7,27 @@ const GPSplash = (() => {
     let showTimer = null;
     let maxTimer = null;
     let pending = 0;
+    let waiting = [];
 
     function hide() {
         clearTimeout(showTimer);
         clearTimeout(maxTimer);
         root.classList.remove('is-loading');
+        const callbacks = waiting;
+        waiting = [];
+        for (const callback of callbacks) {
+            callback();
+        }
+    }
+
+    function whenHidden() {
+        return new Promise((resolve) => {
+            if (!root.classList.contains('is-loading')) {
+                resolve();
+                return;
+            }
+            waiting.push(resolve);
+        });
     }
 
     function show() {
@@ -49,14 +65,15 @@ const GPSplash = (() => {
         setTimeout(hide, FALLBACK_HIDE_MS);
     }
 
-    begin();
+    pending = 1;
+    show();
     if (document.readyState === 'complete') {
         end();
     } else {
         window.addEventListener('load', end, { once: true });
     }
 
-    return { begin, end };
+    return { begin, end, whenHidden };
 })();
 
 const GPSectionLoading = (() => {

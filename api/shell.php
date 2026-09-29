@@ -48,7 +48,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="is-loading">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">

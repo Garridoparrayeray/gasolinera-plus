@@ -426,7 +426,11 @@
             }
             return;
         }
-        el.geoAsk.showModal();
+        GPSplash.whenHidden().then(() => {
+            if (!el.geoAsk.open) {
+                el.geoAsk.showModal();
+            }
+        });
     }
 
     function loadLocationPref() {
