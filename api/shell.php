@@ -443,7 +443,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 </div>
                 <div class="garage-card">
                     <h3>Tu resumen</h3>
-                    <p class="garage-note">Descarga tu gasto, litros, consumo y dónde repostas más como imagen o PDF para guardarlo o compartirlo.</p>
+                    <p class="garage-note">Guarda en este dispositivo tu gasto, litros, consumo y dónde repostas más como imagen o PDF, o compártelo.</p>
                     <div class="garage-segment" role="group" aria-label="Periodo del resumen">
                         <button id="recap-month" type="button" class="pill" aria-pressed="true">Este mes</button>
                         <button id="recap-year" type="button" class="pill" aria-pressed="false">Este año</button>
@@ -452,6 +452,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                     <div class="garage-actions">
                         <button id="recap-image" type="button" class="pill pill--primary">Guardar imagen</button>
                         <button id="recap-pdf" type="button" class="pill">Guardar PDF</button>
+                        <button id="recap-share" type="button" class="pill">Compartir imagen</button>
                     </div>
                     <p id="recap-note" class="form-error" hidden></p>
                 </div>

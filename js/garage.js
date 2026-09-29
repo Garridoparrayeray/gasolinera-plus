@@ -83,6 +83,7 @@ const GPGarage = (() => {
         recapAll: $('recap-all'),
         recapImage: $('recap-image'),
         recapPdf: $('recap-pdf'),
+        recapShare: $('recap-share'),
         recapNote: $('recap-note'),
         odometerDialog: $('odometer-dialog'),
         odometerForm: $('odometer-form'),
@@ -1057,7 +1058,7 @@ const GPGarage = (() => {
         GP.showToast('Toca una gasolinera en el mapa y pulsa Repostar aquí.');
     }
 
-    async function exportRecap(kind) {
+    async function exportRecap(kind, share) {
         const vehicle = activeVehicle();
         if (!vehicle) {
             showError(el.recapNote, 'Primero añade tu coche.');
@@ -1070,9 +1071,9 @@ const GPGarage = (() => {
         }
         showError(el.recapNote, '');
         if (kind === 'pdf') {
-            await GPRecap.exportPdf(stats);
+            await GPRecap.exportPdf(stats, share);
         } else {
-            await GPRecap.exportImage(stats);
+            await GPRecap.exportImage(stats, share);
         }
     }
 
@@ -1358,6 +1359,7 @@ const GPGarage = (() => {
     el.recapAll.addEventListener('click', () => setRecapPeriod('all'));
     el.recapImage.addEventListener('click', () => exportRecap('image'));
     el.recapPdf.addEventListener('click', () => exportRecap('pdf'));
+    el.recapShare.addEventListener('click', () => exportRecap('image', true));
     el.stationSearch.addEventListener('input', onStationInput);
     el.stationSearch.addEventListener('focus', onStationInput);
     el.stationClear.addEventListener('click', clearRefuelStation);

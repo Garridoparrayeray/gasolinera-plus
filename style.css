@@ -1315,3 +1315,4 @@ html[data-view="stats"] #stations-search-btn { display: none !important; }
 .refuel-inline.refuel-confirm { display: none; }
 .refuel-done { display: flex; flex-direction: column; justify-content: space-between; gap: 24px; min-height: 42vh; text-align: center; }
 .refuel-done .pill { width: 100%; min-height: 52px; }
+#recap-share { grid-column: 1 / -1; }

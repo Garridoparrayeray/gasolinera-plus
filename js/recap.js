@@ -262,9 +262,13 @@ const GPRecap = (() => {
         return new Promise((resolve) => canvas.toBlob(resolve, type));
     }
 
-    async function deliver(blob, name) {
+    function isNative() {
+        return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    }
+
+    async function deliver(blob, name, share) {
         const file = new File([blob], name, { type: blob.type });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        if ((share || isNative()) && navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
                 await navigator.share({ files: [file], title: 'Mi resumen de Gasolinera+' });
                 return;
@@ -284,13 +288,13 @@ const GPRecap = (() => {
         setTimeout(() => URL.revokeObjectURL(url), 10000);
     }
 
-    async function exportImage(stats) {
-        await deliver(await canvasBlob(draw(stats), 'image/png'), 'resumen-gasolinera.png');
+    async function exportImage(stats, share) {
+        await deliver(await canvasBlob(draw(stats), 'image/png'), 'resumen-gasolinera.png', share);
     }
 
-    async function exportPdf(stats) {
+    async function exportPdf(stats, share) {
         const canvas = draw(stats);
-        await deliver(pdfFromJpeg(canvas.toDataURL('image/jpeg', 0.92), canvas.width, canvas.height), 'resumen-gasolinera.pdf');
+        await deliver(pdfFromJpeg(canvas.toDataURL('image/jpeg', 0.92), canvas.width, canvas.height), 'resumen-gasolinera.pdf', share);
     }
 
     return { compute, draw, exportImage, exportPdf };
