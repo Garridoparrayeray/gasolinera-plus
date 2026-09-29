@@ -2188,6 +2188,19 @@
             ensureMap();
             return state.map;
         },
+        showMap: () => {
+            switchView('list');
+            if (state.mapHidden) {
+                toggleMap();
+            }
+            ensureMap();
+            setTimeout(() => {
+                el.viewMap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (state.map) {
+                    state.map.invalidateSize();
+                }
+            }, 150);
+        },
     };
 
     restoreFuelPreference();

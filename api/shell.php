@@ -651,7 +651,6 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                     <ul id="refuel-station-results" class="route-suggestions" hidden></ul>
                     <label>Gasolinera <input id="refuel-station-search" type="search" placeholder="Busca por nombre, calle o municipio" autocomplete="off"></label>
                     <div class="refuel-inline">
-                        <button id="refuel-station-map" type="button" class="pill">Elegir en el mapa</button>
                         <button id="refuel-station-clear" type="button" class="pill" hidden>Quitar la gasolinera</button>
                     </div>
                     <p class="garage-note">Si no te acuerdas, puedes seguir sin nombre. Con el nombre, tu resumen dirá dónde repostas más y a qué precio.</p>
@@ -676,7 +675,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 <label><span id="refuel-liters-label">Litros</span> <input id="refuel-liters" type="number" min="0.1" step="0.01" required></label>
                 <div class="refuel-inline refuel-confirm">
                     <button id="refuel-liters-yes" type="button" class="pill pill--primary">Sí, es correcto</button>
-                    <button id="refuel-liters-edit" type="button" class="pill">Editar</button>
+                    <button id="refuel-liters-edit" type="button" class="pill">No, editar</button>
                 </div>
             </section>
 

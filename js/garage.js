@@ -75,7 +75,6 @@ const GPGarage = (() => {
         refuelLitersYes: $('refuel-liters-yes'),
         refuelLitersEdit: $('refuel-liters-edit'),
         refuelReview: $('refuel-review'),
-        refuelStationMap: $('refuel-station-map'),
         refuelDoneText: $('refuel-done-text'),
         refuelDoneClose: $('refuel-done-close'),
         recapMonth: $('recap-month'),
@@ -909,8 +908,10 @@ const GPGarage = (() => {
         if (step === 1 && !edit && !state.refuelStation) {
             el.refuelNext.textContent = 'Seguir sin nombre';
         }
+        el.refuelLiters.readOnly = false;
         if (step === 4 && !edit) {
-            el.refuelNext.textContent = 'Sí, es correcto';
+            el.refuelNext.hidden = true;
+            el.refuelLiters.readOnly = true;
             prepareLitersStep();
         }
         if (step === LAST_STEP && !edit) {
@@ -1054,8 +1055,8 @@ const GPGarage = (() => {
 
     function chooseStationOnMap() {
         el.refuelDialog.close();
-        GP.switchView('list');
-        GP.showToast('Toca una gasolinera en el mapa y pulsa Repostar aquí.');
+        GP.showMap();
+        GP.showToast('Toca una gasolinera en el mapa, abre su ficha y pulsa Repostar aquí.');
     }
 
     async function exportRecap(kind, share) {
@@ -1341,10 +1342,10 @@ const GPGarage = (() => {
     el.refuelBack.addEventListener('click', backStep);
     el.refuelLitersYes.addEventListener('click', nextStep);
     el.refuelLitersEdit.addEventListener('click', () => {
+        el.refuelLiters.readOnly = false;
         el.refuelLiters.focus();
         el.refuelLiters.select();
     });
-    el.refuelStationMap.addEventListener('click', chooseStationOnMap);
     el.refuelDoneClose.addEventListener('click', () => el.refuelDialog.close());
     el.refuelPrice.addEventListener('input', () => {
         state.priceTouched = true;
@@ -1381,6 +1382,7 @@ const GPGarage = (() => {
         if (!state.loaded) {
             await load();
         }
+        GP.switchView('garage');
         openRefuelDialog(null, event.detail);
     });
 
