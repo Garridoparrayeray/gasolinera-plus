@@ -793,10 +793,7 @@
         }
 
         state.map = L.map(el.map).setView([initialLat, initialLon], initialZoom);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>',
-            maxZoom: 19,
-        }).addTo(state.map);
+        GPMaps.addBaseLayers(state.map);
 
         state.markerLayer = L.markerClusterGroup();
         state.map.addLayer(state.markerLayer);

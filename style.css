@@ -956,5 +956,9 @@ html[data-view="route"] #filter-sort { display: none; }
 #trip-legend-gradient { width: 80px; height: 8px; border-radius: 999px; background: linear-gradient(90deg, hsl(220, 75%, 45%), hsl(110, 75%, 45%), hsl(0, 75%, 45%)); }
 #trip-list { list-style: none; margin: 12px 0 0; padding: 0; }
 #trip-list li + li { border-top: 1px solid var(--border); }
+#offline-maps-list { list-style: none; margin: 12px 0 0; padding: 0; }
+#offline-maps-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; font-size: 0.85rem; }
+#offline-maps-list li + li { border-top: 1px solid var(--border); }
+#offline-maps-list .pill { flex-shrink: 0; min-width: 96px; text-align: center; }
 #trip-live .garage-tiles { margin-bottom: 10px; }
 #trip-live strong { font-variant-numeric: tabular-nums; }

@@ -420,6 +420,12 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                     <ul id="trip-list"></ul>
                     <p id="trip-empty" class="garage-note">Todavía no hay viajes grabados.</p>
                 </div>
+                <div class="garage-card" id="offline-maps-card" hidden>
+                    <h3>Mapas sin conexión</h3>
+                    <p class="garage-note">Descarga tu comunidad para ver el mapa sin datos. Se ven a partir del zoom 12; con conexión se sigue usando el mapa normal.</p>
+                    <ul id="offline-maps-list"></ul>
+                    <p id="offline-maps-note" class="garage-note" hidden></p>
+                </div>
                 <div class="garage-card">
                     <h3>Copia de seguridad</h3>
                     <p class="garage-note">Tus coches, repostajes y viajes solo existen en este dispositivo. Guarda una copia de vez en cuando por si cambias de móvil.</p>
@@ -678,7 +684,9 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <script src="/vendor/markercluster/leaflet.markercluster.js"></script>
     <script src="/vendor/leaflet-heat/leaflet-heat.js"></script>
     <script src="/vendor/chartjs/chart.umd.js"></script>
+    <script src="/vendor/protomaps-leaflet/protomaps-leaflet.js"></script>
     <script src="/js/native.js"></script>
+    <script src="/js/offline-maps.js"></script>
     <script src="/js/background.js"></script>
     <script src="/js/alerts-store.js"></script>
     <script src="/js/api.js"></script>
