@@ -642,8 +642,21 @@ const GPRoute = (() => {
         }
     }
 
-    function calculate(event) {
-        return GPSectionLoading.track('route', calculateNow(event));
+    let calculating = false;
+
+    async function calculate(event) {
+        if (calculating) {
+            if (event) {
+                event.preventDefault();
+            }
+            return;
+        }
+        calculating = true;
+        try {
+            await GPSectionLoading.track('route', calculateNow(event));
+        } finally {
+            calculating = false;
+        }
     }
 
     async function calculateNow(event) {

@@ -77,7 +77,7 @@ const GPSplash = (() => {
 })();
 
 const GPSectionLoading = (() => {
-    const SLOW_MS = 300;
+    const SLOW_MS = 200;
     const pending = {};
     const timers = {};
 
@@ -90,7 +90,13 @@ const GPSectionLoading = (() => {
             element.setAttribute('role', 'status');
             element.textContent = 'Cargando…';
             element.hidden = true;
-            document.getElementById(`view-${view}`).prepend(element);
+            const host = document.getElementById(`view-${view}`);
+            if (host) {
+                host.prepend(element);
+            } else {
+                element.classList.add('view-loading--float');
+                document.body.appendChild(element);
+            }
         }
         return element;
     }

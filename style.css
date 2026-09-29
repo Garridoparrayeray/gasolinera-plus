@@ -379,8 +379,8 @@ header {
     font-weight: 700;
     padding: 1px 6px;
     border-radius: 3px;
-    background: var(--primary-tint);
-    color: var(--primary-dark);
+    background: #111111;
+    color: #FFFFFF;
 }
 .badge--24h { background: var(--accent-bg); color: var(--accent-ink); }
 
@@ -1286,3 +1286,5 @@ html[data-view="stats"] #stations-search-btn { display: none !important; }
 /* La pantalla de carga se ve desde el primer instante; si el script no llega a ocultarla, se retira sola a los 10 s */
 .is-loading .splash { animation: splash-safety 0s linear 10s forwards; }
 @keyframes splash-safety { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+
+.view-loading--float { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 10001; margin: 0; background: #111111; color: #FFFFFF; border-color: #FF7A1A; }

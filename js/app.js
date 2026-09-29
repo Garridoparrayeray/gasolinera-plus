@@ -134,6 +134,8 @@
         stationsQuery: '',
         stationsPage: 1,
         stationsPendingPage: null,
+        stationsLoadingKey: '',
+        modalLoadingId: '',
         stationsTotal: 0,
         stationsLoading: false,
         currentView: 'list',
@@ -702,12 +704,20 @@
     
     
     
+    function stationsRequestKey(pageNumber) {
+        return JSON.stringify([state.stationsMode, state.stationsQuery, state.userLat, state.userLon, currentFilters(), pageNumber]);
+    }
+
     async function loadStationsPage(pageNumber) {
+        const requestKey = stationsRequestKey(pageNumber);
         if (state.stationsLoading) {
-            state.stationsPendingPage = pageNumber;
+            if (requestKey !== state.stationsLoadingKey) {
+                state.stationsPendingPage = pageNumber;
+            }
             return;
         }
         state.stationsLoading = true;
+        state.stationsLoadingKey = requestKey;
         state.stationsPendingPage = null;
         updatePaginationControls();
         setStationsStatus('loading');
@@ -1574,13 +1584,19 @@
     
 
     async function openStationModal(ideess) {
+        if (state.modalLoadingId === String(ideess)) {
+            return;
+        }
+        state.modalLoadingId = String(ideess);
         let station;
         try {
-            station = await Api.station(ideess);
+            station = await GPSectionLoading.track('modal', Api.station(ideess));
         } catch (e) {
+            state.modalLoadingId = '';
             showToast('No se pudo abrir la gasolinera: ' + e.message);
             return;
         }
+        state.modalLoadingId = '';
 
         el.modalRotulo.textContent = station.rotulo;
         el.modalDireccion.textContent = station.direccion;
