@@ -1,5 +1,7 @@
 {
+  "installCommand": "true",
   "buildCommand": "node tools/graph/fetch-graph.mjs || echo 'Sin grafo de carreteras publicado'",
+  "outputDirectory": ".",
   "regions": [
     "cdg1"
   ],
