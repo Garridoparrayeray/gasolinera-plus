@@ -11,7 +11,7 @@ const GPPermissions = (() => {
         note.hidden = text === '';
     }
 
-    function row(title, status, detail, buttons) {
+    function row(title, status, detail, buttons, kind) {
         const item = document.createElement('li');
         const head = document.createElement('div');
         head.className = 'permission-head';
@@ -19,6 +19,9 @@ const GPPermissions = (() => {
         name.textContent = title;
         const state = document.createElement('span');
         state.className = 'permission-state';
+        if (kind) {
+            state.classList.add('permission-state--' + kind);
+        }
         state.textContent = status;
         head.appendChild(name);
         head.appendChild(state);
@@ -62,12 +65,12 @@ const GPPermissions = (() => {
         const permission = await GPNative.locationPermission();
         const active = GP.locationActive();
         if (permission === 'denied') {
-            return row('Ubicación', 'Bloqueada', 'El sistema no deja usar tu ubicación. Puedes buscar por pueblo, calle o marca sin ella.', [['Abrir ajustes', openSystemSettings]]);
+            return row('Ubicación', 'Bloqueada', 'El sistema no deja usar tu ubicación. Puedes buscar por pueblo, calle o marca sin ella.', [['Abrir ajustes', openSystemSettings]], 'off');
         }
         if (active) {
-            return row('Ubicación', 'Activada', 'Se usa para mostrar las gasolineras cercanas. Tus coordenadas no se guardan.', [['Desactivar', async () => GP.toggleLocation()]]);
+            return row('Ubicación', 'Activada', 'Se usa para mostrar las gasolineras cercanas. Tus coordenadas no se guardan.', [['Desactivar', async () => GP.toggleLocation()]], 'on');
         }
-        return row('Ubicación', 'Desactivada', 'Sin ella verás las más baratas de España. Actívala para ver las de tu zona.', [['Activar', async () => GP.toggleLocation()]]);
+        return row('Ubicación', 'Desactivada', 'Sin ella verás las más baratas de España. Actívala para ver las de tu zona.', [['Activar', async () => GP.toggleLocation()]], 'off');
     }
 
     function alertsRow() {
@@ -77,9 +80,9 @@ const GPPermissions = (() => {
             permission = ' Las notificaciones están bloqueadas en el navegador.';
         }
         if (on) {
-            return row('Avisos de bajada de precio', 'Activados', 'Te avisamos como mucho una vez al día si baja el precio de tus favoritas.' + permission, [['Desactivar', async () => GP.setAlerts(false)]]);
+            return row('Avisos de bajada de precio', 'Activados', 'Te avisamos como mucho una vez al día si baja el precio de tus favoritas.' + permission, [['Desactivar', async () => say(await GP.setAlerts(false))]], 'on');
         }
-        return row('Avisos de bajada de precio', 'Desactivados', 'Al activarlos se te pedirá permiso para enviar notificaciones.' + permission, [['Activar', async () => GP.setAlerts(true)]]);
+        return row('Avisos de bajada de precio', 'Desactivados', 'Al activarlos se te pedirá permiso para enviar notificaciones.' + permission, [['Activar', async () => say(await GP.setAlerts(true))]], 'off');
     }
 
     async function tripRows() {
@@ -96,21 +99,27 @@ const GPPermissions = (() => {
         const rows = [];
         const perms = status.permissions;
         let autoText = 'Desactivada';
+        let autoKind = 'off';
         if (status.autoDetect) {
             autoText = 'Activada';
+            autoKind = 'on';
         }
-        rows.push(row('Detección automática de viajes', autoText, 'Necesita la ubicación «todo el tiempo» y la actividad física. Se activa o desactiva en la sección Coche.', [['Ir a Coche', async () => GP.switchView('garage')], ['Abrir ajustes', openSystemSettings]]));
+        rows.push(row('Detección automática de viajes', autoText, 'Necesita la ubicación «todo el tiempo» y la actividad física. Se activa o desactiva en la sección Coche.', [['Ir a Coche', async () => GP.switchView('garage')], ['Abrir ajustes', openSystemSettings]], autoKind));
         if (GPNative.platform() === 'android') {
             let btText = 'Sin elegir';
+            let btKind = 'off';
             if (status.bluetooth && status.bluetooth.name) {
                 btText = status.bluetooth.name;
+                btKind = 'on';
             }
-            rows.push(row('Bluetooth del coche', btText, 'Empieza el viaje al conectar con tu coche. Se elige en la sección Coche.', [['Ir a Coche', async () => GP.switchView('garage')]]));
+            rows.push(row('Bluetooth del coche', btText, 'Empieza el viaje al conectar con tu coche. Se elige en la sección Coche.', [['Ir a Coche', async () => GP.switchView('garage')]], btKind));
             let batteryText = 'Con ahorro de batería';
+            let batteryKind = 'off';
             if (perms.unrestrictedBattery) {
                 batteryText = 'Sin restricciones';
+                batteryKind = 'on';
             }
-            rows.push(row('Batería', batteryText, 'Para grabar viajes con la app cerrada, Android no debe limitar a Gasolinera+.', [['Abrir ajustes de batería', async () => plugin.openBatterySettings()]]));
+            rows.push(row('Batería', batteryText, 'Para grabar viajes con la app cerrada, Android no debe limitar a Gasolinera+.', [['Abrir ajustes de batería', async () => plugin.openBatterySettings()]], batteryKind));
         }
         return rows;
     }

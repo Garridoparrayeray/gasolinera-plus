@@ -2088,20 +2088,23 @@
         }
     }
 
-    alertsToggle.addEventListener('change', async () => {
+    async function changeAlerts(enabled) {
         showAlertsNote('');
-        if (!alertsToggle.checked) {
+        if (!enabled) {
             await disableAlerts();
-            return;
+            return '';
         }
         const problem = await enableAlerts();
         if (problem !== '') {
             alertsToggle.checked = false;
             showAlertsNote(problem);
-        } else {
-            showAlertsNote('Te avisaremos una vez al día, como mucho, si baja el precio de tus favoritas.');
+            return problem;
         }
-    });
+        showAlertsNote('Te avisaremos una vez al día, como mucho, si baja el precio de tus favoritas.');
+        return '';
+    }
+
+    alertsToggle.addEventListener('change', () => changeAlerts(alertsToggle.checked));
 
     AlertsStore.set('favorites', state.favoritesList).catch(() => {});
     AlertsStore.get('enabled').then((enabled) => {
@@ -2200,7 +2203,7 @@
         alertsOn: () => alertsToggle.checked,
         setAlerts: (enabled) => {
             alertsToggle.checked = enabled;
-            alertsToggle.dispatchEvent(new Event('change'));
+            return changeAlerts(enabled);
         },
         showMap: () => {
             switchView('list');

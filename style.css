@@ -1323,3 +1323,6 @@ html.is-offline #view-stats > *:not(.offline-block) { opacity: 0.4; pointer-even
 .permissions-card li p { margin: 6px 0 10px; color: var(--text-secondary); font-size: 0.92rem; }
 .permission-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .permission-actions .pill { flex: 1 1 140px; text-align: center; }
+
+.permission-state--on { background: #1B8A3A; color: #FFFFFF; }
+.permission-state--off { background: #C62828; color: #FFFFFF; }
