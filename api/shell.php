@@ -227,6 +227,10 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/></svg>
                 <span>Datos</span>
             </button>
+            <button id="view-about-btn" type="button" role="tab" aria-selected="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <span>Info</span>
+            </button>
         </nav>
 
         <p id="geo-fallback" hidden>
@@ -520,6 +524,20 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             </div>
         </section>
 
+        <section id="view-about" hidden>
+            <div class="garage-card about-card">
+                <h3>Sobre el proyecto</h3>
+                <p>Gasolinera+ es un proyecto independiente y sin ánimo de lucro. Los precios salen de los datos abiertos del Ministerio para la Transición Ecológica y los mapas son de OpenStreetMap.</p>
+                <p><strong>Hecho por Yeray Garrido</strong></p>
+                <div class="about-links">
+                    <a class="pill" href="https://www.linkedin.com/in/yeray-garrido" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                    <a class="pill" href="https://www.yeraygarrido.dev/" target="_blank" rel="noopener noreferrer">Portfolio</a>
+                    <a class="pill" href="https://github.com/Garridoparrayeray" target="_blank" rel="noopener noreferrer">GitHub</a>
+                </div>
+                <div class="about-links">
+                    <button id="legal-open" type="button" class="pill">Aviso legal y privacidad</button>
+                </div>
+            </div>
 <?php if (!$isNative): ?>
         <section id="get-app" aria-labelledby="get-app-title">
             <h3 id="get-app-title">Gasolinera+ como app</h3>
@@ -532,15 +550,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         </section>
 <?php endif; ?>
 
-        <footer id="dev-footer">
-            <p>Hecho por Yeray Garrido</p>
-            <p>
-                <a href="https://www.linkedin.com/in/yeray-garrido" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-                <a href="https://www.yeraygarrido.dev/" target="_blank" rel="noopener noreferrer">Portfolio</a>
-                <a href="https://github.com/Garridoparrayeray" target="_blank" rel="noopener noreferrer">GitHub</a>
-                <button id="legal-open" type="button">Aviso legal y privacidad</button>
-            </p>
-        </footer>
+        </section>
 
     </main>
 

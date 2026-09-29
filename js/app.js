@@ -973,7 +973,7 @@
         }).addTo(state.map);
     }
 
-    const VIEWS = ['list', 'map', 'route', 'garage', 'stats'];
+    const VIEWS = ['list', 'map', 'route', 'garage', 'stats', 'about'];
 
     function switchView(view) {
         if (!VIEWS.includes(view) || !document.getElementById('view-' + view)) {
