@@ -369,7 +369,9 @@ const GPTrips = (() => {
             perms = await plugin.requestActivity();
         }
         if (perms.location && perms.activity && !perms.background) {
-            const ok = window.confirm('Para detectar tus viajes con la app cerrada, Android te pedirá permitir la ubicación "Todo el tiempo". Gasolinera+ solo la usa mientras vas en coche y los recorridos se quedan en tu móvil. ¿Continuar?');
+            const always = GPNative.platform() === 'ios' ? '"Siempre"' : '"Todo el tiempo"';
+            const system = GPNative.platform() === 'ios' ? 'iOS' : 'Android';
+            const ok = window.confirm('Para detectar tus viajes con la app cerrada, ' + system + ' te pedirá permitir la ubicación ' + always + '. Gasolinera+ solo la usa mientras vas en coche y los recorridos se quedan en tu móvil. ¿Continuar?');
             if (ok) {
                 perms = await plugin.requestBackground();
             }
@@ -383,7 +385,7 @@ const GPTrips = (() => {
         try {
             await plugin.setAutoDetect({ enabled: true });
             GP.showToast('Detección automática activada');
-            note('Cuando Android detecte que vas en coche, Gasolinera+ empezará a grabar el viaje y parará al bajarte.');
+            note('Cuando ' + (GPNative.platform() === 'ios' ? 'el iPhone' : 'Android') + ' detecte que vas en coche, Gasolinera+ empezará a grabar el viaje y parará al bajarte.');
         } catch (error) {
             el.auto.checked = false;
             note(error.message);
@@ -589,7 +591,7 @@ const GPTrips = (() => {
         }
     } else {
         el.autoWrap.hidden = true;
-        note('En el navegador los viajes solo se graban con la app abierta. En la app de Android se graban aunque bloquees el móvil.');
+        note('En el navegador los viajes solo se graban con la app abierta. En la app de Android y de iPhone se graban aunque bloquees el móvil.');
     }
 
     document.addEventListener('gp:view', (event) => {

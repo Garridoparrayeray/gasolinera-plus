@@ -68,6 +68,8 @@
 	<string>Gasolinera+ usa tu ubicación para mostrarte las gasolineras más cercanas y calcular rutas. No se guarda en ningún servidor.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Gasolinera+ usa tu ubicación en segundo plano solo para grabar los viajes que decidas registrar y calcular tu consumo. Los recorridos se quedan en tu iPhone.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Gasolinera+ usa el sensor de movimiento para detectar cuando empiezas y terminas un viaje en coche. Los datos se quedan en tu iPhone.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
