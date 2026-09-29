@@ -1596,7 +1596,6 @@
             showToast('No se pudo abrir la gasolinera: ' + e.message);
             return;
         }
-        state.modalLoadingId = '';
 
         el.modalRotulo.textContent = station.rotulo;
         el.modalDireccion.textContent = station.direccion;
@@ -1670,8 +1669,11 @@
             }
         };
 
-        loadZoneComparison(ideess, defaultFuel);
-        loadHistoryChart(ideess, defaultFuel);
+        await GPSectionLoading.track('modal', Promise.all([
+            Promise.resolve(loadZoneComparison(ideess, defaultFuel)).catch(() => {}),
+            Promise.resolve(loadHistoryChart(ideess, defaultFuel)).catch(() => {}),
+        ]));
+        state.modalLoadingId = '';
 
         el.stationModal.showModal();
 
