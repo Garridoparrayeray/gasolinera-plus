@@ -28,7 +28,21 @@ const GPTrips = (() => {
         bandsChart: $('trip-bands-chart'),
         quality: $('trip-quality'),
         remove: $('trip-delete'),
+        drive: $('trip-drive'),
+        driveSpeed: $('trip-drive-speed'),
+        driveBarFill: $('trip-drive-bar-fill'),
+        driveDistance: $('trip-drive-distance'),
+        driveTime: $('trip-drive-time'),
+        driveMax: $('trip-drive-max'),
+        driveHint: $('trip-drive-hint'),
+        driveStop: $('trip-drive-stop'),
+        driveMin: $('trip-drive-min'),
+        chip: $('trip-rec-chip'),
     };
+
+    const SPEED_WARN_KMH = 100;
+    const SPEED_OVER_KMH = 120;
+    const SPEED_BAR_MAX_KMH = 160;
 
     const WEB_TRIP_KEY = 'webTripInProgress';
     const state = {
@@ -40,6 +54,7 @@ const GPTrips = (() => {
         mapLayer: null,
         charts: {},
         openTrip: null,
+        driveMinimized: false,
     };
 
     function recorder() {
@@ -74,25 +89,71 @@ const GPTrips = (() => {
         el.note.textContent = text;
     }
 
+    function speedLevel(kmh) {
+        if (kmh >= SPEED_OVER_KMH) {
+            return 'over';
+        }
+        if (kmh >= SPEED_WARN_KMH) {
+            return 'warn';
+        }
+        return 'ok';
+    }
+
+    function driveHintText() {
+        if (recorder()) {
+            return 'Puedes bloquear el móvil: el viaje sigue grabándose.';
+        }
+        return 'Deja la pantalla encendida: si la bloqueas se pausa la grabación.';
+    }
+
+    function paintDrive(live) {
+        const kmh = live.speedMs * 3.6;
+        el.drive.dataset.level = speedLevel(kmh);
+        el.driveSpeed.textContent = number(kmh, 0);
+        el.driveBarFill.style.width = `${Math.min(100, (kmh / SPEED_BAR_MAX_KMH) * 100)}%`;
+        el.driveDistance.textContent = number(live.distanceM / 1000, 1);
+        el.driveMax.textContent = number(live.maxSpeedMs * 3.6, 0);
+        el.driveTime.textContent = clock((Date.now() - live.startedAt) / 1000);
+    }
+
+    function paintLiveCard(live) {
+        el.liveDistance.textContent = `${number(live.distanceM / 1000, 1)} km`;
+        el.liveSpeed.textContent = `${number(live.speedMs * 3.6, 0)} km/h`;
+        el.liveMax.textContent = `${number(live.maxSpeedMs * 3.6, 0)} km/h`;
+        el.liveTime.textContent = clock((Date.now() - live.startedAt) / 1000);
+    }
+
+    function showDrive(recording) {
+        const visible = recording && !state.driveMinimized;
+        el.drive.hidden = !visible;
+        el.chip.hidden = !(recording && state.driveMinimized);
+        document.documentElement.classList.toggle('is-driving', visible);
+    }
+
     function renderLive() {
         const live = state.live;
         const recording = Boolean(live && live.recording);
         el.live.hidden = !recording;
         el.start.hidden = recording;
         el.stop.hidden = !recording;
+        showDrive(recording);
         clearInterval(state.timer);
         state.timer = null;
         if (!recording) {
             return;
         }
+        el.driveHint.textContent = driveHintText();
         const paint = () => {
-            el.liveDistance.textContent = `${number(live.distanceM / 1000, 1)} km`;
-            el.liveSpeed.textContent = `${number(live.speedMs * 3.6, 0)} km/h`;
-            el.liveMax.textContent = `${number(live.maxSpeedMs * 3.6, 0)} km/h`;
-            el.liveTime.textContent = clock((Date.now() - live.startedAt) / 1000);
+            paintLiveCard(live);
+            paintDrive(live);
         };
         paint();
         state.timer = setInterval(paint, 1000);
+    }
+
+    function minimizeDrive(minimized) {
+        state.driveMinimized = minimized;
+        renderLive();
     }
 
     function vehicleOptions() {
@@ -214,6 +275,7 @@ const GPTrips = (() => {
     }
 
     async function start() {
+        state.driveMinimized = false;
         const plugin = recorder();
         if (plugin) {
             let perms = (await plugin.status()).permissions;
@@ -561,6 +623,9 @@ const GPTrips = (() => {
 
     el.start.addEventListener('click', () => start().catch((error) => note(error.message)));
     el.stop.addEventListener('click', () => stop().catch((error) => note(error.message)));
+    el.driveStop.addEventListener('click', () => stop().catch((error) => note(error.message)));
+    el.driveMin.addEventListener('click', () => minimizeDrive(true));
+    el.chip.addEventListener('click', () => minimizeDrive(false));
     el.auto.addEventListener('change', () => setAuto(el.auto.checked).catch((error) => note(error.message)));
     el.permissionsFix.addEventListener('click', () => {
         const plugin = recorder();

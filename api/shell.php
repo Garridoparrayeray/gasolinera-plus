@@ -635,6 +635,30 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         </form>
     </dialog>
 
+    <button id="trip-rec-chip" type="button" hidden aria-label="Volver al viaje en curso">
+        <span id="trip-rec-dot"></span>
+        <span id="trip-rec-chip-text">EN CURSO</span>
+    </button>
+
+    <div id="trip-drive" role="dialog" aria-label="Viaje en curso" hidden>
+        <div id="trip-drive-top">
+            <span id="trip-drive-status"><span id="trip-drive-dot"></span>GRABANDO</span>
+            <button id="trip-drive-min" type="button">Minimizar</button>
+        </div>
+        <div id="trip-drive-main">
+            <div id="trip-drive-speed">0</div>
+            <div id="trip-drive-unit">km/h</div>
+            <div id="trip-drive-bar" aria-hidden="true"><span id="trip-drive-bar-fill"></span></div>
+        </div>
+        <div id="trip-drive-stats">
+            <div><small>Distancia</small><strong id="trip-drive-distance">0,0</strong><em>km</em></div>
+            <div><small>Tiempo</small><strong id="trip-drive-time">0:00</strong></div>
+            <div><small>Máxima</small><strong id="trip-drive-max">0</strong><em>km/h</em></div>
+        </div>
+        <p id="trip-drive-hint"></p>
+        <button id="trip-drive-stop" type="button">Terminar viaje</button>
+    </div>
+
     <dialog id="trip-dialog">
         <button id="trip-dialog-close" class="btn-icon" type="button" aria-label="Cerrar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>

@@ -923,3 +923,119 @@ body { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
 #offline-maps-list .pill { flex-shrink: 0; min-width: 96px; text-align: center; }
 #trip-live .garage-tiles { margin-bottom: 10px; }
 #trip-live strong { font-variant-numeric: tabular-nums; }
+
+/* Viaje en curso: pantalla completa, alto contraste */
+html.is-driving { overflow: hidden; }
+#trip-drive {
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    display: flex;
+    flex-direction: column;
+    padding: calc(16px + env(safe-area-inset-top)) 20px calc(16px + env(safe-area-inset-bottom));
+    background: #000;
+    color: #fff;
+    font-family: 'Barlow Condensed', 'Bricolage Grotesque', 'Inter', sans-serif;
+}
+#trip-drive-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#trip-drive-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.3rem;
+    font-weight: 800;
+    font-style: italic;
+    letter-spacing: 0.12em;
+    color: var(--primary-light);
+}
+#trip-drive-dot, #trip-rec-dot {
+    width: 14px;
+    height: 14px;
+    background: #E5322D;
+    animation: trip-blink 1.1s steps(2, start) infinite;
+}
+#trip-drive-min {
+    padding: 10px 16px;
+    border: 3px solid #fff;
+    background: #000;
+    color: #fff;
+    font: inherit;
+    font-size: 1.1rem;
+    font-weight: 800;
+    font-style: italic;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+#trip-drive-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; }
+#trip-drive-speed {
+    font-size: min(46vw, 32vh);
+    font-weight: 800;
+    font-style: italic;
+    line-height: 0.85;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+}
+#trip-drive-unit { font-size: 1.8rem; font-weight: 800; font-style: italic; letter-spacing: 0.2em; text-transform: uppercase; color: var(--primary-light); }
+#trip-drive-bar {
+    width: 100%;
+    height: 26px;
+    margin-top: 28px;
+    border: 3px solid #fff;
+    transform: skewX(-18deg);
+}
+#trip-drive-bar-fill {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: repeating-linear-gradient(90deg, var(--primary-light) 0 14px, #000 14px 18px);
+    transition: width 0.4s linear;
+}
+#trip-drive[data-level="warn"] #trip-drive-speed { color: var(--primary-light); }
+#trip-drive[data-level="over"] #trip-drive-speed { color: #E5322D; }
+#trip-drive[data-level="over"] #trip-drive-bar-fill { background: repeating-linear-gradient(90deg, #E5322D 0 14px, #000 14px 18px); }
+#trip-drive-stats { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 3px solid #fff; }
+#trip-drive-stats > div { padding: 12px 10px 8px; }
+#trip-drive-stats > div + div { border-left: 3px solid #fff; }
+#trip-drive-stats small { display: block; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #9a9a9a; }
+#trip-drive-stats strong { font-size: 2.6rem; font-weight: 800; font-style: italic; line-height: 1; font-variant-numeric: tabular-nums; }
+#trip-drive-stats em { margin-left: 4px; font-size: 1.1rem; font-weight: 700; font-style: italic; color: var(--primary-light); }
+#trip-drive-hint { margin: 10px 0; text-align: center; font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #9a9a9a; }
+#trip-drive-stop {
+    width: 100%;
+    min-height: 84px;
+    border: 3px solid #fff;
+    background: #E5322D;
+    color: #fff;
+    font: inherit;
+    font-size: 2.2rem;
+    font-weight: 800;
+    font-style: italic;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+#trip-drive-stop:active { background: #fff; color: #E5322D; }
+#trip-rec-chip {
+    position: fixed;
+    left: 12px;
+    bottom: calc(68px + env(safe-area-inset-bottom) + 12px);
+    z-index: 1300;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border: 3px solid var(--primary-light);
+    background: #000;
+    color: var(--primary-light);
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 800;
+    font-style: italic;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+}
+@keyframes trip-blink { to { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) {
+    #trip-drive-dot, #trip-rec-dot { animation: none; }
+    #trip-drive-bar-fill { transition: none; }
+}
