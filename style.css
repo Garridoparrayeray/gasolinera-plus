@@ -1324,3 +1324,8 @@ html[data-view="stats"] #stations-search-btn { display: none !important; }
 
 .garage-check[hidden] { display: none; }
 .refuel-ask { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 4px 0 12px; }
+
+/* Depósito en ámbar y naranja en vez de verde */
+#garage-tank-fill { background: #FFB020; }
+#garage-tank-fill[data-level="mid"] { background: #FF7A1A; }
+#garage-tank-fill[data-level="low"] { background: #D93025; }

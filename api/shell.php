@@ -690,6 +690,16 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             <section class="refuel-step" data-step="5">
                 <h4>5. Kilómetros</h4>
                 <label>Kilómetros del cuentakilómetros <input id="refuel-odometer" type="number" min="0" step="1" required></label>
+                <p id="refuel-odometer-note" class="garage-note"></p>
+            </section>
+
+            <section class="refuel-step" data-step="5.5">
+                <h4>Revisa los kilómetros</h4>
+                <p id="refuel-km-warning" class="refuel-ask"></p>
+                <div class="refuel-inline refuel-confirm">
+                    <button id="refuel-km-yes" type="button" class="pill pill--primary">Sí, son correctos</button>
+                    <button id="refuel-km-fix" type="button" class="pill">Corregir</button>
+                </div>
             </section>
 
             <section class="refuel-step" data-step="6">

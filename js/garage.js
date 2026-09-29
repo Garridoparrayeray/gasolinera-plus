@@ -74,6 +74,10 @@ const GPGarage = (() => {
         refuelLitersAsk: $('refuel-liters-ask'),
         refuelLitersYes: $('refuel-liters-yes'),
         refuelLitersEdit: $('refuel-liters-edit'),
+        refuelOdometerNote: $('refuel-odometer-note'),
+        refuelKmWarning: $('refuel-km-warning'),
+        refuelKmYes: $('refuel-km-yes'),
+        refuelKmFix: $('refuel-km-fix'),
         refuelLitersOk: $('refuel-liters-ok'),
         refuelLitersBackBtn: $('refuel-liters-back'),
         refuelLitersTitle: $('refuel-liters-title'),
@@ -114,6 +118,7 @@ const GPGarage = (() => {
         priceTouched: false,
         savingRefuel: false,
         litersBackup: null,
+        kmTouched: false,
         recapPeriod: 'month',
     };
 
@@ -929,6 +934,98 @@ const GPGarage = (() => {
         return 'litros';
     }
 
+    function refuelsOfActive(vehicle, excludeId) {
+        return state.refuels.filter((r) => r.vehicleId === vehicle.id && r.id !== excludeId);
+    }
+
+    function usualKmPerDay(vehicle) {
+        const list = refuelsOfActive(vehicle, null).sort((a, b) => a.date.localeCompare(b.date));
+        if (list.length < 2) {
+            return null;
+        }
+        const first = list[0];
+        const last = list[list.length - 1];
+        const days = (new Date(last.date) - new Date(first.date)) / 86400000;
+        if (days < 7 || last.odometer <= first.odometer) {
+            return null;
+        }
+        return (last.odometer - first.odometer) / days;
+    }
+
+    function odometerBase(vehicle, iso, excludeId) {
+        const previous = refuelsOfActive(vehicle, excludeId)
+            .filter((r) => r.date < iso)
+            .sort((a, b) => b.date.localeCompare(a.date))[0];
+        let base = null;
+        if (previous) {
+            base = { odometer: previous.odometer, date: previous.date, fromRefuel: true };
+        }
+        if (vehicle.odometerAt && vehicle.odometerAt <= iso && (!base || vehicle.odometerAt > base.date)) {
+            base = { odometer: vehicle.odometer, date: vehicle.odometerAt, fromRefuel: false };
+        }
+        return base;
+    }
+
+    function expectedKm(vehicle, iso, excludeId) {
+        const base = odometerBase(vehicle, iso, excludeId);
+        const perDay = usualKmPerDay(vehicle);
+        if (!base) {
+            return { base: null, perDay, delta: null, estimate: null };
+        }
+        let delta = null;
+        let estimate = base.odometer;
+        if (perDay !== null) {
+            const days = Math.max(0, (new Date(iso) - new Date(base.date)) / 86400000);
+            delta = perDay * days;
+            estimate = base.odometer + delta;
+        }
+        return { base, perDay, delta, estimate };
+    }
+
+    function kmWarning(vehicle, odometer, iso, excludeId) {
+        const info = expectedKm(vehicle, iso, excludeId);
+        if (info.base && odometer < info.base.odometer) {
+            return `Son menos km que en tu anterior anotación (${number(info.base.odometer, 0)} km).`;
+        }
+        const next = refuelsOfActive(vehicle, excludeId)
+            .filter((r) => r.date > iso)
+            .sort((a, b) => a.date.localeCompare(b.date))[0];
+        if (next && odometer > next.odometer) {
+            return `Son más km que en tu repostaje siguiente (${number(next.odometer, 0)} km).`;
+        }
+        if (info.base) {
+            const gap = odometer - info.base.odometer;
+            let limit = 3000;
+            if (info.delta !== null) {
+                limit = Math.max(info.delta * 3, 800);
+            }
+            if (gap > limit) {
+                let usual = '';
+                if (info.delta !== null) {
+                    usual = ` Por tu ritmo esperaba unos ${number(info.delta, 0)} km.`;
+                }
+                return `Son ${number(gap, 0)} km más que en tu anterior anotación.${usual}`;
+            }
+        } else if (odometer > 1000000) {
+            return 'Es una cifra muy alta para un cuentakilómetros.';
+        }
+        return '';
+    }
+
+    function prepareOdometerStep() {
+        const vehicle = activeVehicle();
+        el.refuelOdometerNote.textContent = '';
+        if (state.kmTouched) {
+            return;
+        }
+        const iso = new Date(el.refuelDate.value).toISOString();
+        const info = expectedKm(vehicle, iso, null);
+        if (info.estimate !== null && info.delta !== null) {
+            el.refuelOdometer.value = Math.round(info.estimate);
+            el.refuelOdometerNote.textContent = `Calculado según tu ritmo (unos ${number(info.perDay, 0)} km al día). Corrígelo si no es así.`;
+        }
+    }
+
     function setStep(step) {
         state.step = step;
         const edit = state.wizardAll;
@@ -936,15 +1033,15 @@ const GPGarage = (() => {
         for (const panel of el.refuelForm.querySelectorAll('.refuel-step')) {
             const number = Number(panel.dataset.step);
             if (edit) {
-                panel.hidden = number > LAST_STEP || number === 4;
+                panel.hidden = number > LAST_STEP || number === 4 || number === 5.5;
             } else {
                 panel.hidden = number !== step;
             }
         }
         const done = step === 7 && !edit;
         el.refuelSave.hidden = !(edit || step === LAST_STEP);
-        el.refuelNext.hidden = edit || step >= LAST_STEP || step === 4 || step === 4.5;
-        el.refuelBack.hidden = edit || step <= 1 || done || step === 4.5;
+        el.refuelNext.hidden = edit || step >= LAST_STEP || step === 4 || step === 4.5 || step === 5.5;
+        el.refuelBack.hidden = edit || step <= 1 || done || step === 4.5 || step === 5.5;
         el.refuelCancel.hidden = done;
         el.refuelProgress.hidden = edit || done;
         el.refuelProgress.textContent = `Paso ${Math.floor(step)} de ${LAST_STEP}`;
@@ -955,6 +1052,9 @@ const GPGarage = (() => {
         el.refuelMissedRow.hidden = false;
         if (step === 4 && !edit) {
             prepareLitersStep();
+        }
+        if (step === 5 && !edit) {
+            prepareOdometerStep();
         }
         if (step === 4.5) {
             el.refuelLiters.focus();
@@ -1063,6 +1163,15 @@ const GPGarage = (() => {
         }
         if (state.step === 3) {
             recomputeLitersFromTotal();
+        }
+        if (state.step === 5) {
+            const iso = new Date(el.refuelDate.value).toISOString();
+            const warning = kmWarning(activeVehicle(), Number(el.refuelOdometer.value), iso, null);
+            if (warning !== '') {
+                el.refuelKmWarning.textContent = warning + ' ¿Son correctos los km?';
+                setStep(5.5);
+                return;
+            }
         }
         setStep(state.step + 1);
         if (state.step === 2) {
@@ -1199,6 +1308,7 @@ const GPGarage = (() => {
         state.editingRefuel = refuel;
         state.wizardAll = refuel !== null;
         state.priceTouched = false;
+        state.kmTouched = false;
         showError(el.refuelError, '');
         el.refuelLitersLabel.textContent = 'Litros';
         if (unit === 'kg') {
@@ -1289,17 +1399,16 @@ const GPGarage = (() => {
             showError(el.refuelError, `Son más ${what} de los que caben en el depósito (${vehicle.tankCapacity}).`);
             return;
         }
-        const others = state.refuels.filter((r) => !state.editingRefuel || r.id !== state.editingRefuel.id);
         const iso = date.toISOString();
-        const before = others.filter((r) => r.date < iso).sort((a, b) => b.date.localeCompare(a.date))[0];
-        const after = others.filter((r) => r.date > iso).sort((a, b) => a.date.localeCompare(b.date))[0];
-        if (before && odometer < before.odometer) {
-            showError(el.refuelError, `Los km no pueden ser menos que en el repostaje anterior (${number(before.odometer, 0)} km).`);
-            return;
-        }
-        if (after && odometer > after.odometer) {
-            showError(el.refuelError, `Los km no pueden ser más que en el repostaje siguiente (${number(after.odometer, 0)} km).`);
-            return;
+        if (state.wizardAll) {
+            let excludeId = null;
+            if (state.editingRefuel) {
+                excludeId = state.editingRefuel.id;
+            }
+            const warning = kmWarning(vehicle, odometer, iso, excludeId);
+            if (warning !== '' && !window.confirm(warning + ' ¿Seguro que quieres guardarlo así?')) {
+                return;
+            }
         }
         checkFullTank();
         let refuel = state.editingRefuel;
@@ -1420,6 +1529,11 @@ const GPGarage = (() => {
     el.refuelNext.addEventListener('click', nextStep);
     el.refuelBack.addEventListener('click', backStep);
     el.refuelLitersYes.addEventListener('click', nextStep);
+    el.refuelKmYes.addEventListener('click', () => setStep(6));
+    el.refuelKmFix.addEventListener('click', () => setStep(5));
+    el.refuelOdometer.addEventListener('input', () => {
+        state.kmTouched = true;
+    });
     el.refuelLitersEdit.addEventListener('click', () => {
         state.litersBackup = { liters: el.refuelLiters.value, total: el.refuelTotal.value };
         setStep(4.5);
