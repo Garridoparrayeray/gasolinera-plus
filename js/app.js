@@ -1004,12 +1004,14 @@
 
         for (const station of stations) {
             const color = priceColor(station.precio, min, max);
+            // El trazo transparente y ancho agranda la zona pulsable sin cambiar el punto.
             const marker = L.circleMarker([station.lat, station.lon], {
                 radius: 7,
                 color,
                 fillColor: color,
                 fillOpacity: 0.85,
-                weight: 1,
+                weight: 18,
+                opacity: 0,
             });
             let popupPrice = 'Sin dato';
             if (station.precio !== null) {
