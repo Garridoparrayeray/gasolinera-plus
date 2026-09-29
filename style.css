@@ -1075,3 +1075,27 @@ html.is-driving { overflow: hidden; }
 .route-station { padding: 14px 0; }
 .route-station__main strong { font-size: 1.05rem; }
 .route-station__price { font-size: 1.3rem; font-family: 'Barlow Condensed', 'Inter', sans-serif; font-style: italic; }
+
+/* Garaje: viajes arriba, cifras grandes y botones de accion */
+#garage-main { display: flex; flex-direction: column; }
+#garage-main > #garage-vehicles { order: -3; }
+#garage-main > #garage-trips-card { order: -2; }
+#garage-main > #garage-vehicle-card { order: -1; }
+#trip-start {
+    width: 100%;
+    min-height: 88px;
+    border: 3px solid var(--text);
+    border-radius: 0;
+    background: var(--primary-light);
+    color: var(--text);
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    font-style: italic;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+#trip-stop { width: 100%; min-height: 64px; border-radius: 0; font-weight: 800; text-transform: uppercase; }
+#garage-vehicle-card .garage-tiles strong { font-size: 1.9rem; font-family: 'Barlow Condensed', 'Inter', sans-serif; font-style: italic; }
+#garage-vehicle-name { font-family: 'Barlow Condensed', 'Inter', sans-serif; font-size: 1.6rem; font-style: italic; text-transform: uppercase; }
+#garage-refuel, #garage-odometer { min-height: 52px; border: 3px solid var(--text); border-radius: 0; font-weight: 800; text-transform: uppercase; }
