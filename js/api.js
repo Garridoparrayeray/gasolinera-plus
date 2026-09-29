@@ -141,6 +141,7 @@ const OfflineEngine = (() => {
             const rawQuery = (q || '').trim();
             const hasLocation = lat !== undefined && lat !== null && lon !== undefined && lon !== null;
             const compactQuery = nq.replace(/ /g, '');
+            const tokens = nq.split(/\s+/).filter((token) => token !== '');
             const radiusKm = Number(radius);
 
             function relevance(s) {
@@ -162,6 +163,9 @@ const OfflineEngine = (() => {
                 if (normalize(s.rotulo).includes(nq)) {
                     return 4;
                 }
+                if (tokens.length > 1 && tokens.some((token) => muni.includes(token) || loc.includes(token))) {
+                    return 3;
+                }
                 return 5;
             }
 
@@ -170,7 +174,12 @@ const OfflineEngine = (() => {
                 const hit = normalize(s.rotulo).includes(nq) || normalize(s.rotulo).replace(/ /g, '').includes(compactQuery) || normalize(s.municipio).includes(nq)
                     || normalize(s.localidad).includes(nq) || normalize(s.direccion).includes(nq)
                     || (rawQuery !== '' && String(s.cp || '').startsWith(rawQuery));
-                if (!hit) {
+                let tokenHit = false;
+                if (tokens.length > 1) {
+                    const fields = [normalize(s.municipio), normalize(s.direccion), normalize(s.rotulo), normalize(s.localidad)];
+                    tokenHit = tokens.every((token) => fields.some((field) => field.includes(token)) || String(s.cp || '').startsWith(token));
+                }
+                if (!hit && !tokenHit) {
                     continue;
                 }
                 let distanciaKm = null;

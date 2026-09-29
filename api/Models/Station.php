@@ -63,8 +63,22 @@ class Station
         $rawQuery = trim($query);
         $cpLike = $rawQuery . '%';
 
-        $where = 'WHERE (municipio_normalizado LIKE :q1 OR direccion_normalizada LIKE :q2 OR rotulo_normalizado LIKE :q3 OR REPLACE(rotulo_normalizado, \' \', \'\') LIKE :q6 OR cp LIKE :q4 OR localidad_normalizada LIKE :q5)';
+        $tokens = preg_split('/\s+/', $normalized, -1, PREG_SPLIT_NO_EMPTY);
+        $where = 'WHERE (municipio_normalizado LIKE :q1 OR direccion_normalizada LIKE :q2 OR rotulo_normalizado LIKE :q3 OR REPLACE(rotulo_normalizado, \' \', \'\') LIKE :q6 OR cp LIKE :q4 OR localidad_normalizada LIKE :q5';
         $params = ['q1' => $like, 'q2' => $like, 'q3' => $like, 'q4' => $cpLike, 'q5' => $like, 'q6' => $compactLike];
+        if (count($tokens) > 1) {
+            $parts = [];
+            foreach ($tokens as $i => $token) {
+                $params['tm' . $i] = '%' . $token . '%';
+                $params['td' . $i] = '%' . $token . '%';
+                $params['tr' . $i] = '%' . $token . '%';
+                $params['tl' . $i] = '%' . $token . '%';
+                $params['tc' . $i] = $token . '%';
+                $parts[] = "(municipio_normalizado LIKE :tm$i OR direccion_normalizada LIKE :td$i OR rotulo_normalizado LIKE :tr$i OR localidad_normalizada LIKE :tl$i OR cp LIKE :tc$i)";
+            }
+            $where .= ' OR (' . implode(' AND ', $parts) . ')';
+        }
+        $where .= ')';
         $where .= self::staleClause($staleStationDays);
         if ($open24h) {
             $where .= ' AND is_24h = 1';
@@ -205,6 +219,14 @@ class Station
         }
         if (str_contains(Search::normalize($row['rotulo']), $normalizedQuery)) {
             return 4;
+        }
+        $tokens = preg_split('/\s+/', $normalizedQuery, -1, PREG_SPLIT_NO_EMPTY);
+        if (count($tokens) > 1) {
+            foreach ($tokens as $token) {
+                if (str_contains($municipio, $token) || str_contains($localidad, $token)) {
+                    return 3;
+                }
+            }
         }
         return 5;
     }
