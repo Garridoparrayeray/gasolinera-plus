@@ -707,7 +707,6 @@
         state.stationsPendingPage = null;
         updatePaginationControls();
         setStationsStatus('loading');
-        GPSplash.begin();
 
         const filters = currentFilters();
         const page = { offset: (pageNumber - 1) * PAGE_SIZE, limit: PAGE_SIZE };
@@ -722,7 +721,6 @@
             state.stationsLoading = false;
             updatePaginationControls();
             setStationsStatus('error');
-            GPSplash.end();
             showToast('No se pudieron cargar las gasolineras: ' + e.message);
             return;
         }
@@ -742,7 +740,6 @@
         renderList(state.currentStations);
         updatePaginationControls();
         setStationsStatus('done');
-        GPSplash.end();
         if (state.currentView === 'list') {
             refreshMapMarkers();
         }
@@ -1234,7 +1231,11 @@
         return `<strong>${sign}${pct.toFixed(1)}%</strong> (${sign}${diff.toFixed(3)} €) entre ${periodLabel(serie[0].fecha, group)} y ${periodLabel(serie[serie.length - 1].fecha, group)} · ${serie.length} ${periodWord} con dato.`;
     }
 
-    async function renderStatsNationalChart() {
+    function renderStatsNationalChart() {
+        return GPSectionLoading.track('stats', renderStatsNationalChartNow());
+    }
+
+    async function renderStatsNationalChartNow() {
         const fuel = el.statsFuel.value;
         await loadStatsAvailability(fuel);
         let data;
@@ -1308,7 +1309,11 @@
         renderStatsStationChart();
     }
 
-    async function renderStatsStationChart() {
+    function renderStatsStationChart() {
+        return GPSectionLoading.track('stats', renderStatsStationChartNow());
+    }
+
+    async function renderStatsStationChartNow() {
         if (!state.statsSelectedIdeess) {
             return;
         }
@@ -1405,7 +1410,11 @@
         glp: '#B3261E',
     };
 
-    async function renderStatsByFuelChart() {
+    function renderStatsByFuelChart() {
+        return GPSectionLoading.track('stats', renderStatsByFuelChartNow());
+    }
+
+    async function renderStatsByFuelChartNow() {
         let data;
         try {
             data = await Api.statsByFuel(el.statsFrom.value, el.statsTo.value, state.statsGroup);
@@ -1454,7 +1463,11 @@
         });
     }
 
-    async function renderStatsProvinceChart() {
+    function renderStatsProvinceChart() {
+        return GPSectionLoading.track('stats', renderStatsProvinceChartNow());
+    }
+
+    async function renderStatsProvinceChartNow() {
         const fuel = el.statsFuel.value;
         let data;
         try {
@@ -1503,7 +1516,11 @@
         });
     }
 
-    async function renderStatsDistributionChart() {
+    function renderStatsDistributionChart() {
+        return GPSectionLoading.track('stats', renderStatsDistributionChartNow());
+    }
+
+    async function renderStatsDistributionChartNow() {
         const fuel = el.statsFuel.value;
         let data;
         try {

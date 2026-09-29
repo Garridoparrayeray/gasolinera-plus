@@ -1122,7 +1122,7 @@ html.is-driving { overflow: hidden; }
 @media (min-width: 1024px) {
     :root { --content-max: 1200px; --page-pad: 32px; }
     #view-toggle { left: 50%; right: auto; width: min(100%, var(--content-max)); transform: translateX(-50%); border-radius: 16px 16px 0 0; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
-    .app-container { display: grid; grid-template-columns: minmax(0, 460px) minmax(0, 1fr); column-gap: 24px; align-items: start; align-content: start; }
+    .app-container { display: grid; grid-template-columns: minmax(0, 520px) minmax(0, 1fr); column-gap: 24px; align-items: start; align-content: start; }
     #view-list { min-width: 0; }
     #stations-list { grid-template-columns: 1fr; }
     .app-container > * { grid-column: 1 / -1; }
@@ -1244,15 +1244,31 @@ html[data-view="stats"] #stations-search-btn { display: none !important; }
 /* Pantalla de carga: GASOLINERA con el + girando (solo si la carga tarda) */
 .splash { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: var(--bg); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s ease, visibility 0s linear 0.3s; }
 .splash__word { display: flex; align-items: center; font-family: var(--font-display); font-size: clamp(2rem, 10vw, 3.4rem); font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
-.splash__plus { display: inline-block; margin-left: 0.06em; color: var(--accent-bg); }
+.splash__plus { display: inline-block; margin-left: 0.04em; color: var(--highlight); font-size: 1.15em; font-weight: 500; transform: rotate(-8deg) translateY(-2px); }
 .is-loading .splash { opacity: 1; visibility: visible; pointer-events: auto; transition: none; }
 .is-loading .splash__plus { animation: splash-plus-spin 0.8s ease-in-out infinite; }
 @keyframes splash-plus-spin {
-    0% { transform: rotate(0deg) scale(1); }
-    60% { transform: rotate(360deg) scale(1.15); }
-    100% { transform: rotate(360deg) scale(1); }
+    0% { transform: rotate(-8deg) translateY(-2px) scale(1); }
+    60% { transform: rotate(352deg) translateY(-2px) scale(1.15); }
+    100% { transform: rotate(352deg) translateY(-2px) scale(1); }
 }
 @media (prefers-reduced-motion: reduce) { .is-loading .splash { display: none; } }
 
 /* Precios de las tarjetas: alineados a la izquierda y en fila que se ajusta al ancho */
 .station-card__prices { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; text-align: left; }
+
+/* Tarjetas de gasolineras: cuadricula que no se sale de su columna */
+.station-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-items: start; }
+.station-card__main { min-width: 0; }
+.station-card__prices { display: flex; flex-flow: row wrap; gap: 4px 16px; text-align: left; white-space: normal; }
+.station-card__prices span { white-space: nowrap; }
+.station-card__open { grid-column: 1 / -1; }
+@media (min-width: 1024px) {
+    .station-card { grid-template-columns: minmax(0, 1fr) auto; }
+    .station-card__prices { flex-direction: column; align-items: flex-end; gap: 4px; text-align: right; }
+}
+
+/* Cargando en cualquier seccion que tarde */
+.view-loading { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 12px 14px; border: 1px solid var(--accent-bg); background: var(--primary-tint); color: var(--text); font-weight: 700; }
+.view-loading::before { content: ''; flex: none; width: 16px; height: 16px; border: 3px solid var(--border); border-top-color: var(--accent-bg); border-radius: 50% !important; animation: gp-spin 0.8s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .view-loading::before { animation: none; } }

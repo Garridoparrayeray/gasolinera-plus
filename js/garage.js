@@ -27,6 +27,7 @@ const GPGarage = (() => {
         compareDay: $('garage-compare-day'),
         compareWeek: $('garage-compare-week'),
         compareMonth: $('garage-compare-month'),
+        compareEmpty: $('garage-compare-empty'),
         stationSearch: $('refuel-station-search'),
         stationResults: $('refuel-station-results'),
         stationClear: $('refuel-station-clear'),
@@ -311,7 +312,11 @@ const GPGarage = (() => {
         return byDate;
     }
 
-    async function renderCharts(vehicle) {
+    function renderCharts(vehicle) {
+        return GPSectionLoading.track('garage', renderChartsNow(vehicle));
+    }
+
+    async function renderChartsNow(vehicle) {
         const unit = unitOf(vehicle.fuel);
         const intervals = GPFuel.intervals(state.refuels).filter((interval) => !interval.suspicious);
         replaceChart('consumption', el.consumptionChart, {
@@ -360,8 +365,13 @@ const GPGarage = (() => {
             el.savings.textContent = '';
             el.savingsZone.textContent = '';
             el.compareList.innerHTML = '';
+            updateCompareButtons();
+            el.compareEmpty.hidden = false;
+            el.priceChart.hidden = true;
             return;
         }
+        el.compareEmpty.hidden = true;
+        el.priceChart.hidden = false;
         await renderComparison(vehicle, sortedRefuels);
     }
 
@@ -531,11 +541,15 @@ const GPGarage = (() => {
         }
     }
 
-    async function renderComparison(vehicle, sortedRefuels) {
+    function updateCompareButtons() {
         const buttons = [['day', el.compareDay], ['week', el.compareWeek], ['month', el.compareMonth]];
         for (const [mode, button] of buttons) {
             button.setAttribute('aria-pressed', String(mode === state.compareMode));
         }
+    }
+
+    async function renderComparison(vehicle, sortedRefuels) {
+        updateCompareButtons();
         if (state.compareMode !== 'day' && !GPPriceIndex.available()) {
             replaceChart('price', el.priceChart, { type: 'line', data: { labels: [], datasets: [] } });
             el.savings.classList.remove('is-saving');

@@ -58,3 +58,56 @@ const GPSplash = (() => {
 
     return { begin, end };
 })();
+
+const GPSectionLoading = (() => {
+    const SLOW_MS = 300;
+    const pending = {};
+    const timers = {};
+
+    function banner(view, create) {
+        let element = document.getElementById(`loading-${view}`);
+        if (!element && create) {
+            element = document.createElement('p');
+            element.id = `loading-${view}`;
+            element.className = 'view-loading';
+            element.setAttribute('role', 'status');
+            element.textContent = 'Cargando…';
+            element.hidden = true;
+            document.getElementById(`view-${view}`).prepend(element);
+        }
+        return element;
+    }
+
+    function begin(view) {
+        pending[view] = (pending[view] || 0) + 1;
+        if (pending[view] === 1) {
+            clearTimeout(timers[view]);
+            timers[view] = setTimeout(() => {
+                banner(view, true).hidden = false;
+            }, SLOW_MS);
+        }
+    }
+
+    function end(view) {
+        pending[view] = Math.max(0, (pending[view] || 0) - 1);
+        if (pending[view] > 0) {
+            return;
+        }
+        clearTimeout(timers[view]);
+        const element = banner(view, false);
+        if (element) {
+            element.hidden = true;
+        }
+    }
+
+    async function track(view, promise) {
+        begin(view);
+        try {
+            return await promise;
+        } finally {
+            end(view);
+        }
+    }
+
+    return { begin, end, track };
+})();

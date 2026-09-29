@@ -398,6 +398,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                         <button id="garage-compare-week" type="button" class="pill" aria-pressed="false">Por semana</button>
                         <button id="garage-compare-month" type="button" class="pill" aria-pressed="false">Por mes</button>
                     </div>
+                    <p id="garage-compare-empty" class="garage-note" hidden>Todavía no hay nada anotado. A la espera de tu primer repostaje.</p>
                     <canvas id="garage-price-chart" height="160"></canvas>
                     <p id="garage-savings" class="garage-note"></p>
                     <p id="garage-savings-zone" class="garage-note"></p>
