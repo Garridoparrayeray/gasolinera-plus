@@ -60,13 +60,15 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <meta property="og:title" content="<?= htmlspecialchars($ogTitle) ?>">
     <meta property="og:description" content="<?= htmlspecialchars($ogDescription) ?>">
     <meta property="og:url" content="<?= htmlspecialchars($ogUrl) ?>">
-    <meta property="og:image" content="https://gasolineraplus.vercel.app/icons/icon-512.png">
-    <meta property="og:image:width" content="512">
-    <meta property="og:image:height" content="512">
+    <meta property="og:image" content="https://gasolineraplus.vercel.app/icons/og-image.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo de Gasolinera+: una llama negra sobre fondo naranja">
     <meta property="og:site_name" content="Gasolinera+">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:image" content="https://gasolineraplus.vercel.app/icons/icon-512.png">
+    <meta name="twitter:image" content="https://gasolineraplus.vercel.app/icons/og-image.png">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#111111">
     <link rel="apple-touch-icon" href="/icons/icon-maskable-192.png">
