@@ -299,8 +299,8 @@ const GPGarage = (() => {
                     {
                         label: `Real (${unit}/100 km)`,
                         data: intervals.map((interval) => +interval.lPer100.toFixed(2)),
-                        borderColor: '#8A5A00',
-                        backgroundColor: 'rgba(184, 134, 11, 0.12)',
+                        borderColor: '#5F8A00',
+                        backgroundColor: 'rgba(95, 138, 0, 0.14)',
                         tension: 0.2,
                         fill: true,
                     },
@@ -326,7 +326,7 @@ const GPGarage = (() => {
             type: 'bar',
             data: {
                 labels: Object.keys(months).map(monthLabel),
-                datasets: [{ label: 'Gasto (€)', data: Object.values(months), backgroundColor: '#8A5A00' }],
+                datasets: [{ label: 'Gasto (€)', data: Object.values(months), backgroundColor: '#5F8A00' }],
             },
             options: { responsive: true, plugins: { legend: { display: false } } },
         });
@@ -346,7 +346,7 @@ const GPGarage = (() => {
                     {
                         label: 'Lo que pagaste',
                         data: sortedRefuels.map((refuel) => refuel.pricePerUnit),
-                        borderColor: '#8A5A00',
+                        borderColor: '#5F8A00',
                         tension: 0.2,
                     },
                     {
