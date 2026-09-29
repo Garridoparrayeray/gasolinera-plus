@@ -470,7 +470,7 @@ const GPGarage = (() => {
         if (saving.amount >= 0) {
             return `${hook} ${money(saving.amount)} frente a ${reference} en ${saving.refuels} ${noun}.`;
         }
-        return `Has pagado unos ${money(-saving.amount)} más que ${reference} en ${saving.refuels} ${noun}.`;
+        return `Vas unos ${money(-saving.amount)} por encima de ${reference} (${saving.refuels} ${noun}).`;
     }
 
     function differenceText(paid, reference, unit) {
@@ -528,7 +528,7 @@ const GPGarage = (() => {
         } else if (national.amount >= 0) {
             el.savings.textContent = savingsText(national, 'la media de España', noun, 'Gracias a Gasolinera+ llevas ahorrados unos');
         } else {
-            el.savings.textContent = savingsText(national, 'la media de España', noun, '') + ' Busca la más barata antes de repostar.';
+            el.savings.textContent = savingsText(national, 'la media de España', noun, '') + ' Comparar precios antes de repostar te ayudará a bajarlo.';
         }
         if (zone.refuels) {
             el.savingsZone.textContent = savingsText(zone, `la media de tu zona (${ZONE_RADIUS_KM} km)`, noun, 'Llevas ahorrados unos');
@@ -755,7 +755,11 @@ const GPGarage = (() => {
             const item = document.createElement('li');
             const button = document.createElement('button');
             button.type = 'button';
-            button.textContent = `${station.rotulo} · ${station.municipio}`;
+            let prefix = '';
+            if (station.favorite) {
+                prefix = '★ ';
+            }
+            button.textContent = `${prefix}${station.rotulo} · ${station.municipio}`;
             const small = document.createElement('small');
             small.textContent = station.direccion;
             button.appendChild(small);
@@ -787,9 +791,75 @@ const GPGarage = (() => {
         }
     }
 
-    function pickStation(station) {
+    function favoriteStations() {
+        try {
+            const list = JSON.parse(localStorage.getItem('gasolinera_favorites') || '[]');
+            if (Array.isArray(list)) {
+                return list;
+            }
+        } catch (error) {
+            return [];
+        }
+        return [];
+    }
+
+    async function showStationSuggestions() {
+        const vehicle = activeVehicle();
+        if (!vehicle) {
+            return;
+        }
+        const stations = favoriteStations().map((s) => ({ ...s, favorite: true }));
+        if (state.userLoc) {
+            try {
+                const data = await Api.near({ lat: state.userLoc.lat, lon: state.userLoc.lon, fuel: vehicle.fuel, sort: 'distance', limit: 5, offset: 0 });
+                for (const station of data.stations || []) {
+                    if (!stations.some((s) => String(s.ideess) === String(station.ideess))) {
+                        stations.push(station);
+                    }
+                }
+            } catch (error) {
+                // sin gasolineras cercanas: solo favoritas
+            }
+        }
+        renderStationResults(stations);
+    }
+
+    let stationTimer = null;
+
+    function onStationInput() {
+        clearTimeout(stationTimer);
+        if (el.stationSearch.value.trim().length < 3) {
+            stationTimer = setTimeout(showStationSuggestions, 150);
+            return;
+        }
+        stationTimer = setTimeout(searchStations, 250);
+    }
+
+    function clearRefuelStation() {
+        state.refuelStation = null;
+        showRefuelStation();
+    }
+
+    function checkFullTank() {
+        const vehicle = activeVehicle();
+        const liters = Number(el.refuelLiters.value);
+        if (!vehicle || !el.refuelFull.checked || !(liters > 0) || liters >= vehicle.tankCapacity * 0.25) {
+            return;
+        }
+        el.refuelFull.checked = false;
+        GP.showToast('Con tan pocos litros no cuenta como depósito lleno: lo he marcado como parcial.');
+    }
+
+    async function pickStation(station) {
         state.refuelStation = station;
-        const price = stationPrice(station, activeVehicle().fuel);
+        let price = stationPrice(station, activeVehicle().fuel);
+        if (price === null) {
+            try {
+                price = stationPrice(await Api.station(station.ideess), activeVehicle().fuel);
+            } catch (error) {
+                price = null;
+            }
+        }
         if (price !== null) {
             el.refuelPrice.value = price;
         }
@@ -894,6 +964,7 @@ const GPGarage = (() => {
             showError(el.refuelError, `Los km no pueden ser más que en el repostaje siguiente (${number(after.odometer, 0)} km).`);
             return;
         }
+        checkFullTank();
         let refuel = state.editingRefuel;
         const fields = {
             date: iso,
@@ -995,6 +1066,11 @@ const GPGarage = (() => {
     el.refuelTotal.addEventListener('input', recomputeLiters);
     el.refuelCancel.addEventListener('click', () => el.refuelDialog.close());
     el.refuelDelete.addEventListener('click', deleteRefuel);
+    el.stationSearch.addEventListener('input', onStationInput);
+    el.stationSearch.addEventListener('focus', onStationInput);
+    el.stationClear.addEventListener('click', clearRefuelStation);
+    el.refuelLiters.addEventListener('change', checkFullTank);
+    el.refuelFull.addEventListener('change', checkFullTank);
     el.odometerBtn.addEventListener('click', openOdometerDialog);
     el.odometerForm.addEventListener('submit', saveOdometer);
     el.odometerCancel.addEventListener('click', () => el.odometerDialog.close());
