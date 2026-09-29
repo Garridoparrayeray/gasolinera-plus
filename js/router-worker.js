@@ -39,7 +39,11 @@ async function readBuffer(url, onProgress) {
 function load(id) {
     if (!routerPromise) {
         routerPromise = (async () => {
-            const manifest = await (await fetch(BASE + 'manifest.json')).json();
+            const manifestResponse = await fetch(BASE + 'manifest.json');
+            if (!manifestResponse.ok) {
+                throw new Error(`El mapa de carreteras no está disponible en el servidor (${manifestResponse.status})`);
+            }
+            const manifest = await manifestResponse.json();
             const main = await readBuffer(BASE + 'main.bin.gz', (received, total) => {
                 postMessage({ id, progress: { received, total: total || manifest.mainBytes } });
             });

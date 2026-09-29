@@ -1,4 +1,5 @@
 {
+  "buildCommand": "node tools/graph/fetch-graph.mjs || echo 'Sin grafo de carreteras publicado'",
   "regions": [
     "cdg1"
   ],
