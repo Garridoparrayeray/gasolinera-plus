@@ -66,6 +66,24 @@ const GPGarage = (() => {
         refuelError: $('refuel-error'),
         refuelDelete: $('refuel-delete'),
         refuelCancel: $('refuel-cancel'),
+        refuelSave: $('refuel-save'),
+        refuelNext: $('refuel-next'),
+        refuelBack: $('refuel-back'),
+        refuelProgress: $('refuel-progress'),
+        refuelPriceNote: $('refuel-price-note'),
+        refuelLitersAsk: $('refuel-liters-ask'),
+        refuelLitersYes: $('refuel-liters-yes'),
+        refuelLitersEdit: $('refuel-liters-edit'),
+        refuelReview: $('refuel-review'),
+        refuelStationMap: $('refuel-station-map'),
+        refuelDoneText: $('refuel-done-text'),
+        refuelDoneClose: $('refuel-done-close'),
+        recapMonth: $('recap-month'),
+        recapYear: $('recap-year'),
+        recapAll: $('recap-all'),
+        recapImage: $('recap-image'),
+        recapPdf: $('recap-pdf'),
+        recapNote: $('recap-note'),
         odometerDialog: $('odometer-dialog'),
         odometerForm: $('odometer-form'),
         odometerInput: $('odometer-value'),
@@ -86,6 +104,11 @@ const GPGarage = (() => {
         nationalCache: {},
         compareMode: 'day',
         userLoc: null,
+        step: 1,
+        wizardAll: false,
+        priceTouched: false,
+        savingRefuel: false,
+        recapPeriod: 'month',
     };
 
     const MAX_PERIODS = 12;
@@ -838,6 +861,9 @@ const GPGarage = (() => {
     function clearRefuelStation() {
         state.refuelStation = null;
         showRefuelStation();
+        if (!state.wizardAll) {
+            setStep(state.step);
+        }
     }
 
     function checkFullTank() {
@@ -848,6 +874,212 @@ const GPGarage = (() => {
         }
         el.refuelFull.checked = false;
         GP.showToast('Con tan pocos litros no cuenta como depósito lleno: lo he marcado como parcial.');
+    }
+
+    const LAST_STEP = 6;
+
+    function unitWord(unit) {
+        if (unit === 'kg') {
+            return 'kilos';
+        }
+        return 'litros';
+    }
+
+    function setStep(step) {
+        state.step = step;
+        const edit = state.wizardAll;
+        el.refuelForm.classList.toggle('is-edit', edit);
+        for (const panel of el.refuelForm.querySelectorAll('.refuel-step')) {
+            const number = Number(panel.dataset.step);
+            if (edit) {
+                panel.hidden = number > LAST_STEP;
+            } else {
+                panel.hidden = number !== step;
+            }
+        }
+        const done = step === 7 && !edit;
+        el.refuelSave.hidden = !(edit || step === LAST_STEP);
+        el.refuelNext.hidden = edit || step >= LAST_STEP;
+        el.refuelBack.hidden = edit || step <= 1 || done;
+        el.refuelCancel.hidden = done;
+        el.refuelProgress.hidden = edit || done;
+        el.refuelProgress.textContent = `Paso ${step} de ${LAST_STEP}`;
+        el.refuelNext.textContent = 'Siguiente';
+        if (step === 1 && !edit && !state.refuelStation) {
+            el.refuelNext.textContent = 'Seguir sin nombre';
+        }
+        if (step === 4 && !edit) {
+            prepareLitersStep();
+        }
+        if (step === LAST_STEP && !edit) {
+            checkFullTank();
+            renderReview();
+        }
+    }
+
+    function prepareLitersStep() {
+        const unit = unitOf(activeVehicle().fuel);
+        const total = Number(el.refuelTotal.value);
+        const price = Number(el.refuelPrice.value);
+        if (total > 0 && price > 0) {
+            el.refuelLiters.value = (total / price).toFixed(2);
+        }
+        el.refuelLitersAsk.textContent = `¿Es correcto este número de ${unitWord(unit)}? Sale de ${number(total, 2)} € a ${number(price, 3)} €/${unit}.`;
+    }
+
+    function renderReview() {
+        const unit = unitOf(activeVehicle().fuel);
+        const date = new Date(el.refuelDate.value);
+        let where = 'Sin indicar';
+        if (state.refuelStation) {
+            where = state.refuelStation.rotulo;
+        }
+        const rows = [
+            ['Gasolinera', where],
+            ['Fecha', `${shortDate(date.toISOString())} ${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`],
+            [unitWord(unit), `${number(Number(el.refuelLiters.value), 2)} ${unit}`],
+            ['Precio', `${number(Number(el.refuelPrice.value), 3)} €/${unit}`],
+            ['Total pagado', money(Number(el.refuelTotal.value))],
+            ['Cuentakilómetros', `${number(Number(el.refuelOdometer.value), 0)} km`],
+        ];
+        el.refuelReview.innerHTML = '';
+        for (const [label, value] of rows) {
+            const item = document.createElement('li');
+            const name = document.createElement('span');
+            name.textContent = label;
+            const strong = document.createElement('strong');
+            strong.textContent = value;
+            item.appendChild(name);
+            item.appendChild(strong);
+            el.refuelReview.appendChild(item);
+        }
+    }
+
+    function stepError() {
+        if (state.step === 2) {
+            if (Number.isNaN(new Date(el.refuelDate.value).getTime())) {
+                return 'Indica la fecha y la hora.';
+            }
+            if (!(Number(el.refuelPrice.value) > 0)) {
+                return 'Indica el precio por litro.';
+            }
+        }
+        if (state.step === 3 && !(Number(el.refuelTotal.value) > 0)) {
+            return 'Indica el total pagado.';
+        }
+        if (state.step === 4 && !(Number(el.refuelLiters.value) > 0)) {
+            return 'Indica los litros.';
+        }
+        if (state.step === 5 && (el.refuelOdometer.value === '' || !(Number(el.refuelOdometer.value) >= 0))) {
+            return 'Indica los kilómetros del cuentakilómetros.';
+        }
+        return '';
+    }
+
+    function nextStep() {
+        const message = stepError();
+        showError(el.refuelError, message);
+        if (message !== '') {
+            return;
+        }
+        setStep(state.step + 1);
+        if (state.step === 2) {
+            updateDayPrice();
+        }
+    }
+
+    function backStep() {
+        showError(el.refuelError, '');
+        if (state.step > 1) {
+            setStep(state.step - 1);
+        }
+    }
+
+    async function updateDayPrice() {
+        if (state.priceTouched || state.wizardAll) {
+            return;
+        }
+        const vehicle = activeVehicle();
+        const date = new Date(el.refuelDate.value);
+        if (!vehicle || Number.isNaN(date.getTime())) {
+            return;
+        }
+        const station = state.refuelStation;
+        const day = GPFuel.madridDate(date.toISOString());
+        const today = GPFuel.madridDate(new Date().toISOString());
+        let price = null;
+        let note = '';
+        if (station && day === today) {
+            price = stationPrice(station, vehicle.fuel);
+            if (price === null) {
+                try {
+                    price = stationPrice(await Api.station(station.ideess), vehicle.fuel);
+                } catch (error) {
+                    price = null;
+                }
+            }
+            if (price !== null) {
+                note = `Precio de hoy en ${station.rotulo}.`;
+            }
+        }
+        if (price === null && GPPriceIndex.available()) {
+            try {
+                let lat;
+                let lon;
+                if (station) {
+                    lat = station.lat;
+                    lon = station.lon;
+                }
+                const ref = await GPPriceIndex.dayReference({ fuel: vehicle.fuel, date: day, lat, lon });
+                if (ref && ref.zone) {
+                    price = ref.zone.avg;
+                    note = 'Precio medio de ese día en la zona de la gasolinera.';
+                } else if (ref && ref.national) {
+                    price = ref.national.avg;
+                    note = 'Precio medio de ese día en España.';
+                }
+            } catch (error) {
+                price = null;
+            }
+        }
+        if (price !== null) {
+            el.refuelPrice.value = price.toFixed(3);
+            el.refuelPriceNote.textContent = note + ' Puedes cambiarlo.';
+        } else {
+            el.refuelPriceNote.textContent = 'No tenemos el precio de ese día: indícalo tú.';
+        }
+    }
+
+    function chooseStationOnMap() {
+        el.refuelDialog.close();
+        GP.switchView('list');
+        GP.showToast('Toca una gasolinera en el mapa y pulsa Repostar aquí.');
+    }
+
+    async function exportRecap(kind) {
+        const vehicle = activeVehicle();
+        if (!vehicle) {
+            showError(el.recapNote, 'Primero añade tu coche.');
+            return;
+        }
+        const stats = GPRecap.compute(vehicle, state.refuels, state.recapPeriod);
+        if (stats.count === 0) {
+            showError(el.recapNote, 'Todavía no hay repostajes en este periodo.');
+            return;
+        }
+        showError(el.recapNote, '');
+        if (kind === 'pdf') {
+            await GPRecap.exportPdf(stats);
+        } else {
+            await GPRecap.exportImage(stats);
+        }
+    }
+
+    function setRecapPeriod(period) {
+        state.recapPeriod = period;
+        el.recapMonth.setAttribute('aria-pressed', String(period === 'month'));
+        el.recapYear.setAttribute('aria-pressed', String(period === 'year'));
+        el.recapAll.setAttribute('aria-pressed', String(period === 'all'));
     }
 
     async function pickStation(station) {
@@ -866,6 +1098,11 @@ const GPGarage = (() => {
         el.stationSearch.value = '';
         el.stationResults.hidden = true;
         showRefuelStation();
+        state.priceTouched = false;
+        if (!state.wizardAll && state.step === 1) {
+            setStep(2);
+        }
+        await updateDayPrice();
     }
 
     function openRefuelDialog(refuel, station) {
@@ -878,6 +1115,8 @@ const GPGarage = (() => {
         }
         const unit = unitOf(vehicle.fuel);
         state.editingRefuel = refuel;
+        state.wizardAll = refuel !== null;
+        state.priceTouched = false;
         showError(el.refuelError, '');
         el.refuelLitersLabel.textContent = 'Litros';
         if (unit === 'kg') {
@@ -913,7 +1152,16 @@ const GPGarage = (() => {
         el.stationSearch.value = '';
         el.stationResults.hidden = true;
         showRefuelStation();
+        el.refuelPriceNote.textContent = '';
+        let first = 1;
+        if (!state.wizardAll && station) {
+            first = 2;
+        }
+        setStep(first);
         el.refuelDialog.showModal();
+        if (first === 2) {
+            updateDayPrice();
+        }
     }
 
     function recomputeTotal() {
@@ -934,6 +1182,13 @@ const GPGarage = (() => {
 
     async function saveRefuel(event) {
         event.preventDefault();
+        if (!state.wizardAll && state.step < LAST_STEP) {
+            nextStep();
+            return;
+        }
+        if (state.savingRefuel) {
+            return;
+        }
         const vehicle = activeVehicle();
         const odometer = Math.round(Number(el.refuelOdometer.value));
         const liters = Number(el.refuelLiters.value);
@@ -982,14 +1237,28 @@ const GPGarage = (() => {
             refuel = { id: GarageStore.newId(), vehicleId: vehicle.id, createdAt: fields.updatedAt, ...fields };
         }
         applyStation(refuel, state.refuelStation);
-        await attachReferences(refuel, vehicle.fuel);
-        await GarageStore.refuels.save(refuel);
+        state.savingRefuel = true;
+        try {
+            await attachReferences(refuel, vehicle.fuel);
+            await GarageStore.refuels.save(refuel);
+        } finally {
+            state.savingRefuel = false;
+        }
         if (odometer > vehicle.odometer) {
             await GarageStore.vehicles.save({ ...vehicle, odometer, odometerAt: fields.updatedAt });
         }
-        el.refuelDialog.close();
         await refresh();
-        GP.showToast('Repostaje guardado');
+        if (state.wizardAll) {
+            el.refuelDialog.close();
+            GP.showToast('Repostaje guardado');
+            return;
+        }
+        let where = '';
+        if (refuel.stationName) {
+            where = ' en ' + refuel.stationName;
+        }
+        el.refuelDoneText.textContent = `${money(refuel.total)} · ${number(refuel.liters, 2)} ${unitOf(vehicle.fuel)}${where}`;
+        setStep(7);
     }
 
     async function deleteRefuel() {
@@ -1066,6 +1335,27 @@ const GPGarage = (() => {
     el.refuelTotal.addEventListener('input', recomputeLiters);
     el.refuelCancel.addEventListener('click', () => el.refuelDialog.close());
     el.refuelDelete.addEventListener('click', deleteRefuel);
+    el.refuelNext.addEventListener('click', nextStep);
+    el.refuelBack.addEventListener('click', backStep);
+    el.refuelLitersYes.addEventListener('click', nextStep);
+    el.refuelLitersEdit.addEventListener('click', () => {
+        el.refuelLiters.focus();
+        el.refuelLiters.select();
+    });
+    el.refuelStationMap.addEventListener('click', chooseStationOnMap);
+    el.refuelDoneClose.addEventListener('click', () => el.refuelDialog.close());
+    el.refuelPrice.addEventListener('input', () => {
+        state.priceTouched = true;
+    });
+    el.refuelDate.addEventListener('change', () => {
+        state.priceTouched = false;
+        updateDayPrice();
+    });
+    el.recapMonth.addEventListener('click', () => setRecapPeriod('month'));
+    el.recapYear.addEventListener('click', () => setRecapPeriod('year'));
+    el.recapAll.addEventListener('click', () => setRecapPeriod('all'));
+    el.recapImage.addEventListener('click', () => exportRecap('image'));
+    el.recapPdf.addEventListener('click', () => exportRecap('pdf'));
     el.stationSearch.addEventListener('input', onStationInput);
     el.stationSearch.addEventListener('focus', onStationInput);
     el.stationClear.addEventListener('click', clearRefuelStation);

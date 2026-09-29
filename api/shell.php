@@ -442,6 +442,20 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                     <p id="offline-maps-note" class="garage-note" hidden></p>
                 </div>
                 <div class="garage-card">
+                    <h3>Tu resumen</h3>
+                    <p class="garage-note">Descarga tu gasto, litros, consumo y dónde repostas más como imagen o PDF para guardarlo o compartirlo.</p>
+                    <div class="garage-segment" role="group" aria-label="Periodo del resumen">
+                        <button id="recap-month" type="button" class="pill" aria-pressed="true">Este mes</button>
+                        <button id="recap-year" type="button" class="pill" aria-pressed="false">Este año</button>
+                        <button id="recap-all" type="button" class="pill" aria-pressed="false">Todo</button>
+                    </div>
+                    <div class="garage-actions">
+                        <button id="recap-image" type="button" class="pill pill--primary">Guardar imagen</button>
+                        <button id="recap-pdf" type="button" class="pill">Guardar PDF</button>
+                    </div>
+                    <p id="recap-note" class="form-error" hidden></p>
+                </div>
+                <div class="garage-card">
                     <h3>Copia de seguridad</h3>
                     <p class="garage-note">Tus coches, repostajes y viajes solo existen en este dispositivo. Guarda una copia de vez en cuando por si cambias de móvil.</p>
                     <label class="garage-check"><input type="checkbox" id="backup-include-trips" checked> Incluir los recorridos de los viajes</label>
@@ -626,27 +640,70 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
 
     <dialog id="refuel-dialog">
         <form id="refuel-form" method="dialog">
-            <h3>Anotar repostaje</h3>
-            <p id="refuel-station" class="garage-note" hidden></p>
-            <div id="refuel-picker">
-                <label>Gasolinera <input id="refuel-station-search" type="search" placeholder="Busca por nombre, calle o municipio" autocomplete="off"></label>
-                <ul id="refuel-station-results" class="route-suggestions" hidden></ul>
-                <button id="refuel-station-clear" type="button" class="pill" hidden>Quitar la gasolinera</button>
-            </div>
-            <label>Fecha y hora <input id="refuel-date" type="datetime-local" required></label>
-            <label>Kilómetros del cuentakilómetros <input id="refuel-odometer" type="number" min="0" step="1" required></label>
-            <div class="form-row">
-                <label><span id="refuel-liters-label">Litros</span> <input id="refuel-liters" type="number" min="0.1" step="0.01" required></label>
+            <h3 id="refuel-title">Anotar repostaje</h3>
+            <p id="refuel-progress" class="garage-note"></p>
+
+            <section class="refuel-step" data-step="1">
+                <h4>1. Buscar gasolinera</h4>
+                <p id="refuel-station" class="garage-note" hidden></p>
+                <div id="refuel-picker">
+                    <label>Gasolinera <input id="refuel-station-search" type="search" placeholder="Busca por nombre, calle o municipio" autocomplete="off"></label>
+                    <ul id="refuel-station-results" class="route-suggestions" hidden></ul>
+                    <div class="refuel-inline">
+                        <button id="refuel-station-map" type="button" class="pill">Elegir en el mapa</button>
+                        <button id="refuel-station-clear" type="button" class="pill" hidden>Quitar la gasolinera</button>
+                    </div>
+                    <p class="garage-note">Si no te acuerdas, puedes seguir sin nombre. Con el nombre, tu resumen dirá dónde repostas más y a qué precio.</p>
+                </div>
+            </section>
+
+            <section class="refuel-step" data-step="2">
+                <h4>2. Fecha y hora</h4>
+                <label>Fecha y hora <input id="refuel-date" type="datetime-local" required></label>
                 <label><span id="refuel-price-label">Precio (€/L)</span> <input id="refuel-price" type="number" min="0.1" step="0.001" required></label>
-            </div>
-            <label>Total pagado (€) <input id="refuel-total" type="number" min="0.1" step="0.01" required></label>
-            <label class="garage-check"><input id="refuel-full" type="checkbox" checked> He llenado el depósito</label>
-            <label class="garage-check"><input id="refuel-missed" type="checkbox"> Me salté anotar algún repostaje antes de este</label>
+                <p id="refuel-price-note" class="garage-note"></p>
+            </section>
+
+            <section class="refuel-step" data-step="3">
+                <h4>3. Total pagado</h4>
+                <label>Total pagado (€) <input id="refuel-total" type="number" min="0.1" step="0.01" required></label>
+            </section>
+
+            <section class="refuel-step" data-step="4">
+                <h4>4. Litros</h4>
+                <p id="refuel-liters-ask" class="refuel-confirm garage-note"></p>
+                <label><span id="refuel-liters-label">Litros</span> <input id="refuel-liters" type="number" min="0.1" step="0.01" required></label>
+                <div class="refuel-inline refuel-confirm">
+                    <button id="refuel-liters-yes" type="button" class="pill pill--primary">Sí, es correcto</button>
+                    <button id="refuel-liters-edit" type="button" class="pill">Editar</button>
+                </div>
+            </section>
+
+            <section class="refuel-step" data-step="5">
+                <h4>5. Kilómetros</h4>
+                <label>Kilómetros del cuentakilómetros <input id="refuel-odometer" type="number" min="0" step="1" required></label>
+            </section>
+
+            <section class="refuel-step" data-step="6">
+                <h4>6. Comprueba que todo es correcto</h4>
+                <ul id="refuel-review" class="refuel-review"></ul>
+                <label class="garage-check"><input id="refuel-full" type="checkbox" checked> He llenado el depósito</label>
+                <label class="garage-check"><input id="refuel-missed" type="checkbox"> Me salté anotar algún repostaje antes de este</label>
+            </section>
+
+            <section class="refuel-step refuel-done" data-step="7">
+                <h4>¡Repostaje guardado!</h4>
+                <p id="refuel-done-text" class="garage-note"></p>
+                <button id="refuel-done-close" type="button" class="pill pill--primary">Cerrar</button>
+            </section>
+
             <p id="refuel-error" class="form-error" hidden></p>
-            <div class="dialog-actions">
+            <div class="dialog-actions" id="refuel-actions">
+                <button id="refuel-save" type="submit" class="pill pill--primary">Guardar</button>
+                <button id="refuel-next" type="button" class="pill pill--primary">Siguiente</button>
+                <button id="refuel-back" type="button" class="pill">Atrás</button>
                 <button id="refuel-delete" type="button" class="pill pill--danger" hidden>Borrar</button>
                 <button id="refuel-cancel" type="button" class="pill">Cancelar</button>
-                <button id="refuel-save" type="submit" class="pill pill--primary">Guardar</button>
             </div>
         </form>
     </dialog>
@@ -761,6 +818,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <script src="/js/garage-store.js"></script>
     <script src="/js/backup.js"></script>
     <script src="/js/trip-metrics.js"></script>
+    <script src="/js/recap.js"></script>
     <script src="/js/garage.js"></script>
     <script src="/js/trips.js"></script>
     <script src="/js/router-core.js"></script>

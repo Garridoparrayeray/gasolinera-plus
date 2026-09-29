@@ -1291,3 +1291,21 @@ html[data-view="stats"] #stations-search-btn { display: none !important; }
 @keyframes splash-safety { to { opacity: 0; visibility: hidden; pointer-events: none; } }
 
 .view-loading--float { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 10001; margin: 0; background: #111111; color: #FFFFFF; border-color: #FF7A1A; }
+
+/* Asistente de repostaje por pasos */
+.refuel-step h4 { margin: 8px 0 10px; font-family: var(--font-display); font-size: 1.15rem; }
+.refuel-step[hidden] { display: none; }
+.refuel-inline { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.refuel-inline .pill { flex: 1 1 140px; }
+.refuel-review { list-style: none; margin: 0 0 8px; padding: 0; }
+.refuel-review li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.refuel-review strong { text-align: right; }
+.refuel-done { text-align: center; padding: 16px 0; }
+#refuel-form.is-edit .refuel-confirm { display: none; }
+#refuel-progress { margin: 0 0 4px; font-weight: 700; }
+#recap-image, #recap-pdf { flex: 1 1 0; }
+
+/* + de la pantalla de carga: mismo tamano que el del titulo */
+.splash__plus { width: 0.5em; height: 0.5em; margin-left: 0.05em; font-size: 1em; align-self: flex-start; margin-top: 0.14em; }
+.splash__plus::before { height: 0.13em; }
+.splash__plus::after { width: 0.13em; }

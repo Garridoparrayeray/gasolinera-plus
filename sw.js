@@ -20,6 +20,7 @@ const SHELL_FILES = [
     '/js/fuel-math.js',
     '/js/garage-store.js',
     '/js/backup.js',
+    '/js/recap.js',
     '/js/garage.js',
     '/js/trip-metrics.js',
     '/js/trips.js',
