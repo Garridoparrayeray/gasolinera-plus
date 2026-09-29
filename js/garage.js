@@ -804,9 +804,10 @@ const GPGarage = (() => {
             return;
         }
         const params = { q: query, sort: 'price', fuel: vehicle.fuel, limit: 6 };
-        if (state.userLoc) {
-            params.lat = state.userLoc.lat;
-            params.lon = state.userLoc.lon;
+        const here = await currentLocation();
+        if (here) {
+            params.lat = here.lat;
+            params.lon = here.lon;
             params.sort = 'distance';
         }
         try {
@@ -815,6 +816,26 @@ const GPGarage = (() => {
         } catch (error) {
             el.stationResults.hidden = true;
         }
+    }
+
+    function currentLocation() {
+        const known = GP.userPosition();
+        if (known) {
+            state.userLoc = known;
+            return Promise.resolve(known);
+        }
+        if (state.userLoc) {
+            return Promise.resolve(state.userLoc);
+        }
+        if (!navigator.geolocation) {
+            return Promise.resolve(null);
+        }
+        return new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition((position) => {
+                state.userLoc = { lat: position.coords.latitude, lon: position.coords.longitude };
+                resolve(state.userLoc);
+            }, () => resolve(null), { timeout: 4000, maximumAge: 300000 });
+        });
     }
 
     function favoriteStations() {
@@ -836,9 +857,10 @@ const GPGarage = (() => {
         }
         const favorites = favoriteStations().map((s) => ({ ...s, favorite: true }));
         let nearby = [];
-        if (state.userLoc) {
+        const here = await currentLocation();
+        if (here) {
             try {
-                const data = await Api.near({ lat: state.userLoc.lat, lon: state.userLoc.lon, fuel: vehicle.fuel, sort: 'distance', radius: 25, limit: 10, offset: 0 });
+                const data = await Api.near({ lat: here.lat, lon: here.lon, fuel: vehicle.fuel, sort: 'distance', radius: 25, limit: 10, offset: 0 });
                 nearby = data.stations || [];
             } catch (error) {
                 nearby = [];
