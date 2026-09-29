@@ -38,6 +38,12 @@ const GPTrips = (() => {
         driveStop: $('trip-drive-stop'),
         driveMin: $('trip-drive-min'),
         chip: $('trip-rec-chip'),
+        summary: $('trip-summary'),
+        summaryTitle: $('trip-summary-title'),
+        summaryTiles: $('trip-summary-tiles'),
+        summaryCarsWrap: $('trip-summary-cars-wrap'),
+        summaryCars: $('trip-summary-cars'),
+        summaryClose: $('trip-summary-close'),
     };
 
     const SPEED_WARN_KMH = 100;
@@ -196,12 +202,7 @@ const GPTrips = (() => {
             createdAt: now,
         };
         await GarageStore.trips.save(trip);
-        if (vehicleId && metrics.distanceKm > 0) {
-            const vehicle = await GarageStore.vehicles.get(vehicleId);
-            if (vehicle) {
-                await GarageStore.vehicles.save({ ...vehicle, odometer: Math.round(vehicle.odometer + metrics.distanceKm), odometerAt: now });
-            }
-        }
+        await shiftOdometer(vehicleId, metrics.distanceKm);
         return trip;
     }
 
@@ -222,6 +223,7 @@ const GPTrips = (() => {
         }
         state.importing = true;
         let imported = 0;
+        let lastSaved = null;
         try {
             const { trips } = await plugin.listTrips();
             for (const meta of trips) {
@@ -230,6 +232,7 @@ const GPTrips = (() => {
                 await plugin.deleteTrip({ id: meta.id });
                 if (saved) {
                     imported++;
+                    lastSaved = saved;
                 }
             }
         } finally {
@@ -238,6 +241,7 @@ const GPTrips = (() => {
         if (imported) {
             await GPGarage.refresh();
             GP.showToast(`${imported} viaje(s) guardado(s)`);
+            await openSummary(lastSaved);
         }
         await renderList();
         return imported;
@@ -394,9 +398,10 @@ const GPTrips = (() => {
         renderLive();
         await GarageStore.saveSetting(WEB_TRIP_KEY, null);
         if (web.points.length >= 2) {
-            await saveTrip(web.points, { id: web.id, auto: false });
+            const saved = await saveTrip(web.points, { id: web.id, auto: false });
             await GPGarage.refresh();
             note('Viaje guardado.');
+            await openSummary(saved);
         } else {
             note('No llegó ninguna posición del GPS: el viaje no se ha guardado.');
         }
@@ -505,6 +510,71 @@ const GPTrips = (() => {
         return `<div><small>${label}</small><strong>${value}</strong></div>`;
     }
 
+    async function shiftOdometer(vehicleId, km) {
+        if (!vehicleId || km === 0) {
+            return;
+        }
+        const vehicle = await GarageStore.vehicles.get(vehicleId);
+        if (!vehicle) {
+            return;
+        }
+        const odometer = Math.max(0, Math.round(vehicle.odometer + km));
+        await GarageStore.vehicles.save({ ...vehicle, odometer, odometerAt: new Date().toISOString() });
+    }
+
+    function summaryTiles(metrics) {
+        const tiles = [
+            tile('Distancia', `${number(metrics.distanceKm, 1)} km`),
+            tile('Tiempo', clock(metrics.durationSeconds)),
+            tile('Vel. media', `${number(metrics.avgSpeedKmh, 0)} km/h`),
+        ];
+        if (metrics.fuelUsed !== null) {
+            tiles.push(tile('Consumo estimado', `${number(metrics.fuelUsed, 2)} L`));
+        }
+        if (metrics.cost !== null) {
+            tiles.push(tile('Coste estimado', `${number(metrics.cost, 2)} €`));
+        }
+        return tiles.join('');
+    }
+
+    async function reassignTrip(trip, vehicle) {
+        if (trip.vehicleId === vehicle.id) {
+            return;
+        }
+        await shiftOdometer(trip.vehicleId, -trip.metrics.distanceKm);
+        await shiftOdometer(vehicle.id, trip.metrics.distanceKm);
+        trip.vehicleId = vehicle.id;
+        await GarageStore.trips.save(trip);
+        await GPGarage.refresh();
+        await renderList();
+        await renderSummaryCars(trip);
+    }
+
+    async function renderSummaryCars(trip) {
+        const vehicles = await GarageStore.vehicles.list();
+        el.summaryCarsWrap.hidden = vehicles.length < 2;
+        el.summaryCars.innerHTML = '';
+        for (const vehicle of vehicles) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'pill';
+            button.textContent = vehicle.name;
+            button.setAttribute('aria-pressed', String(vehicle.id === trip.vehicleId));
+            button.addEventListener('click', () => reassignTrip(trip, vehicle).catch((error) => note(error.message)));
+            el.summaryCars.appendChild(button);
+        }
+    }
+
+    async function openSummary(trip) {
+        if (!trip || el.summary.open) {
+            return;
+        }
+        el.summaryTitle.textContent = 'Viaje guardado';
+        el.summaryTiles.innerHTML = summaryTiles(trip.metrics);
+        await renderSummaryCars(trip);
+        el.summary.showModal();
+    }
+
     function replaceChart(key, canvas, config) {
         if (state.charts[key]) {
             state.charts[key].destroy();
@@ -601,12 +671,7 @@ const GPTrips = (() => {
             return;
         }
         await GarageStore.trips.remove(trip.id);
-        if (trip.vehicleId && trip.metrics.distanceKm > 0) {
-            const vehicle = await GarageStore.vehicles.get(trip.vehicleId);
-            if (vehicle) {
-                await GarageStore.vehicles.save({ ...vehicle, odometer: Math.max(0, Math.round(vehicle.odometer - trip.metrics.distanceKm)) });
-            }
-        }
+        await shiftOdometer(trip.vehicleId, -trip.metrics.distanceKm);
         el.dialog.close();
         await GPGarage.refresh();
         await renderList();
@@ -624,6 +689,7 @@ const GPTrips = (() => {
     el.start.addEventListener('click', () => start().catch((error) => note(error.message)));
     el.stop.addEventListener('click', () => stop().catch((error) => note(error.message)));
     el.driveStop.addEventListener('click', () => stop().catch((error) => note(error.message)));
+    el.summaryClose.addEventListener('click', () => el.summary.close());
     el.driveMin.addEventListener('click', () => minimizeDrive(true));
     el.chip.addEventListener('click', () => minimizeDrive(false));
     el.auto.addEventListener('change', () => setAuto(el.auto.checked).catch((error) => note(error.message)));

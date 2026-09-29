@@ -659,6 +659,18 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         <button id="trip-drive-stop" type="button">Terminar viaje</button>
     </div>
 
+    <dialog id="trip-summary">
+        <h3 id="trip-summary-title">Viaje guardado</h3>
+        <div class="garage-tiles" id="trip-summary-tiles"></div>
+        <div id="trip-summary-cars-wrap" hidden>
+            <h4>¿Con qué coche ibas?</h4>
+            <div id="trip-summary-cars"></div>
+        </div>
+        <div class="dialog-actions">
+            <button id="trip-summary-close" type="button" class="pill pill--primary">Listo</button>
+        </div>
+    </dialog>
+
     <dialog id="trip-dialog">
         <button id="trip-dialog-close" class="btn-icon" type="button" aria-label="Cerrar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>

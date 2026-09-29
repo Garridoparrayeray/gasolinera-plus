@@ -1039,3 +1039,12 @@ html.is-driving { overflow: hidden; }
     #trip-drive-dot, #trip-rec-dot { animation: none; }
     #trip-drive-bar-fill { transition: none; }
 }
+
+/* Resumen tras el viaje */
+#trip-summary { max-width: 560px; }
+#trip-summary h3 { margin: 0 0 12px; font-family: 'Barlow Condensed', 'Bricolage Grotesque', 'Inter', sans-serif; font-size: 2rem; font-style: italic; text-transform: uppercase; }
+#trip-summary h4 { margin: 16px 0 8px; font-size: 1rem; }
+#trip-summary-tiles strong { font-size: 1.5rem; }
+#trip-summary-cars { display: flex; flex-direction: column; gap: 8px; }
+#trip-summary-cars .pill { padding: 16px; border: 3px solid var(--text); border-radius: 0; font-size: 1.05rem; font-weight: 800; text-align: left; }
+#trip-summary-cars .pill[aria-pressed="true"] { background: var(--text); color: var(--primary-light); }
