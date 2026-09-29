@@ -1172,3 +1172,15 @@ a { color: var(--primary); }
 
 /* Los puntos del mapa siguen siendo redondos */
 .marker-cluster, .marker-cluster div, .leaflet-marker-icon.marker-cluster { border-radius: 50% !important; }
+
+/* Pestañas: etiqueta completa en pantallas anchas y abreviada en el movil */
+.tab-short { display: none; }
+@media (max-width: 599px) {
+    .tab-long { display: none; }
+    .tab-short { display: inline; }
+    #view-toggle button { font-size: 0.68rem; }
+}
+
+/* Buscador: el boton mide lo mismo que el campo */
+#search-input { min-height: 52px; }
+#search-form > button { align-self: stretch; width: 52px; height: auto; }

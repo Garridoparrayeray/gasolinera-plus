@@ -209,7 +209,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         <nav id="view-toggle" role="tablist" aria-label="Secciones">
             <button id="view-list-btn" type="button" role="tab" aria-selected="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-                <span>Precios</span>
+                <span class="tab-long">Listado/Mapa</span><span class="tab-short">Listado</span>
             </button>
             <button id="view-route-btn" type="button" role="tab" aria-selected="false">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h8.5a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H16"/></svg>
@@ -221,7 +221,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             </button>
             <button id="view-stats-btn" type="button" role="tab" aria-selected="false">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/></svg>
-                <span>Datos</span>
+                <span class="tab-long">Estadísticas</span><span class="tab-short">Estad.</span>
             </button>
             <button id="view-about-btn" type="button" role="tab" aria-selected="false">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
