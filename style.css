@@ -1127,3 +1127,15 @@ html.is-driving { overflow: hidden; }
     #garage-main > #garage-vehicles, #garage-main > #garage-trips-card { grid-column: 1 / -1; }
 }
 #trip-drive-speed, #trip-drive-stats strong, #trip-drive-stop { font-stretch: 75%; }
+
+/* Precios: mapa y lista en una sola pantalla; elegir una gasolinera la marca en el mapa */
+.station-card { flex-wrap: wrap; }
+.station-card.is-selected { border-color: var(--primary-light); background: var(--primary-tint); box-shadow: 0 0 0 2px var(--primary-light); }
+.station-card__open { display: none; flex: 1 1 100%; margin-top: 6px; padding: 10px; border-radius: 12px; font-weight: 700; text-align: center; }
+.station-card.is-selected .station-card__open { display: block; }
+#map-show-all { border-color: var(--primary-light); background: var(--primary-light); color: #0B0D0A; font-weight: 700; }
+@media (max-width: 1023px) {
+    #view-map { order: 1; margin-bottom: 12px; }
+    #view-list { order: 2; }
+    #map { height: 40vh; height: 40dvh; min-height: 260px; border-radius: 16px; }
+}

@@ -63,7 +63,7 @@ s.where = 'repostar-aqui';
 await ev("document.getElementById('view-list-btn').click()");
 await ev("(()=>{const i=document.getElementById('search-input');i.value='bilbao';document.getElementById('search-form').requestSubmit();})()");
 await waitFor("document.querySelectorAll('#stations-list li').length > 0", 10000);
-await ev("document.querySelector('#stations-list li').click()");
+await ev("document.querySelector('#stations-list li .station-card__open').click()");
 await waitFor("document.getElementById('station-modal').open", 8000);
 await ev("document.getElementById('modal-refuel').click()");
 check('"Repostar aqui" abre el repostaje', await waitFor("document.getElementById('refuel-dialog').open", 3000));
