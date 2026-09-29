@@ -16,7 +16,7 @@ async function search(query) {
 }
 
 async function openFirstStation() {
-    await ev("document.querySelector('#stations-list li').click()");
+    await ev("document.querySelector('#stations-list li .station-card__open').click()");
     return waitFor("document.getElementById('station-modal').open && document.querySelectorAll('#modal-fuels li').length > 0", 8000);
 }
 
@@ -71,8 +71,12 @@ for (const size of sizes.filter((x) => !sizeFilter || sizeFilter.includes(x.n)))
     await ev("(()=>{const f=document.getElementById('filter-fuel');f.value='gasoleo_a';f.dispatchEvent(new Event('change',{bubbles:true}));})()");
 
     s.where = `${tag}/mapa`;
-    await ev("document.getElementById('view-map-btn').click()");
+    await ev("document.getElementById('view-list-btn').click()");
     check(`${tag} el mapa pinta gasolineras`, await waitFor("document.querySelectorAll('#map .leaflet-interactive, #map .marker-cluster').length > 0", 12000));
+    await ev("document.querySelector('#stations-list li').click()");
+    check(`${tag} elegir una gasolinera la marca en el mapa`, await waitFor("document.querySelector('#stations-list li').classList.contains('is-selected') && !document.getElementById('map-show-all').hidden", 6000));
+    await ev("document.getElementById('map-show-all').click()");
+    check(`${tag} ver todas devuelve todas las gasolineras`, await waitFor("!document.querySelector('#stations-list li.is-selected') && document.getElementById('map-show-all').hidden", 6000));
 
     s.where = `${tag}/estadisticas`;
     await ev("document.getElementById('view-stats-btn').click()");

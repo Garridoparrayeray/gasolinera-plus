@@ -38,6 +38,8 @@
         filterSort: document.getElementById('filter-sort'),
         filterOpen: document.getElementById('filter-open'),
         viewList: document.getElementById('view-list'),
+        viewMap: document.getElementById('view-map'),
+        mapShowAll: document.getElementById('map-show-all'),
         stationsList: document.getElementById('stations-list'),
         stationsEmpty: document.getElementById('stations-empty'),
         stationsGeocodedNote: document.getElementById('stations-geocoded-note'),
@@ -127,6 +129,8 @@
         bboxController: null,
         map: null,
         markerLayer: null,
+        selectedLayer: null,
+        selectedId: null,
         heatLayer: null,
         heatVisible: false,
         userMarker: null,
@@ -664,7 +668,7 @@
 
         renderList(state.currentStations);
         updatePaginationControls();
-        if (state.currentView === 'map') {
+        if (state.currentView === 'list') {
             refreshMapMarkers();
         }
 
@@ -707,7 +711,80 @@
         return label;
     }
 
+    function markSelectedCard() {
+        for (const card of el.stationsList.children) {
+            card.classList.toggle('is-selected', card.dataset.ideess === state.selectedId);
+        }
+    }
+
+    function resetSelection() {
+        state.selectedId = null;
+        el.mapShowAll.hidden = true;
+        if (state.selectedLayer) {
+            state.selectedLayer.clearLayers();
+        }
+        if (state.map && state.markerLayer && !state.map.hasLayer(state.markerLayer)) {
+            state.map.addLayer(state.markerLayer);
+        }
+        markSelectedCard();
+    }
+
+    function clearSelection() {
+        if (state.selectedId === null) {
+            return;
+        }
+        resetSelection();
+        loadBboxForMap();
+    }
+
+    function selectStation(station) {
+        if (state.selectedId === station.ideess) {
+            clearSelection();
+            return;
+        }
+        ensureMap();
+        state.selectedId = station.ideess;
+        markSelectedCard();
+        if (!state.selectedLayer) {
+            state.selectedLayer = L.layerGroup().addTo(state.map);
+        }
+        state.selectedLayer.clearLayers();
+        state.map.removeLayer(state.markerLayer);
+        const marker = L.circleMarker([station.lat, station.lon], {
+            radius: 11,
+            color: '#0B0D0A',
+            fillColor: '#C6FF00',
+            fillOpacity: 1,
+            weight: 3,
+        });
+        bindStationPopup(marker, station, fuelPriceLabel(station, el.filterFuel.value) || 'Sin dato');
+        marker.addTo(state.selectedLayer);
+        state.map.flyTo([station.lat, station.lon], 16);
+        marker.openPopup();
+        el.mapShowAll.hidden = false;
+        el.viewMap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function bindStationPopup(marker, station, priceLabel) {
+        let open24hText = '';
+        if (station.is24h) {
+            open24hText = ' · 24h';
+        }
+        marker.bindPopup(`
+            <strong>${escapeHtml(station.rotulo)}</strong><br>
+            ${priceLabel}${open24hText}<br>
+            <button class="popup-view-btn" data-ideess="${station.ideess}">Ver ficha</button>
+        `);
+        marker.on('popupopen', (e) => {
+            const btn = e.popup.getElement().querySelector('.popup-view-btn');
+            if (btn) {
+                btn.addEventListener('click', () => openStationModal(station.ideess));
+            }
+        });
+    }
+
     function renderList(stations) {
+        resetSelection();
         el.stationsList.innerHTML = '';
         el.stationsEmpty.textContent = 'No hay gasolineras que coincidan con la búsqueda.';
         el.stationsEmpty.hidden = stations.length > 0;
@@ -761,8 +838,14 @@
                     ${gasolina95Html}
                     ${filteredPriceHtml}
                 </div>
+                <button type="button" class="station-card__open pill">Ver ficha</button>
             `;
-            li.addEventListener('click', () => openStationModal(station.ideess));
+            li.dataset.ideess = station.ideess;
+            li.addEventListener('click', () => selectStation(station));
+            li.querySelector('.station-card__open').addEventListener('click', (event) => {
+                event.stopPropagation();
+                openStationModal(station.ideess);
+            });
             el.stationsList.appendChild(li);
         }
     }
@@ -895,21 +978,7 @@
             if (station.precio !== null) {
                 popupPrice = priceText(station.precio, el.filterFuel.value);
             }
-            let open24hText = '';
-            if (station.is24h) {
-                open24hText = ' · 24h';
-            }
-            marker.bindPopup(`
-                <strong>${escapeHtml(station.rotulo)}</strong><br>
-                ${popupPrice}${open24hText}<br>
-                <button class="popup-view-btn" data-ideess="${station.ideess}">Ver ficha</button>
-            `);
-            marker.on('popupopen', (e) => {
-                const btn = e.popup.getElement().querySelector('.popup-view-btn');
-                if (btn) {
-                    btn.addEventListener('click', () => openStationModal(station.ideess));
-                }
-            });
+            bindStationPopup(marker, station, popupPrice);
             state.markerLayer.addLayer(marker);
         }
 
@@ -979,18 +1048,17 @@
 
     const VIEWS = ['list', 'map', 'route', 'garage', 'stats', 'about'];
 
-    const DESKTOP_QUERY = window.matchMedia('(min-width: 1024px)');
     const PRICE_VIEWS = ['list', 'map'];
 
     function visibleViews(view) {
-        if (DESKTOP_QUERY.matches && PRICE_VIEWS.includes(view)) {
+        if (PRICE_VIEWS.includes(view)) {
             return PRICE_VIEWS;
         }
         return [view];
     }
 
     function switchView(view) {
-        if (!VIEWS.includes(view) || !document.getElementById('view-' + view)) {
+        if (view === 'map' || !VIEWS.includes(view) || !document.getElementById('view-' + view)) {
             view = 'list';
         }
         state.currentView = view;
@@ -1645,7 +1713,7 @@
             button.addEventListener('click', () => switchView(name));
         }
     }
-    DESKTOP_QUERY.addEventListener('change', () => switchView(state.currentView));
+    el.mapShowAll.addEventListener('click', clearSelection);
     el.heatmapToggle.addEventListener('click', toggleHeatmap);
     el.locateMe.addEventListener('click', locateOnMap);
 
@@ -1929,6 +1997,7 @@
     GPNative.checkForUpdate(showUpdateBanner);
     initGeolocationFlow();
     handleDeepLink();
+    switchView(state.currentView);
     updateCompareCount();
     updateFavoritesCount();
     loadNationalHeadline();

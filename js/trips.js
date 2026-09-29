@@ -114,20 +114,28 @@ const GPTrips = (() => {
         return 'Deja la pantalla encendida: si la bloqueas se pausa la grabación.';
     }
 
+    function averageKmh(live) {
+        const seconds = (Date.now() - live.startedAt) / 1000;
+        if (seconds <= 0) {
+            return 0;
+        }
+        return (live.distanceM / seconds) * 3.6;
+    }
+
     function paintDrive(live) {
         const kmh = live.speedMs * 3.6;
         el.drive.dataset.level = speedLevel(kmh);
         el.driveSpeed.textContent = number(kmh, 0);
         el.driveBarFill.style.width = `${Math.min(100, (kmh / SPEED_BAR_MAX_KMH) * 100)}%`;
         el.driveDistance.textContent = number(live.distanceM / 1000, 1);
-        el.driveMax.textContent = number(live.maxSpeedMs * 3.6, 0);
+        el.driveMax.textContent = number(averageKmh(live), 0);
         el.driveTime.textContent = clock((Date.now() - live.startedAt) / 1000);
     }
 
     function paintLiveCard(live) {
         el.liveDistance.textContent = `${number(live.distanceM / 1000, 1)} km`;
         el.liveSpeed.textContent = `${number(live.speedMs * 3.6, 0)} km/h`;
-        el.liveMax.textContent = `${number(live.maxSpeedMs * 3.6, 0)} km/h`;
+        el.liveMax.textContent = `${number(averageKmh(live), 0)} km/h`;
         el.liveTime.textContent = clock((Date.now() - live.startedAt) / 1000);
     }
 

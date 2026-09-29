@@ -208,12 +208,8 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
 
         <nav id="view-toggle" role="tablist" aria-label="Secciones">
             <button id="view-list-btn" type="button" role="tab" aria-selected="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
-                <span>Lista</span>
-            </button>
-            <button id="view-map-btn" type="button" role="tab" aria-selected="false">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
-                <span>Mapa</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                <span>Precios</span>
             </button>
             <button id="view-route-btn" type="button" role="tab" aria-selected="false">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h8.5a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H16"/></svg>
@@ -249,10 +245,11 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             </nav>
         </section>
 
-        <section id="view-map" hidden>
+        <section id="view-map">
             <div id="map-controls">
                 <button id="heatmap-toggle" type="button" class="pill" aria-pressed="false">Mapa de calor de precio</button>
                 <button id="locate-me" type="button" class="pill">Mi ubicación</button>
+                <button id="map-show-all" type="button" class="pill" hidden>Ver todas</button>
             </div>
             <div id="map-wrap">
                 <div id="map"></div>
@@ -408,7 +405,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                             <div><small>Distancia</small><strong id="trip-live-distance">0,0 km</strong></div>
                             <div><small>Velocidad</small><strong id="trip-live-speed">0 km/h</strong></div>
                             <div><small>Tiempo</small><strong id="trip-live-time">0:00</strong></div>
-                            <div><small>Máxima</small><strong id="trip-live-max">0 km/h</strong></div>
+                            <div><small>Media</small><strong id="trip-live-max">0 km/h</strong></div>
                         </div>
                     </div>
                     <div class="garage-actions">
@@ -656,7 +653,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         <div id="trip-drive-stats">
             <div><small>Distancia</small><strong id="trip-drive-distance">0,0</strong><em>km</em></div>
             <div><small>Tiempo</small><strong id="trip-drive-time">0:00</strong></div>
-            <div><small>Máxima</small><strong id="trip-drive-max">0</strong><em>km/h</em></div>
+            <div><small>Media</small><strong id="trip-drive-max">0</strong><em>km/h</em></div>
         </div>
         <p id="trip-drive-hint"></p>
         <button id="trip-drive-stop" type="button">Terminar viaje</button>

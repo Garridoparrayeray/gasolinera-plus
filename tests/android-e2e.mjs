@@ -82,14 +82,14 @@ clearInterval(gpsTicker);
 check('media nacional desde la API', await waitFor("/\\d/.test(document.getElementById('national-gasoleo-a').textContent)", 8000));
 
 s.where = 'ficha';
-await ev("document.querySelector('#stations-list li').click()");
+await ev("document.querySelector('#stations-list li .station-card__open').click()");
 check('abre la ficha', await waitFor("document.getElementById('station-modal').open && document.querySelectorAll('#modal-fuels li').length > 0", 8000));
 check('boton compartir nativo visible', (await ev("!document.getElementById('modal-share').hidden")) === true);
 adb('shell', 'input', 'keyevent', '4');
 check('el boton atras cierra la ficha', await waitFor("!document.getElementById('station-modal').open", 4000));
 check('la app sigue abierta tras atras', foregroundPackage().includes(PKG));
 
-await ev("document.querySelector('#stations-list li').click()");
+await ev("document.querySelector('#stations-list li .station-card__open').click()");
 await waitFor("document.getElementById('station-modal').open", 6000);
 await ev("document.getElementById('modal-directions').click()");
 await sleep(3000);
@@ -100,7 +100,7 @@ await sleep(1500);
 await ev("document.getElementById('station-modal').open && document.getElementById('modal-close').click()");
 
 s.where = 'mapa';
-await ev("document.getElementById('view-map-btn').click()");
+await ev("document.getElementById('view-list-btn').click()");
 check('el mapa pinta gasolineras', await waitFor("document.querySelectorAll('#map .leaflet-interactive, #map .marker-cluster').length > 0", 15000));
 check('el mapa carga teselas', await waitFor("[...document.querySelectorAll('#map img.leaflet-tile')].some(img => img.complete && img.naturalWidth > 0)", 15000));
 await ev("document.getElementById('view-list-btn').click()");
@@ -114,7 +114,7 @@ s.allowHttpErrors = true;
 await s.send('Network.setBlockedURLs', { urls: ['*localhost:8021*', '*gasolineraplus.vercel.app*'] });
 await ev("(()=>{const i=document.getElementById('search-input');i.value='valladolid';document.getElementById('search-form').requestSubmit();})()");
 check('sin conexion busca con los datos del APK', await waitFor("document.querySelectorAll('#stations-list li').length > 0 && document.getElementById('stations-list').textContent.toLowerCase().includes('valladolid')", 10000));
-await ev("document.querySelector('#stations-list li').click()");
+await ev("document.querySelector('#stations-list li .station-card__open').click()");
 check('sin conexion abre la ficha', await waitFor("document.getElementById('station-modal').open && document.querySelectorAll('#modal-fuels li').length > 0", 8000));
 await s.send('Network.setBlockedURLs', { urls: [] });
 s.offline = false;
