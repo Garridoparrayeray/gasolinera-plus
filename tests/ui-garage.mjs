@@ -13,11 +13,29 @@ async function fill(values) {
     }
 }
 
-async function addRefuel(date, odometer, liters, price) {
+async function press(id) {
+    await ev(`document.getElementById('${id}').click()`);
+    await sleep(150);
+}
+
+async function walkRefuelSteps(date, odometer, total, price) {
     await ev("document.getElementById('garage-refuel').click()");
     await waitFor("document.getElementById('refuel-dialog').open", 3000);
-    await fill({ 'refuel-date': date, 'refuel-odometer': odometer, 'refuel-liters': liters, 'refuel-price': price });
+    await press('refuel-next');
+    await fill({ 'refuel-date': date, 'refuel-price': price });
+    await press('refuel-next');
+    await fill({ 'refuel-total': total });
+    await press('refuel-next');
+    await press('refuel-liters-yes');
+    await fill({ 'refuel-odometer': odometer });
+    await press('refuel-next');
+}
+
+async function addRefuel(date, odometer, liters, price) {
+    await walkRefuelSteps(date, odometer, (liters * price).toFixed(2), price);
     await ev("document.getElementById('refuel-form').requestSubmit()");
+    await waitFor("!document.querySelector('#refuel-dialog [data-step=\"7\"]').hidden", 4000);
+    await press('refuel-done-close');
     return waitFor("!document.getElementById('refuel-dialog').open", 4000);
 }
 
@@ -51,12 +69,9 @@ check('lista los dos repostajes', (await ev("document.querySelectorAll('#garage-
 check('grafica de consumo', await waitFor("!!Chart.getChart(document.getElementById('garage-consumption-chart'))", 4000));
 check('grafica de gasto mensual', await waitFor("!!Chart.getChart(document.getElementById('garage-spend-chart'))", 4000));
 
-await ev("document.getElementById('garage-refuel').click()");
-await waitFor("document.getElementById('refuel-dialog').open", 3000);
-await fill({ 'refuel-date': '2026-09-20T10:00', 'refuel-odometer': 10500, 'refuel-liters': 30, 'refuel-price': 1.5 });
-await ev("document.getElementById('refuel-form').requestSubmit()");
-check('rechaza km menores que el repostaje anterior', await waitFor("!document.getElementById('refuel-error').hidden && document.getElementById('refuel-dialog').open", 3000));
-check('litros por precio da el total', (await ev("document.getElementById('refuel-total').value")) === '45.00');
+await walkRefuelSteps('2026-09-20T10:00', 10500, '45.00', 1.5);
+check('avisa si los km son menores que el repostaje anterior', await waitFor("!document.querySelector('#refuel-dialog [data-step=\"5.5\"]').hidden && document.getElementById('refuel-km-warning').textContent.includes('menos km')", 3000));
+check('total entre precio da los litros', (await ev("document.getElementById('refuel-liters').value")) === '30.00');
 await ev("document.getElementById('refuel-cancel').click()");
 
 s.where = 'repostar-aqui';

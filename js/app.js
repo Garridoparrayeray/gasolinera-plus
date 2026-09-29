@@ -1651,20 +1651,10 @@
         el.modalCompareToggle.onclick = () => {
             if (isInCompareList(ideess)) {
                 removeFromCompare(ideess);
-                el.modalRefuel.onclick = () => {
-            el.stationModal.close();
-            document.dispatchEvent(new CustomEvent('gp:refuel-here', { detail: station }));
-        };
-
-        el.modalCompareToggle.textContent = compareToggleLabel(ideess);
+                el.modalCompareToggle.textContent = compareToggleLabel(ideess);
             } else {
                 addToCompare(ideess, station.rotulo, station.direccion);
-                el.modalRefuel.onclick = () => {
-            el.stationModal.close();
-            document.dispatchEvent(new CustomEvent('gp:refuel-here', { detail: station }));
-        };
-
-        el.modalCompareToggle.textContent = compareToggleLabel(ideess);
+                el.modalCompareToggle.textContent = compareToggleLabel(ideess);
                 showToast(`${station.rotulo} añadida a comparar`);
                 setTimeout(() => el.stationModal.close(), 900);
             }

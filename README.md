@@ -102,3 +102,5 @@ cd android && ./gradlew assembleDebug      # JAVA_HOME = JDK 21 (el de Android S
 `vercel.json` (mismo patrón que bizkaibus+: `api/shell.php` debe existir físicamente dentro de `api/` desde el primer commit, o el deploy falla con "pattern doesn't match any Serverless Functions"). El cron de `.github/workflows/rebuild-schedule.yml` ejecuta `--mode=daily`, comitea `data/gasolinera.sqlite` si cambió, y despliega con `vercel deploy --prod`; necesita los secrets `TOKEN_GASOLINERA` (token de Vercel), `TEAM_ID` y `PROJECT_ID` configurados en el repo de GitHub.
 
 Más detalle de cada versión y sus funciones: [docs/funcionalidades.md](docs/funcionalidades.md).
+
+Documentación técnica completa para programadores: [docs/tecnica/](docs/tecnica/README.md).

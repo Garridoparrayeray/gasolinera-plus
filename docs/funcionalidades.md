@@ -26,7 +26,7 @@ Gasolinera+ existe en cuatro formas. Este documento dice qué hace cada una y qu
 | Grabar viaje manualmente | Solo con la pantalla encendida | Sí, con la pantalla apagada | Sí, con la pantalla apagada |
 | Detección automática de viajes (actividad física) | No | Sí | Sí |
 | Viaje automático al conectar el Bluetooth del coche | No | Sí | No (iOS no lo permite) |
-| Avisos de precio | No | Sí | Sí |
+| Avisos de precio de favoritas | Solo con la web instalada en Chrome de Android | Sí | Sí |
 | Copia de seguridad del garaje (exportar e importar) | Sí | Sí | Sí |
 
 ## Dónde se guardan tus datos
@@ -78,7 +78,7 @@ Todo el recorrido se guarda en el móvil. Los viajes automáticos de menos de 50
 
 ## Rendimiento y límites
 
-- La búsqueda por texto siempre se apoya en los datos locales cuando están descargados, así que no carga el servidor.
+- En la app, la lista de gasolineras cercanas y el mapa se resuelven con los datos guardados en el móvil, sin cargar el servidor. La búsqueda por texto sí consulta el servidor (con caché) y usa los datos locales cuando no hay red.
 - Las respuestas del servidor se guardan en caché y las coordenadas se redondean para que muchas personas compartan la misma respuesta. Hay un límite de peticiones por usuario.
 - El radio de la búsqueda por texto solo descarta marcas y calles lejanas; un municipio o código postal se busca sin límite de distancia.
 - Cualquier sección que tarde más de 0,2 s muestra "Cargando…" hasta terminar.
