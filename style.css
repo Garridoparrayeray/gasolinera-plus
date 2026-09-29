@@ -1321,3 +1321,6 @@ html[data-view="stats"] #stations-search-btn { display: none !important; }
 #refuel-station-results li button { border: 1px solid var(--border); margin-bottom: 6px; }
 #stations-empty-anywhere { display: block; margin: 0 0 12px; }
 #stations-empty-anywhere[hidden] { display: none; }
+
+.garage-check[hidden] { display: none; }
+.refuel-ask { font-size: 1.1rem; font-weight: 700; color: var(--text); margin: 4px 0 12px; }

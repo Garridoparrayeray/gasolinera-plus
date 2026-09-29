@@ -74,6 +74,11 @@ const GPGarage = (() => {
         refuelLitersAsk: $('refuel-liters-ask'),
         refuelLitersYes: $('refuel-liters-yes'),
         refuelLitersEdit: $('refuel-liters-edit'),
+        refuelLitersOk: $('refuel-liters-ok'),
+        refuelLitersBackBtn: $('refuel-liters-back'),
+        refuelLitersTitle: $('refuel-liters-title'),
+        refuelMissedRow: $('refuel-missed-row'),
+        refuelMissedText: $('refuel-missed-text'),
         refuelReview: $('refuel-review'),
         refuelDoneText: $('refuel-done-text'),
         refuelDoneClose: $('refuel-done-close'),
@@ -108,6 +113,7 @@ const GPGarage = (() => {
         wizardAll: false,
         priceTouched: false,
         savingRefuel: false,
+        litersBackup: null,
         recapPeriod: 'month',
     };
 
@@ -930,27 +936,29 @@ const GPGarage = (() => {
         for (const panel of el.refuelForm.querySelectorAll('.refuel-step')) {
             const number = Number(panel.dataset.step);
             if (edit) {
-                panel.hidden = number > LAST_STEP;
+                panel.hidden = number > LAST_STEP || number === 4;
             } else {
                 panel.hidden = number !== step;
             }
         }
         const done = step === 7 && !edit;
         el.refuelSave.hidden = !(edit || step === LAST_STEP);
-        el.refuelNext.hidden = edit || step >= LAST_STEP;
-        el.refuelBack.hidden = edit || step <= 1 || done;
+        el.refuelNext.hidden = edit || step >= LAST_STEP || step === 4 || step === 4.5;
+        el.refuelBack.hidden = edit || step <= 1 || done || step === 4.5;
         el.refuelCancel.hidden = done;
         el.refuelProgress.hidden = edit || done;
-        el.refuelProgress.textContent = `Paso ${step} de ${LAST_STEP}`;
+        el.refuelProgress.textContent = `Paso ${Math.floor(step)} de ${LAST_STEP}`;
         el.refuelNext.textContent = 'Siguiente';
         if (step === 1 && !edit && !state.refuelStation) {
             el.refuelNext.textContent = 'Seguir sin nombre';
         }
-        el.refuelLiters.readOnly = false;
+        el.refuelMissedRow.hidden = false;
         if (step === 4 && !edit) {
-            el.refuelNext.hidden = true;
-            el.refuelLiters.readOnly = true;
             prepareLitersStep();
+        }
+        if (step === 4.5) {
+            el.refuelLiters.focus();
+            el.refuelLiters.select();
         }
         if (step === LAST_STEP && !edit) {
             checkFullTank();
@@ -962,13 +970,43 @@ const GPGarage = (() => {
         const unit = unitOf(activeVehicle().fuel);
         const total = Number(el.refuelTotal.value);
         const price = Number(el.refuelPrice.value);
+        el.refuelLitersTitle.textContent = unitWord(unit);
+        el.refuelLitersAsk.textContent = `¿Es correcto este número de ${unitWord(unit)}: ${number(Number(el.refuelLiters.value), 2)} ${unit}? Sale de ${number(total, 2)} € a ${number(price, 3)} €/${unit}.`;
+    }
+
+    function recomputeLitersFromTotal() {
+        const total = Number(el.refuelTotal.value);
+        const price = Number(el.refuelPrice.value);
         if (total > 0 && price > 0) {
             el.refuelLiters.value = (total / price).toFixed(2);
         }
-        el.refuelLitersAsk.textContent = `¿Es correcto este número de ${unitWord(unit)}? Sale de ${number(total, 2)} € a ${number(price, 3)} €/${unit}.`;
+    }
+
+    function updateMissedHint() {
+        const vehicle = activeVehicle();
+        const iso = new Date(el.refuelDate.value).toISOString();
+        const previous = state.refuels
+            .filter((r) => r.vehicleId === vehicle.id && r.date < iso)
+            .sort((a, b) => b.odometer - a.odometer)[0];
+        el.refuelMissed.checked = false;
+        el.refuelMissedRow.hidden = true;
+        if (!previous) {
+            return;
+        }
+        const km = Number(el.refuelOdometer.value) - previous.odometer;
+        let autonomy = GPFuel.summary(vehicle, state.refuels).autonomyKm;
+        if (!(autonomy > 0)) {
+            autonomy = (vehicle.tankCapacity / (vehicle.homologated || 7)) * 100;
+        }
+        if (km > autonomy * 1.25) {
+            el.refuelMissed.checked = true;
+            el.refuelMissedRow.hidden = false;
+            el.refuelMissedText.textContent = `Han pasado ${number(km, 0)} km desde tu último repostaje y un depósito da unos ${number(autonomy, 0)} km. Parece que falta alguno por anotar: no contaré ese tramo en el consumo.`;
+        }
     }
 
     function renderReview() {
+        updateMissedHint();
         const unit = unitOf(activeVehicle().fuel);
         const date = new Date(el.refuelDate.value);
         let where = 'Sin indicar';
@@ -1022,6 +1060,9 @@ const GPGarage = (() => {
         showError(el.refuelError, message);
         if (message !== '') {
             return;
+        }
+        if (state.step === 3) {
+            recomputeLitersFromTotal();
         }
         setStep(state.step + 1);
         if (state.step === 2) {
@@ -1380,9 +1421,24 @@ const GPGarage = (() => {
     el.refuelBack.addEventListener('click', backStep);
     el.refuelLitersYes.addEventListener('click', nextStep);
     el.refuelLitersEdit.addEventListener('click', () => {
-        el.refuelLiters.readOnly = false;
-        el.refuelLiters.focus();
-        el.refuelLiters.select();
+        state.litersBackup = { liters: el.refuelLiters.value, total: el.refuelTotal.value };
+        setStep(4.5);
+    });
+    el.refuelLitersOk.addEventListener('click', () => {
+        if (!(Number(el.refuelLiters.value) > 0)) {
+            showError(el.refuelError, 'Indica los litros.');
+            return;
+        }
+        showError(el.refuelError, '');
+        setStep(4);
+    });
+    el.refuelLitersBackBtn.addEventListener('click', () => {
+        showError(el.refuelError, '');
+        if (state.litersBackup) {
+            el.refuelLiters.value = state.litersBackup.liters;
+            el.refuelTotal.value = state.litersBackup.total;
+        }
+        setStep(4);
     });
     el.refuelDoneClose.addEventListener('click', () => el.refuelDialog.close());
     el.refuelPrice.addEventListener('input', () => {

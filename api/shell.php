@@ -671,11 +671,19 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
 
             <section class="refuel-step" data-step="4">
                 <h4>4. Litros</h4>
-                <p id="refuel-liters-ask" class="refuel-confirm garage-note"></p>
-                <label><span id="refuel-liters-label">Litros</span> <input id="refuel-liters" type="number" min="0.1" step="0.01" required></label>
+                <p id="refuel-liters-ask" class="refuel-confirm refuel-ask"></p>
                 <div class="refuel-inline refuel-confirm">
                     <button id="refuel-liters-yes" type="button" class="pill pill--primary">Sí, es correcto</button>
                     <button id="refuel-liters-edit" type="button" class="pill">No, editar</button>
+                </div>
+            </section>
+
+            <section class="refuel-step" data-step="4.5">
+                <h4>Editar <span id="refuel-liters-title">litros</span></h4>
+                <label><span id="refuel-liters-label">Litros</span> <input id="refuel-liters" type="number" min="0.1" step="0.01" required></label>
+                <div class="refuel-inline refuel-confirm">
+                    <button id="refuel-liters-ok" type="button" class="pill pill--primary">OK</button>
+                    <button id="refuel-liters-back" type="button" class="pill">Atrás</button>
                 </div>
             </section>
 
@@ -688,7 +696,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 <h4>6. Comprueba que todo es correcto</h4>
                 <ul id="refuel-review" class="refuel-review"></ul>
                 <label class="garage-check"><input id="refuel-full" type="checkbox" checked> He llenado el depósito</label>
-                <label class="garage-check"><input id="refuel-missed" type="checkbox"> Me salté anotar algún repostaje antes de este</label>
+                <label id="refuel-missed-row" class="garage-check"><input id="refuel-missed" type="checkbox"> <span id="refuel-missed-text">Me salté anotar algún repostaje antes de este</span></label>
             </section>
 
             <section class="refuel-step refuel-done" data-step="7">
