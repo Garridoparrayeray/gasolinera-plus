@@ -29,6 +29,7 @@ $router->get('/stations/search', [$stations, 'search']);
 $router->get('/stations/suggest-places', [$stations, 'suggestPlaces']);
 $router->get('/stations/bbox', [$stations, 'bbox']);
 $router->get('/stats/national', [$stations, 'nationalStats']);
+$router->get('/stats/zone-average', [$stations, 'zoneAverage']);
 $router->get('/stats/by-fuel', [$stations, 'statsByFuel']);
 $router->get('/stats/by-province', [$stations, 'statsByProvince']);
 $router->get('/stats/price-distribution', [$stations, 'priceDistribution']);
