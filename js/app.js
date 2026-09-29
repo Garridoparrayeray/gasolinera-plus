@@ -754,7 +754,7 @@
         const marker = L.circleMarker([station.lat, station.lon], {
             radius: 11,
             color: '#0B0D0A',
-            fillColor: '#C6FF00',
+            fillColor: GPNative.accentColor(),
             fillOpacity: 1,
             weight: 3,
         });

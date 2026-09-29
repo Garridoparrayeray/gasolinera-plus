@@ -9,6 +9,14 @@ const GPNative = (() => {
         return Boolean(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
     }
 
+    function accentColor() {
+        const value = getComputedStyle(document.documentElement).getPropertyValue('--accent-bg').trim();
+        if (value) {
+            return value;
+        }
+        return '#4B6B00';
+    }
+
     function platform() {
         if (window.Capacitor && window.Capacitor.getPlatform) {
             return window.Capacitor.getPlatform();
@@ -302,6 +310,7 @@ const GPNative = (() => {
         APK_URL,
         isNative,
         platform,
+        accentColor,
         plugin,
         apiBase,
         publicUrl,
