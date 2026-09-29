@@ -121,6 +121,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Download road graph
+        run: node tools/graph/fetch-graph.mjs
+
       - name: Build web bundle and sync
         run: npm run sync:ios
 
