@@ -506,7 +506,7 @@ const GPRoute = (() => {
 
     function priceColor(price, min, max) {
         if (max === min) {
-            return '#8A5A00';
+            return '#5F8A00';
         }
         const ratio = (price - min) / (max - min);
         return `hsl(${120 - ratio * 120}, 70%, 42%)`;
@@ -582,7 +582,7 @@ const GPRoute = (() => {
         line.addTo(state.routeLayer);
         state.map.fitBounds(line.getBounds(), { padding: [30, 30] });
         if (state.stop) {
-            L.circleMarker([state.stop.station.lat, state.stop.station.lon], { radius: 11, color: '#1D4E89', weight: 3, fillColor: '#F2B705', fillOpacity: 1 }).addTo(state.routeLayer);
+            L.circleMarker([state.stop.station.lat, state.stop.station.lon], { radius: 11, color: '#1D4E89', weight: 3, fillColor: '#C6FF00', fillOpacity: 1 }).addTo(state.routeLayer);
         }
     }
 
