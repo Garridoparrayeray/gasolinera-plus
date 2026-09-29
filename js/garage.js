@@ -785,6 +785,9 @@ const GPGarage = (() => {
             button.textContent = `${prefix}${station.rotulo} · ${station.municipio}`;
             const small = document.createElement('small');
             small.textContent = station.direccion;
+            if (typeof station.distanciaKm === 'number') {
+                small.textContent = `${number(station.distanciaKm, 1)} km · ${station.direccion}`;
+            }
             button.appendChild(small);
             button.addEventListener('click', () => pickStation(station));
             item.appendChild(button);
@@ -831,22 +834,35 @@ const GPGarage = (() => {
         if (!vehicle) {
             return;
         }
-        const stations = favoriteStations().map((s) => ({ ...s, favorite: true }));
+        const favorites = favoriteStations().map((s) => ({ ...s, favorite: true }));
+        let nearby = [];
         if (state.userLoc) {
             try {
-                const data = await Api.near({ lat: state.userLoc.lat, lon: state.userLoc.lon, fuel: vehicle.fuel, sort: 'distance', limit: 5, offset: 0 });
-                for (const station of data.stations || []) {
-                    if (!stations.some((s) => String(s.ideess) === String(station.ideess))) {
-                        stations.push(station);
-                    }
-                }
+                const data = await Api.near({ lat: state.userLoc.lat, lon: state.userLoc.lon, fuel: vehicle.fuel, sort: 'distance', radius: 25, limit: 10, offset: 0 });
+                nearby = data.stations || [];
             } catch (error) {
-                // sin gasolineras cercanas: solo favoritas
+                nearby = [];
+            }
+        }
+        const stations = [];
+        for (const station of nearby) {
+            const favorite = favorites.find((f) => String(f.ideess) === String(station.ideess));
+            if (favorite) {
+                stations.push({ ...station, favorite: true });
+            }
+        }
+        for (const favorite of favorites) {
+            if (!stations.some((s) => String(s.ideess) === String(favorite.ideess))) {
+                stations.push(favorite);
+            }
+        }
+        for (const station of nearby) {
+            if (!stations.some((s) => String(s.ideess) === String(station.ideess))) {
+                stations.push(station);
             }
         }
         renderStationResults(stations);
     }
-
     let stationTimer = null;
 
     function onStationInput() {

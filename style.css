@@ -1315,3 +1315,9 @@ html[data-view="stats"] #stations-search-btn { display: none !important; }
 .refuel-done { display: flex; flex-direction: column; justify-content: space-between; gap: 24px; min-height: 42vh; text-align: center; }
 .refuel-done .pill { width: 100%; min-height: 52px; }
 #recap-share { grid-column: 1 / -1; }
+
+/* Sugerencias de gasolinera dentro del formulario, sin reborde flotante */
+#refuel-station-results { position: static; border: 0; box-shadow: none; background: transparent; margin: 0 0 8px; }
+#refuel-station-results li button { border: 1px solid var(--border); margin-bottom: 6px; }
+#stations-empty-anywhere { display: block; margin: 0 0 12px; }
+#stations-empty-anywhere[hidden] { display: none; }
