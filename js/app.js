@@ -39,6 +39,8 @@
         filterOpen: document.getElementById('filter-open'),
         viewList: document.getElementById('view-list'),
         viewMap: document.getElementById('view-map'),
+        stationsStatus: document.getElementById('stations-status'),
+        stationsProgress: document.getElementById('stations-progress'),
         mapShowAll: document.getElementById('map-show-all'),
         mapToggle: document.getElementById('map-toggle'),
         stationsList: document.getElementById('stations-list'),
@@ -552,8 +554,54 @@
         };
     }
 
+    function selectedText(select) {
+        return select.options[select.selectedIndex].text;
+    }
+
+    function filterSummary() {
+        const parts = [selectedText(el.filterFuel), selectedText(el.filterRadius), selectedText(el.filterSort)];
+        if (el.filterOpen.value) {
+            parts.push(selectedText(el.filterOpen));
+        }
+        return parts.join(' · ');
+    }
+
+    function placeSummary() {
+        if (state.stationsMode === 'search') {
+            return `«${state.stationsQuery}»`;
+        }
+        return 'Cerca de ti';
+    }
+
+    function flashStatus() {
+        el.stationsStatus.classList.remove('is-flash');
+        void el.stationsStatus.offsetWidth;
+        el.stationsStatus.classList.add('is-flash');
+    }
+
+    function setStationsStatus(kind) {
+        const loading = kind === 'loading';
+        el.stationsProgress.hidden = !loading;
+        el.stationsList.classList.toggle('is-loading', loading);
+        if (loading) {
+            el.stationsStatus.textContent = `Buscando gasolineras… ${filterSummary()}`;
+            return;
+        }
+        if (kind === 'needs-location') {
+            el.stationsStatus.textContent = 'Activa tu ubicación, o escribe un municipio y pulsa buscar, para ver gasolineras.';
+        } else if (kind === 'error') {
+            el.stationsStatus.textContent = 'No se pudo actualizar la lista. Inténtalo de nuevo.';
+        } else if (state.stationsTotal === 0) {
+            el.stationsStatus.textContent = `${placeSummary()}: no hay gasolineras con estos filtros. Prueba con más kilómetros u otro carburante.`;
+        } else {
+            el.stationsStatus.textContent = `${placeSummary()}: ${state.stationsTotal.toLocaleString('es-ES')} gasolineras · ${filterSummary()}`;
+        }
+        flashStatus();
+    }
+
     async function loadNearby() {
         if (state.userLat === null || state.userLon === null) {
+            setStationsStatus('needs-location');
             return;
         }
         state.stationsMode = 'nearby';
@@ -640,6 +688,7 @@
         state.stationsLoading = true;
         state.stationsPendingPage = null;
         updatePaginationControls();
+        setStationsStatus('loading');
 
         const filters = currentFilters();
         const page = { offset: (pageNumber - 1) * PAGE_SIZE, limit: PAGE_SIZE };
@@ -653,6 +702,7 @@
         } catch (e) {
             state.stationsLoading = false;
             updatePaginationControls();
+            setStationsStatus('error');
             showToast('No se pudieron cargar las gasolineras: ' + e.message);
             return;
         }
@@ -671,6 +721,7 @@
 
         renderList(state.currentStations);
         updatePaginationControls();
+        setStationsStatus('done');
         if (state.currentView === 'list') {
             refreshMapMarkers();
         }

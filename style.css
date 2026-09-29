@@ -1199,3 +1199,19 @@ a { color: var(--primary); }
 .map-shield { position: absolute; inset: 0; z-index: 1100; display: flex; align-items: flex-end; justify-content: center; padding: 12px; border: 0; background: rgba(0, 0, 0, 0.04); cursor: pointer; }
 .map-shield span { padding: 10px 16px; background: var(--surface); color: var(--text); border: 1px solid var(--field-border); font-size: 0.9rem; font-weight: 700; }
 .map-guard-wrap { position: relative; width: 100%; }
+
+/* Estado de la busqueda: se ve cuando se esta buscando y cuantos resultados hay */
+#stations-progress { height: 4px; margin: 0 0 8px; background: var(--border); overflow: hidden; }
+#stations-progress span { display: block; width: 35%; height: 100%; background: var(--accent-bg); animation: stations-slide 1s linear infinite; }
+@keyframes stations-slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+#stations-status { margin: 0 0 12px; padding: 4px 0; font-size: 0.95rem; font-weight: 600; color: var(--text); }
+#stations-status:empty { display: none; }
+#stations-status.is-flash { animation: status-flash 1s ease-out; }
+@keyframes status-flash { from { background: var(--primary-tint); } to { background: transparent; } }
+#stations-list.is-loading { opacity: 0.45; pointer-events: none; transition: opacity 0.15s; }
+html[data-view="garage"] #stations-status, html[data-view="garage"] #stations-progress,
+html[data-view="route"] #stations-status, html[data-view="route"] #stations-progress,
+html[data-view="about"] #stations-status, html[data-view="about"] #stations-progress { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+    #stations-progress span, #stations-status.is-flash { animation: none; }
+}

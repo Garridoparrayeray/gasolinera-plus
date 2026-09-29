@@ -153,7 +153,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         </section>
 
         <form id="search-form" autocomplete="off">
-            <input id="search-input" type="search" placeholder="Buscar municipio, dirección o marca…" aria-label="Buscar gasolinera" autocomplete="off">
+            <input id="search-input" type="search" placeholder="Municipio, calle o marca" aria-label="Buscar gasolinera" autocomplete="off">
             <button type="submit" class="btn-icon" aria-label="Buscar">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </button>
@@ -196,8 +196,8 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 <option value="25">25 km</option>
             </select>
             <select id="filter-sort" aria-label="Ordenar por">
-                <option value="price">Más barata primero</option>
-                <option value="distance">Más cercana primero</option>
+                <option value="price">Más barata</option>
+                <option value="distance">Más cercana</option>
             </select>
             <select id="filter-open" aria-label="Apertura">
                 <option value="">Cualquier horario</option>
@@ -205,6 +205,8 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 <option value="24h">Abierto 24h</option>
             </select>
         </div>
+        <div id="stations-progress" hidden><span></span></div>
+        <p id="stations-status" role="status" aria-live="polite"></p>
 
         <nav id="view-toggle" role="tablist" aria-label="Secciones">
             <button id="view-list-btn" type="button" role="tab" aria-selected="true">
