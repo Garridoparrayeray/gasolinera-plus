@@ -25,7 +25,7 @@ Gasolinera+ existe en cuatro formas. Este documento dice qué hace cada una y qu
 | Resumen tipo recap en imagen o PDF | Sí | Sí | Sí |
 | Grabar viaje manualmente | Solo con la pantalla encendida | Sí, con la pantalla apagada | Sí, con la pantalla apagada |
 | Detección automática de viajes (actividad física) | No | Sí | Sí |
-| Viaje automático al conectar el Bluetooth del coche | No | Sí | No (iOS no lo permite) |
+| Viaje automático al conectar el Bluetooth del coche | No | No incluido en la 1.0 (desactivado) | No (iOS no lo permite) |
 | Avisos de precio de favoritas | Se pueden activar, pero en el navegador puede que no lleguen con la web cerrada (funcionan en Chrome de Android con la web instalada) | Sí | Sí |
 | Copia de seguridad del garaje (exportar e importar) | Sí | Sí | Sí |
 
@@ -59,7 +59,7 @@ Hay tres formas, de menos a más automática. Se pueden combinar.
 
 1. **Manual.** Botón "Empezar viaje". En web solo graba con la pantalla encendida; en la app nativa sigue con la pantalla apagada.
 2. **Detección automática por actividad** (Android e iPhone). El sistema detecta que vas en coche y la app empieza y termina sola. Necesita ubicación "Permitir todo el tiempo" y permiso de actividad física.
-3. **Bluetooth del coche** (solo Android). Empieza al conectarse a un Bluetooth concreto y termina al desconectarse.
+3. **Bluetooth del coche** (solo Android). **No está disponible en la versión 1.0**: el código existe pero está desactivado hasta probarlo bien. Empezaría al conectarse a un Bluetooth concreto y terminaría al desconectarse.
    - Hay que emparejar antes el móvil con el coche en los ajustes de Bluetooth del sistema.
    - Necesita ubicación "Permitir todo el tiempo", permiso de Bluetooth y quitar el ahorro de batería a Gasolinera+. Sin eso, Android puede negar arrancar la grabación con la app cerrada.
    - Si no quieres emparejar nada, usa la opción 1 o la 2.

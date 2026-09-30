@@ -110,13 +110,6 @@ const GPPermissions = (() => {
         }
         rows.push(row('Detección automática de viajes', autoText, 'Necesita la ubicación «todo el tiempo» y la actividad física. Se activa o desactiva en la sección Coche.', [['Ir a Coche', async () => GP.switchView('garage')], ['Abrir ajustes', openSystemSettings]], autoKind));
         if (GPNative.platform() === 'android') {
-            let btText = 'Sin elegir';
-            let btKind = 'off';
-            if (status.bluetooth && status.bluetooth.name) {
-                btText = status.bluetooth.name;
-                btKind = 'on';
-            }
-            rows.push(row('Bluetooth del coche', btText, 'Empieza el viaje al conectar con tu coche. Se elige en la sección Coche.', [['Ir a Coche', async () => GP.switchView('garage')]], btKind));
             let batteryText = 'Con ahorro de batería';
             let batteryKind = 'off';
             if (perms.unrestrictedBattery) {

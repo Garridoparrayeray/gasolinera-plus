@@ -57,6 +57,7 @@ const GPTrips = (() => {
     const MIN_REFERENCE_KM = 30;
 
     const WEB_TRIP_KEY = 'webTripInProgress';
+    const BLUETOOTH_ENABLED = false;
     const state = {
         live: null,
         timer: null,
@@ -461,7 +462,7 @@ const GPTrips = (() => {
     }
 
     async function renderBluetooth(status) {
-        el.btWrap.hidden = GPNative.platform() !== 'android';
+        el.btWrap.hidden = !BLUETOOTH_ENABLED || GPNative.platform() !== 'android';
         if (el.btWrap.hidden) {
             return;
         }

@@ -609,7 +609,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 </details>
                 <details>
                     <summary>Permisos, viajes, sin conexión y copia de seguridad</summary>
-                    <p>Graba viajes a mano, de forma automática o al conectar el Bluetooth de tu coche (Android). Sin conexión, la app usa los datos guardados. En «Permisos y privacidad» (arriba) activas o desactivas la ubicación y los avisos. Exporta una copia de seguridad de vez en cuando: tus datos solo están en tu dispositivo.</p>
+                    <p>Graba viajes a mano o de forma automática. Sin conexión, la app usa los datos guardados. En «Permisos y privacidad» (arriba) activas o desactivas la ubicación y los avisos. Exporta una copia de seguridad de vez en cuando: tus datos solo están en tu dispositivo.</p>
                 </details>
                 <div class="about-links">
                     <a class="pill" href="https://gasolineraplus.vercel.app/docs/guia-usuario.pdf" target="_blank" rel="noopener noreferrer">Descargar la guía en PDF</a>

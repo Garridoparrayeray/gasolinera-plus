@@ -78,6 +78,7 @@ Patrón de «Cargando…»: `GPSectionLoading.track(vista, promesa)`. Cualquier 
 - **Pruebas de la interfaz del asistente nuevo:** el test de garaje recorre los pasos, pero no cubre el paso de edición de litros ni el de revisión de km.
 - **Código sin uso:** `chooseStationOnMap` (`garage.js`) ya no se llama desde ningún botón.
 - **Limpieza de estilos:** `style.css` acumula bloques; unificar reglas repetidas reduciría su tamaño.
+- **Bluetooth del coche:** implementado pero desactivado en la 1.0 (ver [08](08-viajes-y-nativo.md)); falta probarlo en móviles reales y volver a declarar el receptor y los permisos en el manifiesto.
 - **Firma y distribución:** falta el APK firmado para Google Play y la cuenta de Apple para iOS.
 - **Lectura del cuentakilómetros con la cámara** y **adaptador OBD-II** no están hechos.
 - **Detección de repostaje saltado por litros:** hoy se decide por kilómetros contra autonomía; comparar litros repostados con litros esperados sería más exacto pero necesita historial de consumo fiable.
