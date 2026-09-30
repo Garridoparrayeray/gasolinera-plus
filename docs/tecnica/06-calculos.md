@@ -66,9 +66,6 @@ resultado = limitar(nivel, 0, capacidad)
 
 Si no hay ni punto de partida ni lleno, el nivel es desconocido y la pantalla pide indicar uno. Al terminar el asistente de repostaje se muestra el nivel resultante (`~N %`, litros sobre capacidad) o `100 %` si se marcó lleno.
 
-### Consumo estimado sin llenados completos (`chainEstimate`)
-
-Si no hay ningún tramo lleno a lleno válido, se estima con el método de la cadena: para el tramo más largo sin `missedBefore`, `litros = suma de los litros de todos los repostajes salvo el primero` y `km = último.odometer − primero.odometer`. Solo se acepta si `km ≥ 300`, `litros ≥ 2 × capacidad` (`ESTIMATE_MIN_TANKS`) y el resultado está entre 1,5 y 40 L/100 km. El error máximo es aproximadamente `capacidad / litros` del tramo, por eso mejora con cada repostaje. La fuente del consumo pasa a `estimated` (la pantalla lo indica) y `real` sigue teniendo prioridad cuando existe.
 
 ```
 tankPercent = nivel / capacidad * 100
@@ -76,6 +73,10 @@ autonomyKm  = nivel / consumoMedio * 100
 ```
 
 Colores de la barra: `< 15 %` rojo (`low`), `< 35 %` naranja (`mid`), resto ámbar (`ok`).
+
+### Margen del consumo real
+
+El consumo solo es real entre llenados completos; los repostajes parciales intermedios se suman a los litros del tramo. Como el «clic» del surtidor varía, se asume un error de `CLICK_ERROR_L = 2` litros por cadena de tramos consecutivos: `margen = 2 × cadenas × 100 / km` en L/100 km, y la pantalla lo muestra como `±`. Si no hay dos llenos, se usa el consumo homologado y no se estima nada. Con 3 repostajes parciales seguidos (`FULL_HINT_AFTER`), el asistente sugiere llenar hasta el primer clic (`updateFullHint`).
 
 ### Gasto mensual (`monthlySpend`)
 

@@ -64,6 +64,7 @@ const GPGarage = (() => {
         refuelPriceLabel: $('refuel-price-label'),
         refuelTotal: $('refuel-total'),
         refuelFull: $('refuel-full'),
+        refuelFullHint: $('refuel-full-hint'),
         refuelMissed: $('refuel-missed'),
         refuelError: $('refuel-error'),
         refuelDelete: $('refuel-delete'),
@@ -266,11 +267,9 @@ const GPGarage = (() => {
 
         setMetric(el.consumption, number(s.avgConsumption, 1), `${unit}/100 km`);
         if (s.consumptionSource === 'real') {
-            el.consumptionSource.textContent = `real, medido en ${number(s.trackedKm, 0)} km`;
-        } else if (s.consumptionSource === 'estimated') {
-            el.consumptionSource.textContent = `estimado con ${number(s.trackedKm, 0)} km; mejora con cada repostaje`;
+            el.consumptionSource.textContent = `real, medido en ${number(s.trackedKm, 0)} km · margen ±${number(s.consumptionMargin, 1)}`;
         } else {
-            el.consumptionSource.textContent = 'homologado, hasta tener datos suficientes';
+            el.consumptionSource.textContent = 'homologado, hasta tener dos llenos';
         }
         if (s.costPerKm === null) {
             el.costKm.textContent = '—';
@@ -923,7 +922,7 @@ const GPGarage = (() => {
         }
     }
 
-    function checkFullTank() {
+    function applyFullRule() {
         const vehicle = activeVehicle();
         const liters = Number(el.refuelLiters.value);
         if (!vehicle || !el.refuelFull.checked || !(liters > 0) || liters >= vehicle.tankCapacity * 0.25) {
@@ -933,7 +932,37 @@ const GPGarage = (() => {
         GP.showToast('Con tan pocos litros no cuenta como depósito lleno: lo he marcado como parcial.');
     }
 
+    function updateFullHint() {
+        const vehicle = activeVehicle();
+        el.refuelFullHint.hidden = true;
+        if (!vehicle || el.refuelFull.checked) {
+            return;
+        }
+        let excludeId = null;
+        if (state.editingRefuel) {
+            excludeId = state.editingRefuel.id;
+        }
+        const list = refuelsOfActive(vehicle, excludeId).sort((a, b) => b.odometer - a.odometer);
+        let partials = 0;
+        for (const refuel of list) {
+            if (refuel.full) {
+                break;
+            }
+            partials++;
+        }
+        if (partials >= FULL_HINT_AFTER) {
+            el.refuelFullHint.textContent = `Llevas ${partials} repostajes sin llenar. Si en este llenas hasta el primer clic del surtidor y marcas «He llenado el depósito», calculo tu consumo exacto de todo el tramo.`;
+            el.refuelFullHint.hidden = false;
+        }
+    }
+
+    function checkFullTank() {
+        applyFullRule();
+        updateFullHint();
+    }
+
     const LAST_STEP = 6;
+    const FULL_HINT_AFTER = 3;
 
     function unitWord(unit) {
         if (unit === 'kg') {

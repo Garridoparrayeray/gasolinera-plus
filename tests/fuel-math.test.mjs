@@ -143,17 +143,20 @@ const approx = (actual, expected, digits = 2) => assert.equal(+actual.toFixed(di
         odometer += 380;
     }
     const s = GPFuel.summary({ ...car, odometer }, list);
-    assert.equal(s.consumptionSource, 'estimated');
-    approx(s.avgConsumption, (7 * 20) / (7 * 380) * 100, 2);
+    assert.equal(s.consumptionSource, 'homologated', 'sin dos llenos no se inventa un consumo');
+    assert.equal(s.consumptionMargin, null);
 }
 
 {
     const list = [
-        refuel('2026-09-01T10:00:00Z', 10000, 20, 1.5, { full: false }),
-        refuel('2026-09-05T10:00:00Z', 10400, 20, 1.5, { full: false }),
+        refuel('2026-09-01T10:00:00Z', 10000, 40, 1.5),
+        refuel('2026-09-05T10:00:00Z', 10200, 15, 1.5, { full: false }),
+        refuel('2026-09-10T10:00:00Z', 10600, 27, 1.5),
     ];
-    const s = GPFuel.summary({ ...car, odometer: 10400 }, list);
-    assert.equal(s.consumptionSource, 'homologated', 'con pocos litros repostados no se estima el consumo');
+    const s = GPFuel.summary({ ...car, odometer: 10600 }, list);
+    assert.equal(s.consumptionSource, 'real');
+    approx(s.avgConsumption, 42 / 600 * 100, 2);
+    approx(s.consumptionMargin, 2 / 600 * 100, 2);
 }
 assert.equal(GPFuel.madridDate('2026-09-30T23:30:00Z'), '2026-10-01');
 assert.equal(GPFuel.madridMonth('2026-12-31T23:30:00Z'), '2027-01');

@@ -1,8 +1,7 @@
 const GPFuel = (() => {
     const MIN_PLAUSIBLE = 1.5;
     const MAX_PLAUSIBLE = 40;
-    const ESTIMATE_MIN_KM = 300;
-    const ESTIMATE_MIN_TANKS = 2;
+    const CLICK_ERROR_L = 2;
     const dateFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' });
 
     function madridDate(iso) {
@@ -97,38 +96,6 @@ const GPFuel = (() => {
         return savingsBy(refuels, (refuel) => nationalByDate[madridDate(refuel.date)]);
     }
 
-    function chainEstimate(list, tankCapacity) {
-        let best = null;
-        let first = null;
-        let liters = 0;
-        let cost = 0;
-        for (const refuel of list) {
-            if (first === null || refuel.missedBefore) {
-                first = refuel;
-                liters = 0;
-                cost = 0;
-                continue;
-            }
-            liters += refuel.liters;
-            cost += refuel.total;
-            const km = refuel.odometer - first.odometer;
-            if (km > 0 && (best === null || km > best.km)) {
-                best = { km, liters, cost };
-            }
-        }
-        if (best === null || best.km < ESTIMATE_MIN_KM) {
-            return null;
-        }
-        if (tankCapacity > 0 && best.liters < tankCapacity * ESTIMATE_MIN_TANKS) {
-            return null;
-        }
-        const lPer100 = (best.liters / best.km) * 100;
-        if (lPer100 < MIN_PLAUSIBLE || lPer100 > MAX_PLAUSIBLE) {
-            return null;
-        }
-        return { km: best.km, lPer100, costPerKm: best.cost / best.km };
-    }
-
     function estimateTank(vehicle, list, consumption) {
         let level = null;
         let previous = null;
@@ -181,18 +148,18 @@ const GPFuel = (() => {
         let avgConsumption = vehicle.homologated;
         let consumptionSource = 'homologated';
         let costPerKm = null;
+        let consumptionMargin = null;
         if (km > 0) {
             avgConsumption = (liters / km) * 100;
             consumptionSource = 'real';
             costPerKm = cost / km;
-        } else {
-            const chain = chainEstimate(list, vehicle.tankCapacity);
-            if (chain !== null) {
-                km = chain.km;
-                avgConsumption = chain.lPer100;
-                consumptionSource = 'estimated';
-                costPerKm = chain.costPerKm;
+            let groups = 1;
+            for (let i = 1; i < valid.length; i++) {
+                if (valid[i].from !== valid[i - 1].to) {
+                    groups++;
+                }
             }
+            consumptionMargin = (CLICK_ERROR_L * groups * 100) / km;
         }
 
         let totalCost = 0;
@@ -223,6 +190,7 @@ const GPFuel = (() => {
         return {
             avgConsumption,
             consumptionSource,
+            consumptionMargin,
             costPerKm,
             trackedKm: km,
             totalCost,

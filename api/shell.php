@@ -796,6 +796,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 <h4>6. Comprueba que todo es correcto</h4>
                 <ul id="refuel-review" class="refuel-review"></ul>
                 <label class="garage-check"><input id="refuel-full" type="checkbox" checked> He llenado el depósito</label>
+                <p id="refuel-full-hint" class="garage-note" hidden></p>
                 <label id="refuel-missed-row" class="garage-check"><input id="refuel-missed" type="checkbox"> <span id="refuel-missed-text">Me salté anotar algún repostaje antes de este</span></label>
             </section>
 
