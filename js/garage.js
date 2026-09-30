@@ -49,6 +49,7 @@ const GPGarage = (() => {
         vehicleHomologatedInput: $('vehicle-homologated'),
         vehicleHomologatedLabel: $('vehicle-homologated-label'),
         vehicleOdometerInput: $('vehicle-odometer'),
+        vehicleLevelInput: $('vehicle-level'),
         vehicleError: $('vehicle-error'),
         vehicleDelete: $('vehicle-delete'),
         vehicleCancel: $('vehicle-cancel'),
@@ -250,7 +251,7 @@ const GPGarage = (() => {
         if (s.tankLiters === null) {
             el.tankFill.style.width = '0%';
             el.tankFill.dataset.level = 'unknown';
-            el.tankText.textContent = 'Anota un repostaje con el depósito lleno para estimar lo que te queda.';
+            el.tankText.textContent = 'Indica cuánto combustible tiene tu coche (al editarlo) o anota un llenado completo para estimar lo que te queda.';
         } else {
             el.tankFill.style.width = `${Math.round(s.tankPercent)}%`;
             let level = 'ok';
@@ -266,8 +267,10 @@ const GPGarage = (() => {
         setMetric(el.consumption, number(s.avgConsumption, 1), `${unit}/100 km`);
         if (s.consumptionSource === 'real') {
             el.consumptionSource.textContent = `real, medido en ${number(s.trackedKm, 0)} km`;
+        } else if (s.consumptionSource === 'estimated') {
+            el.consumptionSource.textContent = `estimado con ${number(s.trackedKm, 0)} km; mejora con cada repostaje`;
         } else {
-            el.consumptionSource.textContent = 'homologado, hasta tener dos llenos';
+            el.consumptionSource.textContent = 'homologado, hasta tener datos suficientes';
         }
         if (s.costPerKm === null) {
             el.costKm.textContent = '—';
@@ -699,6 +702,7 @@ const GPGarage = (() => {
             el.vehicleTankInput.value = vehicle.tankCapacity;
             el.vehicleHomologatedInput.value = vehicle.homologated;
             el.vehicleOdometerInput.value = vehicle.odometer;
+            el.vehicleLevelInput.value = '';
             el.vehicleDelete.hidden = false;
         } else {
             el.vehicleDialogTitle.textContent = 'Añadir coche';
@@ -733,6 +737,9 @@ const GPGarage = (() => {
             vehicle = { ...vehicle, name, fuel: el.vehicleFuelInput.value, tankCapacity: tank, homologated, odometer, odometerAt: now, updatedAt: now };
         } else {
             vehicle = { id: GarageStore.newId(), name, fuel: el.vehicleFuelInput.value, tankCapacity: tank, homologated, odometer, odometerAt: now, createdAt: now, updatedAt: now };
+        }
+        if (el.vehicleLevelInput.value !== '') {
+            vehicle = { ...vehicle, startLevel: Number(el.vehicleLevelInput.value), startOdometer: odometer, startAt: now };
         }
         await GarageStore.vehicles.save(vehicle);
         el.vehicleDialog.close();
@@ -1450,7 +1457,17 @@ const GPGarage = (() => {
         if (refuel.stationName) {
             where = ' en ' + refuel.stationName;
         }
-        el.refuelDoneText.textContent = `${money(refuel.total)} · ${number(refuel.liters, 2)} ${unitOf(vehicle.fuel)}${where}`;
+        let doneText = `${money(refuel.total)} · ${number(refuel.liters, 2)} ${unitOf(vehicle.fuel)}${where}`;
+        const updated = activeVehicle();
+        if (updated) {
+            const after = GPFuel.summary(updated, refuelsOfActive(updated, null));
+            if (refuel.full) {
+                doneText += '. Depósito lleno: 100 %.';
+            } else if (after.tankLiters !== null) {
+                doneText += `. El depósito queda al ~${Math.round(after.tankPercent)} % (unos ${number(after.tankLiters, 0)} de ${number(updated.tankCapacity, 0)} ${unitOf(vehicle.fuel)}).`;
+            }
+        }
+        el.refuelDoneText.textContent = doneText;
         setStep(7);
     }
 

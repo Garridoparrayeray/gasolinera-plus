@@ -1,6 +1,8 @@
 const GPFuel = (() => {
     const MIN_PLAUSIBLE = 1.5;
     const MAX_PLAUSIBLE = 40;
+    const ESTIMATE_MIN_KM = 300;
+    const ESTIMATE_MIN_TANKS = 2;
     const dateFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' });
 
     function madridDate(iso) {
@@ -95,10 +97,56 @@ const GPFuel = (() => {
         return savingsBy(refuels, (refuel) => nationalByDate[madridDate(refuel.date)]);
     }
 
+    function chainEstimate(list, tankCapacity) {
+        let best = null;
+        let first = null;
+        let liters = 0;
+        let cost = 0;
+        for (const refuel of list) {
+            if (first === null || refuel.missedBefore) {
+                first = refuel;
+                liters = 0;
+                cost = 0;
+                continue;
+            }
+            liters += refuel.liters;
+            cost += refuel.total;
+            const km = refuel.odometer - first.odometer;
+            if (km > 0 && (best === null || km > best.km)) {
+                best = { km, liters, cost };
+            }
+        }
+        if (best === null || best.km < ESTIMATE_MIN_KM) {
+            return null;
+        }
+        if (tankCapacity > 0 && best.liters < tankCapacity * ESTIMATE_MIN_TANKS) {
+            return null;
+        }
+        const lPer100 = (best.liters / best.km) * 100;
+        if (lPer100 < MIN_PLAUSIBLE || lPer100 > MAX_PLAUSIBLE) {
+            return null;
+        }
+        return { km: best.km, lPer100, costPerKm: best.cost / best.km };
+    }
+
     function estimateTank(vehicle, list, consumption) {
         let level = null;
         let previous = null;
-        for (const refuel of list) {
+        let items = list;
+        if (typeof vehicle.startLevel === 'number' && vehicle.startAt && vehicle.tankCapacity > 0) {
+            let lastFull = null;
+            for (const refuel of list) {
+                if (refuel.full && (lastFull === null || refuel.date > lastFull)) {
+                    lastFull = refuel.date;
+                }
+            }
+            if (lastFull === null || vehicle.startAt > lastFull) {
+                level = (vehicle.tankCapacity * vehicle.startLevel) / 100;
+                previous = { odometer: vehicle.startOdometer };
+                items = list.filter((refuel) => refuel.date > vehicle.startAt);
+            }
+        }
+        for (const refuel of items) {
             if (level !== null && previous) {
                 level -= ((refuel.odometer - previous.odometer) * consumption) / 100;
                 level = Math.max(0, level);
@@ -137,6 +185,14 @@ const GPFuel = (() => {
             avgConsumption = (liters / km) * 100;
             consumptionSource = 'real';
             costPerKm = cost / km;
+        } else {
+            const chain = chainEstimate(list, vehicle.tankCapacity);
+            if (chain !== null) {
+                km = chain.km;
+                avgConsumption = chain.lPer100;
+                consumptionSource = 'estimated';
+                costPerKm = chain.costPerKm;
+            }
         }
 
         let totalCost = 0;

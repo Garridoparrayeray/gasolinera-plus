@@ -115,6 +115,46 @@ const approx = (actual, expected, digits = 2) => assert.equal(+actual.toFixed(di
     assert.equal(saving.refuels, 2, 'las filas sin referencia no cuentan');
 }
 
+{
+    const start = { ...car, odometer: 10000, startLevel: 20, startOdometer: 10000, startAt: '2026-09-01T08:00:00Z' };
+    const list = [refuel('2026-09-02T10:00:00Z', 10100, 40, 1.5, { full: false })];
+    const s = GPFuel.summary({ ...start, odometer: 10100 }, list);
+    approx(s.tankLiters, 10 - 100 * 0.05 + 40, 1);
+    approx(s.tankPercent, (10 - 5 + 40) / 50 * 100, 1);
+    const noStart = GPFuel.summary({ ...car, odometer: 10100 }, list);
+    assert.equal(noStart.tankLiters, null, 'sin punto de partida ni llenado no hay nivel');
+}
+
+{
+    const start = { ...car, odometer: 10000, startLevel: 50, startOdometer: 10000, startAt: '2026-09-01T08:00:00Z' };
+    const list = [
+        refuel('2026-09-02T10:00:00Z', 10200, 20, 1.5, { full: false }),
+        refuel('2026-09-10T10:00:00Z', 10600, 30, 1.5),
+    ];
+    const s = GPFuel.summary({ ...start, odometer: 10600 }, list);
+    approx(s.tankPercent, 100, 0);
+}
+
+{
+    const list = [];
+    let odometer = 10000;
+    for (let i = 0; i < 8; i++) {
+        list.push(refuel('2026-09-' + String(i * 3 + 1).padStart(2, '0') + 'T10:00:00Z', odometer, 20, 1.5, { full: false }));
+        odometer += 380;
+    }
+    const s = GPFuel.summary({ ...car, odometer }, list);
+    assert.equal(s.consumptionSource, 'estimated');
+    approx(s.avgConsumption, (7 * 20) / (7 * 380) * 100, 2);
+}
+
+{
+    const list = [
+        refuel('2026-09-01T10:00:00Z', 10000, 20, 1.5, { full: false }),
+        refuel('2026-09-05T10:00:00Z', 10400, 20, 1.5, { full: false }),
+    ];
+    const s = GPFuel.summary({ ...car, odometer: 10400 }, list);
+    assert.equal(s.consumptionSource, 'homologated', 'con pocos litros repostados no se estima el consumo');
+}
 assert.equal(GPFuel.madridDate('2026-09-30T23:30:00Z'), '2026-10-01');
 assert.equal(GPFuel.madridMonth('2026-12-31T23:30:00Z'), '2027-01');
 

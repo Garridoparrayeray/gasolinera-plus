@@ -709,6 +709,17 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             <label><span id="vehicle-tank-label">Capacidad del depósito (L)</span> <input id="vehicle-tank" type="number" min="5" max="300" step="1" required></label>
             <label><span id="vehicle-homologated-label">Consumo homologado (L/100 km)</span> <input id="vehicle-homologated" type="number" min="1" max="40" step="0.1" required></label>
             <label>Kilómetros actuales <input id="vehicle-odometer" type="number" min="0" step="1" required></label>
+            <label>Combustible en el depósito ahora
+                <select id="vehicle-level">
+                    <option value="">Sin indicar</option>
+                    <option value="100">Lleno</option>
+                    <option value="75">Tres cuartos</option>
+                    <option value="50">Medio</option>
+                    <option value="25">Un cuarto</option>
+                    <option value="10">Reserva</option>
+                </select>
+            </label>
+            <p class="garage-note">Es tu punto de partida para calcular cuánto te queda. Puedes dejarlo sin indicar; se ajusta solo cuando llenes el depósito.</p>
             <p id="vehicle-error" class="form-error" hidden></p>
             <div class="dialog-actions">
                 <button id="vehicle-delete" type="button" class="pill pill--danger" hidden>Borrar coche</button>

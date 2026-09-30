@@ -62,7 +62,13 @@ tras el último: nivel -= (odómetroActual - último.odometer) * consumo / 100
 resultado = limitar(nivel, 0, capacidad)
 ```
 
-Si nunca hubo un lleno, el nivel es desconocido y la pantalla pide anotar uno.
+**Punto de partida:** el coche puede guardar `startLevel` (porcentaje del depósito), `startOdometer` y `startAt` cuando el usuario indica cuánto combustible tiene al crearlo o editarlo. Si no hay ningún lleno posterior a `startAt`, el cálculo arranca de ahí (`nivel = capacidad * startLevel / 100`, `previo.odometer = startOdometer`) y solo cuentan los repostajes posteriores a `startAt`. Un lleno posterior sustituye al punto de partida.
+
+Si no hay ni punto de partida ni lleno, el nivel es desconocido y la pantalla pide indicar uno. Al terminar el asistente de repostaje se muestra el nivel resultante (`~N %`, litros sobre capacidad) o `100 %` si se marcó lleno.
+
+### Consumo estimado sin llenados completos (`chainEstimate`)
+
+Si no hay ningún tramo lleno a lleno válido, se estima con el método de la cadena: para el tramo más largo sin `missedBefore`, `litros = suma de los litros de todos los repostajes salvo el primero` y `km = último.odometer − primero.odometer`. Solo se acepta si `km ≥ 300`, `litros ≥ 2 × capacidad` (`ESTIMATE_MIN_TANKS`) y el resultado está entre 1,5 y 40 L/100 km. El error máximo es aproximadamente `capacidad / litros` del tramo, por eso mejora con cada repostaje. La fuente del consumo pasa a `estimated` (la pantalla lo indica) y `real` sigue teniendo prioridad cuando existe.
 
 ```
 tankPercent = nivel / capacidad * 100

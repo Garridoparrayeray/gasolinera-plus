@@ -175,7 +175,7 @@ const GarageStore = (() => {
         if (!ID_PATTERN.test(String(row.id)) || !FUEL_PATTERN.test(String(row.fuel)) || tank === null || homologated === null || odometer === null) {
             return null;
         }
-        return {
+        const vehicle = {
             id: String(row.id),
             name: clean(row.name, 80),
             fuel: String(row.fuel),
@@ -186,6 +186,15 @@ const GarageStore = (() => {
             createdAt: clean(row.createdAt, 40),
             updatedAt: clean(row.updatedAt, 40),
         };
+        const startLevel = finite(row.startLevel);
+        const startOdometer = finite(row.startOdometer);
+        const startAt = clean(row.startAt, 40);
+        if (startLevel !== null && startLevel >= 0 && startLevel <= 100 && startOdometer !== null && startAt) {
+            vehicle.startLevel = startLevel;
+            vehicle.startOdometer = startOdometer;
+            vehicle.startAt = startAt;
+        }
+        return vehicle;
     }
 
     function sanitizeRefuel(row) {
