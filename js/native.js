@@ -1,7 +1,7 @@
 const GPNative = (() => {
     const SITE_URL = 'https://gasolineraplus.vercel.app';
     const RELEASES_API = 'https://api.github.com/repos/Garridoparrayeray/gasolinera-plus/releases/latest';
-    const APK_URL = 'https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest/download/gasolinera-plus.apk';
+    const APK_URL = 'https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest';
     const OFFLINE_REFRESH_MS = 20 * 60 * 60 * 1000;
     const backHandlers = [];
 
