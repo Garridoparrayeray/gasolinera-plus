@@ -38,9 +38,10 @@ for (const size of sizes.filter((x) => !sizeFilter || sizeFilter.includes(x.n)))
     check(`${tag} paginador sin NaN`, !(await ev("document.getElementById('pagination-status').textContent")).includes('NaN'));
     check(`${tag} media nacional cargada`, await waitFor("/\\d/.test(document.getElementById('national-gasoleo-a').textContent)", 6000));
     check(`${tag} sin librerias de CDN`, (await ev("[...document.scripts, ...document.querySelectorAll('link[rel=stylesheet]')].every(n => !/unpkg|jsdelivr|googleapis/.test(n.src || n.href))")) === true);
-    check(`${tag} seccion para instalar la app`, (await ev("!document.getElementById('get-app').hidden && !document.getElementById('get-app-android').hidden")) === true);
-    await ev("document.getElementById('get-app-ios').click()");
-    check(`${tag} instrucciones de iPhone al pulsar`, (await ev("!document.getElementById('get-app-ios-help').hidden")) === true);
+    await waitFor("!document.getElementById('get-app-desktop').hidden", 4000);
+    check(`${tag} seccion para instalar la app`, (await ev("!document.getElementById('get-app').hidden && !document.getElementById('get-app-desktop').hidden && document.getElementById('get-app-android').hidden && document.getElementById('get-app-ios').hidden")) === true, await ev("['get-app','get-app-desktop','get-app-android','get-app-ios'].map((id) => id + '=' + document.getElementById(id).hidden).join(' ') + ' ' + navigator.userAgent + ' ' + navigator.platform + ' ' + navigator.maxTouchPoints"));
+    await ev("document.getElementById('get-app-desktop').click()");
+    check(`${tag} instrucciones de instalacion al pulsar`, (await ev("!document.getElementById('get-app-desktop-help').hidden")) === true);
 
     s.where = `${tag}/buscar`;
     check(`${tag} buscar "bilbao" da resultados`, await search('bilbao'));

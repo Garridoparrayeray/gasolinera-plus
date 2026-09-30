@@ -253,9 +253,13 @@ const GPNative = (() => {
                 help.hidden = !help.hidden;
                 return;
             }
-            installPrompt.prompt();
-            await installPrompt.userChoice;
-            installPrompt = null;
+            try {
+                await installPrompt.prompt();
+                await installPrompt.userChoice;
+                installPrompt = null;
+            } catch (error) {
+                help.hidden = false;
+            }
         });
     }
 
