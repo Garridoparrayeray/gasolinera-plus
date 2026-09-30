@@ -3,7 +3,9 @@ const GPRouter = (() => {
     const SNAP_RADIUS_M = 2500;
     const FAST_ROAD_SNAP_PENALTY_M = 40;
     const SNAP_ALTERNATIVES = 4;
-    const MAX_LEG_ATTEMPTS = 6;
+    const SNAP_POOL = 24;
+    const MAX_LEG_ATTEMPTS = 8;
+    const ESCAPE_NODES = 400;
     const DETAIL_RADIUS_DEG = 0.12;
     const EARTH = 6371000;
     const RAD = Math.PI / 180;
@@ -381,6 +383,139 @@ const GPRouter = (() => {
             return found[0];
         }
 
+        reachableNodes(snapped, limit) {
+            const m = this.main;
+            const seen = new Set();
+            const stack = [];
+            for (const [node] of this.endpointCosts(snapped, true)) {
+                seen.add(node);
+                stack.push(node);
+            }
+            while (stack.length && seen.size < limit) {
+                const node = stack.pop();
+                if (node < m.mainNodes) {
+                    for (let e = m.firstEdge[node]; e < m.firstEdge[node + 1]; e++) {
+                        const target = m.edgeTarget[e];
+                        if (!seen.has(target)) {
+                            seen.add(target);
+                            stack.push(target);
+                        }
+                    }
+                }
+                const detail = this.detailEdges.get(node);
+                if (detail) {
+                    for (const edge of detail) {
+                        if (!seen.has(edge.to)) {
+                            seen.add(edge.to);
+                            stack.push(edge.to);
+                        }
+                    }
+                }
+            }
+            return seen.size;
+        }
+
+        buildReverse() {
+            const m = this.main;
+            const start = new Uint32Array(m.mainNodes + 1);
+            for (let e = 0; e < m.edgeTarget.length; e++) {
+                const target = m.edgeTarget[e];
+                if (target < m.mainNodes) {
+                    start[target + 1]++;
+                }
+            }
+            for (let i = 0; i < m.mainNodes; i++) {
+                start[i + 1] += start[i];
+            }
+            const fill = start.slice(0, m.mainNodes);
+            const source = new Uint32Array(start[m.mainNodes]);
+            for (let node = 0; node < m.mainNodes; node++) {
+                for (let e = m.firstEdge[node]; e < m.firstEdge[node + 1]; e++) {
+                    const target = m.edgeTarget[e];
+                    if (target < m.mainNodes) {
+                        source[fill[target]++] = node;
+                    }
+                }
+            }
+            this.reverse = { start, source };
+        }
+
+        buildDetailReverse() {
+            const map = new Map();
+            for (const [from, list] of this.detailEdges) {
+                for (const edge of list) {
+                    let sources = map.get(edge.to);
+                    if (!sources) {
+                        sources = [];
+                        map.set(edge.to, sources);
+                    }
+                    sources.push(from);
+                }
+            }
+            this.detailReverse = map;
+        }
+
+        reverseReachable(snapped, limit) {
+            if (!this.reverse) {
+                this.buildReverse();
+            }
+            if (!this.detailReverse) {
+                this.buildDetailReverse();
+            }
+            const m = this.main;
+            const seen = new Set();
+            const stack = [];
+            for (const [node] of this.endpointCosts(snapped, false)) {
+                seen.add(node);
+                stack.push(node);
+            }
+            while (stack.length && seen.size < limit) {
+                const node = stack.pop();
+                if (node < m.mainNodes) {
+                    for (let i = this.reverse.start[node]; i < this.reverse.start[node + 1]; i++) {
+                        const source = this.reverse.source[i];
+                        if (!seen.has(source)) {
+                            seen.add(source);
+                            stack.push(source);
+                        }
+                    }
+                }
+                const sources = this.detailReverse.get(node);
+                if (sources) {
+                    for (const source of sources) {
+                        if (!seen.has(source)) {
+                            seen.add(source);
+                            stack.push(source);
+                        }
+                    }
+                }
+            }
+            return seen.size;
+        }
+
+        viableFirst(list, role) {
+            const isViable = (candidate) => {
+                let forward = true;
+                let backward = true;
+                if (role !== 'destination') {
+                    forward = this.reachableNodes(candidate, ESCAPE_NODES) >= ESCAPE_NODES;
+                }
+                if (role !== 'origin') {
+                    backward = this.reverseReachable(candidate, ESCAPE_NODES) >= ESCAPE_NODES;
+                }
+                return forward && backward;
+            };
+            const open = [];
+            const closed = [];
+            for (const candidate of list) {
+                if (isViable(candidate)) {
+                    open.push(candidate);
+                } else {
+                    closed.push(candidate);
+                }
+            }
+            return [...open, ...closed];
+        }
         endpointCosts(snapped, leaving) {
             const info = snapped.info;
             const fraction = snapped.alongMeters / Math.max(1, snapped.totalMeters);
@@ -612,7 +747,17 @@ const GPRouter = (() => {
         async route(points, options = {}) {
             const avoidTolls = Boolean(options.avoidTolls);
             await this.ensureTiles(points);
-            const candidates = points.map(([lat, lon]) => this.snapCandidates(lat, lon, SNAP_ALTERNATIVES));
+            this.detailReverse = null;
+            const last = points.length - 1;
+            const candidates = points.map(([lat, lon], index) => {
+                let role = 'both';
+                if (index === 0) {
+                    role = 'origin';
+                } else if (index === last) {
+                    role = 'destination';
+                }
+                return this.viableFirst(this.snapCandidates(lat, lon, SNAP_POOL), role).slice(0, SNAP_ALTERNATIVES);
+            });
             const failed = candidates.findIndex((list) => list.length === 0);
             if (failed !== -1) {
                 return { error: 'no-road', index: failed };

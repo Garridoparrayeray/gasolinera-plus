@@ -585,6 +585,27 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 <ul id="permissions-list"></ul>
                 <p id="permissions-note" class="garage-note" hidden></p>
             </div>
+            <div class="garage-card feedback-card">
+                <h3>Sugerencias y errores</h3>
+                <p class="garage-note">¿Algo no funciona o se te ocurre una mejora? Escríbenos: se abrirá tu correo con el mensaje preparado y lo revisaremos.</p>
+                <label>Tipo
+                    <select id="feedback-kind">
+                        <option value="suggestion">Sugerencia</option>
+                        <option value="bug">Error o algo que no funciona</option>
+                        <option value="other">Otro comentario</option>
+                    </select>
+                </label>
+                <label>Mensaje
+                    <textarea id="feedback-message" rows="5" maxlength="1500" placeholder="Cuéntanos qué ha pasado o qué te gustaría, y en qué pantalla."></textarea>
+                </label>
+                <p id="feedback-count" class="garage-note">0 / 1500</p>
+                <label class="garage-check"><input type="checkbox" id="feedback-tech" checked> Incluir datos técnicos (versión, sistema y pantalla; nunca tu ubicación ni tus datos)</label>
+                <div class="about-links">
+                    <button id="feedback-send" type="button" class="pill pill--primary">Enviar por correo</button>
+                    <button id="feedback-copy" type="button" class="pill">Copiar mensaje</button>
+                </div>
+                <p id="feedback-note" class="garage-note" hidden></p>
+            </div>
             <div class="garage-card guide-card">
                 <h3>Guía de uso</h3>
                 <p class="garage-note">Lo esencial de cada pantalla. La guía completa, con imágenes y ejemplos, está en PDF.</p>
@@ -621,7 +642,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             <h3 id="get-app-title">Gasolinera+ como app</h3>
             <p>Instálala para usarla sin navegador, con rutas, tu garaje y tus viajes.</p>
             <div id="get-app-actions">
-                <a id="get-app-android" class="pill" href="https://github.com/Garridoparrayeray/gasolinera-plus/releases/download/android-debug/gasolinera-plus-debug.apk" rel="noopener">Descargar para Android (prueba)</a>
+                <a id="get-app-android" class="pill" href="https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest/download/gasolinera-plus.apk" rel="noopener">Descargar para Android</a>
                 <button id="get-app-ios" type="button" class="pill">Instalar en iPhone</button>
             </div>
             <p id="get-app-ios-help" hidden>En Safari, pulsa <strong>Compartir</strong> y después <strong>Añadir a pantalla de inicio</strong>. Se abrirá como una app, a pantalla completa.</p>
@@ -894,6 +915,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <script src="/js/router-core.js"></script>
     <script src="/js/route.js"></script>
     <script src="/js/permissions.js"></script>
+    <script src="/js/feedback.js"></script>
 <?php if (!$isNative): ?>
     <script>
         if ('serviceWorker' in navigator && !window.Capacitor) {

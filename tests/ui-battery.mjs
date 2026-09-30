@@ -90,6 +90,9 @@ for (const size of sizes.filter((x) => !sizeFilter || sizeFilter.includes(x.n)))
     await ev("document.getElementById('legal-close').click()");
     await ev("document.getElementById('view-about-btn').click()");
     check(`${tag} permisos: lista ubicacion y avisos`, await waitFor("document.querySelectorAll('#permissions-list li').length >= 2", 5000));
+    await ev("(()=>{const m=document.getElementById('feedback-message');m.value='Prueba de mensaje de error';m.dispatchEvent(new Event('input',{bubbles:true}));})()");
+    const mail = await ev("GPFeedback.build().then((m) => m.subject + ' | ' + m.body)");
+    check(`${tag} sugerencias: prepara el correo con datos tecnicos`, typeof mail === 'string' && mail.startsWith('Gasolinera+ · Sugerencia') && mail.includes('Versión: web') && !mail.toLowerCase().includes('lat'), String(mail).slice(0, 80));
     await ev("document.getElementById('legal-close').click()");
 }
 
