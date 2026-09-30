@@ -232,6 +232,33 @@ const GPNative = (() => {
         return null;
     }
 
+    let installPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        installPrompt = event;
+    });
+
+    function setupDesktopInstall(isMobile, androidLink) {
+        if (isMobile) {
+            return;
+        }
+        androidLink.hidden = true;
+        document.getElementById('get-app-ios').hidden = true;
+        const button = document.getElementById('get-app-desktop');
+        const help = document.getElementById('get-app-desktop-help');
+        button.hidden = false;
+        button.addEventListener('click', async () => {
+            if (!installPrompt) {
+                help.hidden = !help.hidden;
+                return;
+            }
+            installPrompt.prompt();
+            await installPrompt.userChoice;
+            installPrompt = null;
+        });
+    }
+
     function setupGetApp() {
         const section = document.getElementById('get-app');
         if (!section) {
@@ -257,6 +284,7 @@ const GPNative = (() => {
         iosButton.addEventListener('click', () => {
             iosHelp.hidden = !iosHelp.hidden;
         });
+        setupDesktopInstall(isIos || isAndroid, androidLink);
     }
 
     function handleOpenUrl(rawUrl) {

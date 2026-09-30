@@ -647,7 +647,9 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             <div id="get-app-actions">
                 <a id="get-app-android" class="pill" href="https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest" target="_blank" rel="noopener">Descargar para Android</a>
                 <button id="get-app-ios" type="button" class="pill">Instalar en iPhone</button>
+                <button id="get-app-desktop" type="button" class="pill" hidden>Instalar en el ordenador</button>
             </div>
+            <p id="get-app-desktop-help" hidden>En Chrome o Edge, abre el menú del navegador y elige <strong>Instalar Gasolinera+</strong> (en Edge: <strong>Aplicaciones</strong> y después <strong>Instalar este sitio como una aplicación</strong>). Se abrirá en su propia ventana, con acceso directo en el menú Inicio.</p>
             <p id="get-app-ios-help" hidden>En Safari, pulsa <strong>Compartir</strong> y después <strong>Añadir a pantalla de inicio</strong>. Se abrirá como una app, a pantalla completa.</p>
         </section>
 <?php endif; ?>
