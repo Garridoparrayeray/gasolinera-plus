@@ -64,6 +64,23 @@ const GPRecap = (() => {
         if (stats.liters > 0) {
             stats.avgPrice = stats.total / stats.liters;
         }
+        stats.versusPrevious = null;
+        if (period === 'month' && stats.avgPrice !== null) {
+            const now = GPFuel.madridDate(new Date().toISOString());
+            const previous = new Date(Date.UTC(Number(now.slice(0, 4)), Number(now.slice(5, 7)) - 2, 1));
+            const previousPrefix = previous.toISOString().slice(0, 7);
+            let previousTotal = 0;
+            let previousLiters = 0;
+            for (const refuel of refuels) {
+                if (refuel.vehicleId === vehicle.id && GPFuel.madridDate(refuel.date).startsWith(previousPrefix)) {
+                    previousTotal += refuel.total;
+                    previousLiters += refuel.liters;
+                }
+            }
+            if (previousLiters > 0) {
+                stats.versusPrevious = stats.avgPrice - previousTotal / previousLiters;
+            }
+        }
         stats.km = null;
         stats.consumption = null;
         stats.costPerKm = null;
@@ -160,6 +177,20 @@ const GPRecap = (() => {
                 text = 'Pagas ' + fmt(-stats.versusNational, 2) + ' € de más';
             }
             rows.push(['Frente a la media de España', text]);
+        }
+        if (stats.versusPrevious !== null) {
+            const cents = fmt(Math.abs(stats.versusPrevious) * 100, 1);
+            let word = 'litro';
+            if (stats.unit === 'kg') {
+                word = 'kilo';
+            }
+            let text = 'Igual que el mes pasado';
+            if (stats.versusPrevious <= -0.001) {
+                text = 'El ' + word + ' te ha salido ' + cents + ' cént. más barato';
+            } else if (stats.versusPrevious >= 0.001) {
+                text = 'El ' + word + ' te ha salido ' + cents + ' cént. más caro';
+            }
+            rows.push(['Frente al mes pasado', text]);
         }
         if (stats.avgTicket !== null && stats.count > 1) {
             rows.push(['Gasto medio por repostaje', fmt(stats.avgTicket, 2) + ' €']);
