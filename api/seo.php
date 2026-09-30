@@ -64,10 +64,7 @@ function seoHead(string $title, string $description, string $canonical, string $
 {
     $base = Seo::siteUrl();
     $verification = '';
-    $token = getenv('GP_GSC_VERIFICATION');
-    if (is_string($token) && $token !== '') {
-        $verification = '<meta name="google-site-verification" content="' . Seo::escape($token) . '">';
-    }
+    $verification = '<meta name="google-site-verification" content="' . Seo::escape(Seo::verificationToken()) . '">';
     return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
         . '<title>' . Seo::escape($title) . '</title>'
         . '<meta name="description" content="' . Seo::escape($description) . '">'

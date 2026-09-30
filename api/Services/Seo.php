@@ -26,6 +26,15 @@ class Seo
         return 'https://gasolineraplus.vercel.app';
     }
 
+    public static function verificationToken(): string
+    {
+        $env = getenv('GP_GSC_VERIFICATION');
+        if (is_string($env) && $env !== '') {
+            return $env;
+        }
+        return 'd7akLe3xucjSHfxtm75cUFm5NyeE8X2NEX3f8knOGYU';
+    }
+
     public static function escape(string $text): string
     {
         return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');

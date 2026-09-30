@@ -91,7 +91,7 @@ if (!$isNative) {
         error_log('Gasolinera+ shell SEO: ' . $t->getMessage());
     }
 }
-$verificationToken = getenv('GP_GSC_VERIFICATION');
+$verificationToken = \Services\Seo::verificationToken();
 ?>
 <!DOCTYPE html>
 <html lang="es" class="is-loading">
