@@ -18,14 +18,18 @@ const GPBackup = (() => {
         const current = readLocalList(key);
         const known = new Set(current.map((entry) => entry.ideess));
         let added = 0;
-        for (const entry of incoming) {
-            if (entry && entry.ideess && !known.has(entry.ideess)) {
-                current.push(entry);
-                known.add(entry.ideess);
-                added++;
+        for (const raw of incoming) {
+            if (!raw || typeof raw !== 'object' || !/^[A-Za-z0-9_-]{1,20}$/.test(String(raw.ideess)) || known.has(String(raw.ideess))) {
+                continue;
             }
-        }
-        localStorage.setItem(key, JSON.stringify(current));
+            const entry = { ideess: String(raw.ideess), rotulo: String(raw.rotulo || '').slice(0, 120), direccion: String(raw.direccion || '').slice(0, 160) };
+            if (raw.municipio) {
+                entry.municipio = String(raw.municipio).slice(0, 120);
+            }
+            current.push(entry);
+            known.add(entry.ideess);
+            added++;
+        }        localStorage.setItem(key, JSON.stringify(current));
         return added;
     }
 

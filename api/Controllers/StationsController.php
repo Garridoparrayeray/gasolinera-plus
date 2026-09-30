@@ -78,7 +78,7 @@ class StationsController
     public function search(Request $request): void
     {
         $config = Config::current();
-        $q = trim((string)$request->query('q', ''));
+        $q = mb_substr(trim((string)$request->query('q', '')), 0, 100);
         if (mb_strlen($q) < 2) {
             Response::json([
                 'stations' => [],
@@ -174,7 +174,7 @@ class StationsController
     
     public function suggestPlaces(Request $request): void
     {
-        $q = trim((string)$request->query('q', ''));
+        $q = mb_substr(trim((string)$request->query('q', '')), 0, 60);
         if (mb_strlen($q) < 2) {
             Response::json(['places' => []]);
             return;
@@ -613,6 +613,9 @@ class StationsController
         $offset = $request->queryInt('offset', 0);
         if ($offset === null || $offset < 0) {
             $offset = 0;
+        }
+        if ($offset > 100000) {
+            $offset = 100000;
         }
         $limit = $request->queryInt('limit', 30);
         if ($limit === null || $limit <= 0) {

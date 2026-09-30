@@ -146,8 +146,156 @@ const GarageStore = (() => {
         return payload;
     }
 
-    async function importAll(payload) {
-        if (!payload || payload.format !== BACKUP_FORMAT) {
+    const ID_PATTERN = /^[A-Za-z0-9_-]{1,80}$/;
+    const FUEL_PATTERN = /^[a-z0-9_]{1,40}$/;
+    const MAX_IMPORT_ROWS = { vehicles: 50, refuels: 20000, trips: 5000, settings: 10 };
+
+    function clean(value, max) {
+        if (value === undefined || value === null) {
+            return '';
+        }
+        return String(value).slice(0, max);
+    }
+
+    function finite(value) {
+        if (value === null || value === undefined || value === '') {
+            return null;
+        }
+        const number = Number(value);
+        if (Number.isFinite(number)) {
+            return number;
+        }
+        return null;
+    }
+
+    function sanitizeVehicle(row) {
+        const tank = finite(row.tankCapacity);
+        const homologated = finite(row.homologated);
+        const odometer = finite(row.odometer);
+        if (!ID_PATTERN.test(String(row.id)) || !FUEL_PATTERN.test(String(row.fuel)) || tank === null || homologated === null || odometer === null) {
+            return null;
+        }
+        return {
+            id: String(row.id),
+            name: clean(row.name, 80),
+            fuel: String(row.fuel),
+            tankCapacity: tank,
+            homologated,
+            odometer,
+            odometerAt: clean(row.odometerAt, 40),
+            createdAt: clean(row.createdAt, 40),
+            updatedAt: clean(row.updatedAt, 40),
+        };
+    }
+
+    function sanitizeRefuel(row) {
+        const odometer = finite(row.odometer);
+        const liters = finite(row.liters);
+        const price = finite(row.pricePerUnit);
+        const total = finite(row.total);
+        if (!ID_PATTERN.test(String(row.id)) || !ID_PATTERN.test(String(row.vehicleId)) || odometer === null || liters === null || price === null || total === null) {
+            return null;
+        }
+        let stationId = null;
+        let stationName = null;
+        if (row.stationId) {
+            stationId = clean(row.stationId, 30);
+            stationName = clean(row.stationName, 80);
+        }
+        return {
+            id: String(row.id),
+            vehicleId: String(row.vehicleId),
+            date: clean(row.date, 40),
+            odometer,
+            liters,
+            pricePerUnit: price,
+            total,
+            full: Boolean(row.full),
+            missedBefore: Boolean(row.missedBefore),
+            stationId,
+            stationName,
+            stationLat: finite(row.stationLat),
+            stationLon: finite(row.stationLon),
+            nationalAvg: finite(row.nationalAvg),
+            zoneAvg: finite(row.zoneAvg),
+            zoneRadiusKm: finite(row.zoneRadiusKm),
+            createdAt: clean(row.createdAt, 40),
+            updatedAt: clean(row.updatedAt, 40),
+        };
+    }
+
+    function sanitizeMetrics(metrics) {
+        const out = {};
+        if (!metrics || typeof metrics !== 'object') {
+            return out;
+        }
+        for (const [key, value] of Object.entries(metrics)) {
+            if (key === 'speedBands' && Array.isArray(value)) {
+                out.speedBands = value.slice(0, 12).map((band) => ({ from: finite(band && band.from), to: finite(band && band.to), seconds: finite(band && band.seconds) }));
+            } else if (value === null || typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value))) {
+                out[key] = value;
+            }
+        }
+        return out;
+    }
+
+    function sanitizeTrip(row) {
+        if (!ID_PATTERN.test(String(row.id))) {
+            return null;
+        }
+        let vehicleId = null;
+        if (row.vehicleId && ID_PATTERN.test(String(row.vehicleId))) {
+            vehicleId = String(row.vehicleId);
+        }
+        const track = [];
+        if (Array.isArray(row.track)) {
+            for (const point of row.track.slice(0, 20000)) {
+                if (Array.isArray(point) && point.length >= 4 && point.slice(0, 4).every((v) => Number.isFinite(Number(v)))) {
+                    track.push(point.slice(0, 4).map(Number));
+                }
+            }
+        }
+        return {
+            id: String(row.id),
+            vehicleId,
+            auto: Boolean(row.auto),
+            startedAt: clean(row.startedAt, 40),
+            endedAt: clean(row.endedAt, 40),
+            metrics: sanitizeMetrics(row.metrics),
+            track,
+            createdAt: clean(row.createdAt, 40),
+        };
+    }
+
+    function sanitizeSetting(row) {
+        if (row.key !== 'activeVehicleId') {
+            return null;
+        }
+        if (row.value === null || (typeof row.value === 'string' && ID_PATTERN.test(row.value))) {
+            return { key: 'activeVehicleId', value: row.value };
+        }
+        return null;
+    }
+
+    function sanitizeRows(store, rows) {
+        const sanitizers = { vehicles: sanitizeVehicle, refuels: sanitizeRefuel, trips: sanitizeTrip, settings: sanitizeSetting };
+        if (!Array.isArray(rows)) {
+            return [];
+        }
+        const out = [];
+        for (const row of rows.slice(0, MAX_IMPORT_ROWS[store])) {
+            if (!row || typeof row !== 'object') {
+                continue;
+            }
+            const safe = sanitizers[store](row);
+            if (safe) {
+                out.push(safe);
+            }
+        }
+        return out;
+    }
+
+    async function importAll(payload) {        if (!payload || payload.format !== BACKUP_FORMAT) {
             throw new Error('El fichero no es una copia de Gasolinera+');
         }
         if (payload.schema > DB_VERSION) {
@@ -158,7 +306,7 @@ const GarageStore = (() => {
         await new Promise((resolve, reject) => {
             const tx = db.transaction(STORES, 'readwrite');
             for (const store of STORES) {
-                const rows = payload[store] || [];
+                const rows = sanitizeRows(store, payload[store]);
                 counts[store] = rows.length;
                 for (const row of rows) {
                     tx.objectStore(store).put(row);

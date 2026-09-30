@@ -636,8 +636,13 @@ const GPTrips = (() => {
         }
     }
 
+    function escapeText(value) {
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return String(value).replace(/[&<>"']/g, (char) => map[char]);
+    }
+
     function tile(label, value) {
-        return `<div><small>${label}</small><strong>${value}</strong></div>`;
+        return `<div><small>${escapeText(label)}</small><strong>${escapeText(value)}</strong></div>`;
     }
 
     async function shiftOdometer(vehicleId, km) {

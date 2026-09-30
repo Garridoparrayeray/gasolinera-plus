@@ -1787,9 +1787,16 @@
         }
 
         const removeRow = document.createElement('tr');
-        removeRow.innerHTML = '<td></td>' + state.compareList.map((entry) =>
-            `<td><button class="pill compare-remove-btn" data-ideess="${entry.ideess}">Quitar</button></td>`
-        ).join('');
+        removeRow.appendChild(document.createElement('td'));
+        for (const entry of state.compareList) {
+            const cell = document.createElement('td');
+            const button = document.createElement('button');
+            button.className = 'pill compare-remove-btn';
+            button.dataset.ideess = entry.ideess;
+            button.textContent = 'Quitar';
+            cell.appendChild(button);
+            removeRow.appendChild(cell);
+        }
         table.appendChild(removeRow);
 
         el.compareTable.appendChild(table);
