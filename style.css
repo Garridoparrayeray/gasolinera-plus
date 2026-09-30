@@ -1329,8 +1329,7 @@ html.is-offline #view-stats > *:not(.offline-block) { opacity: 0.4; pointer-even
 
 /* Sugerencias y errores en la pestaña Info */
 .feedback-kinds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0 12px; }
-.feedback-kind { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px; border: 1px solid var(--field-border); background: var(--surface); color: var(--text); font: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
-.feedback-kind-icon { font-size: 1.4rem; line-height: 1; }
+.feedback-kind { padding: 14px 6px; text-align: center; border: 1px solid var(--field-border); background: var(--surface); color: var(--text); font: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
 .feedback-kind[aria-pressed="true"] { background: var(--accent-bg); border-color: var(--accent-bg); color: var(--accent-ink); }
 .feedback-field { position: relative; }
 .feedback-field textarea { display: block; width: 100%; min-height: 140px; padding: 12px 12px 30px; font: inherit; font-size: 1rem; line-height: 1.45; resize: vertical; box-sizing: border-box; }

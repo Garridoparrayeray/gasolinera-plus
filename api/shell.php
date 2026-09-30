@@ -589,9 +589,9 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                 <h3>Sugerencias y errores</h3>
                 <p class="garage-note">¿Algo no funciona o se te ocurre una mejora? Cuéntanoslo y lo revisaremos.</p>
                 <div class="feedback-kinds" role="group" aria-label="Tipo de mensaje">
-                    <button type="button" class="feedback-kind" data-kind="suggestion" aria-pressed="true"><span class="feedback-kind-icon" aria-hidden="true">💡</span>Sugerencia</button>
-                    <button type="button" class="feedback-kind" data-kind="bug" aria-pressed="false"><span class="feedback-kind-icon" aria-hidden="true">🐞</span>Error</button>
-                    <button type="button" class="feedback-kind" data-kind="other" aria-pressed="false"><span class="feedback-kind-icon" aria-hidden="true">💬</span>Otro</button>
+                    <button type="button" class="feedback-kind" data-kind="suggestion" aria-pressed="true">Sugerencia</button>
+                    <button type="button" class="feedback-kind" data-kind="bug" aria-pressed="false">Error</button>
+                    <button type="button" class="feedback-kind" data-kind="other" aria-pressed="false">Otro</button>
                 </div>
                 <select id="feedback-kind" hidden>
                     <option value="suggestion">Sugerencia</option>
