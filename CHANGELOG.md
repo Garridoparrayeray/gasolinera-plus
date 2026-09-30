@@ -1,5 +1,20 @@
 # Cambios
 
+## 1.0.1
+
+### Novedades
+- Instalación en el ordenador: botón «Instalar en el ordenador» en la pestaña Info.
+- Nivel del depósito: punto de partida al crear o editar el coche y nivel estimado al terminar cada repostaje.
+- Consumo real entre llenados completos, con margen de error y aviso para llenar hasta el primer clic cuando llevas varios repostajes parciales.
+- Resumen mensual con comparación del precio medio frente al mes anterior.
+- Sugerencias y errores con un diseño nuevo, y textos más grandes en pantallas de ordenador.
+
+### Cambios
+- Viajes: los tramos sin señal GPS (túneles) se miden con su velocidad media real y se indican en la ficha del viaje.
+- Viajes automáticos: esperan 20 minutos parados antes de cortar, para no partir un atasco largo.
+- Se eliminan los acelerones, los frenazos y la puntuación de conducción.
+- El enlace de descarga de Android abre la página de la última versión.
+
 ## 1.0.0
 
 Primera versión pública de Gasolinera+.
