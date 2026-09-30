@@ -731,10 +731,9 @@ const GPTrips = (() => {
             tile('Velocidad media', `${number(m.avgSpeedKmh, 0)} km/h`),
             tile('Velocidad máxima', `${number(m.maxSpeedKmh, 0)} km/h`),
             tile('Por encima de 120', `${number(m.percentAbove120, 0)} %`),
-            tile('Acelerones / frenazos', `${m.harshAccelerations} / ${m.harshBrakes}`),
         ];
-        if (m.ecoScore !== null) {
-            tiles.push(tile('Conducción eficiente', `${m.ecoScore} / 100`));
+        if (m.gapSeconds > 0) {
+            tiles.push(tile('Sin señal GPS (túneles)', minutesText(m.gapSeconds)));
         }
         if (m.fuelUsed !== null) {
             tiles.push(tile('Consumo estimado', `${number(m.fuelUsed, 2)} L`));

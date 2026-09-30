@@ -35,8 +35,7 @@ const approx = (actual, expected, tolerance, message) => assert.ok(Math.abs(actu
     approx(m.maxSpeedKmh, 100, 1.5, 'velocidad máxima');
     approx(m.avgSpeedKmh, 100, 1.5, 'velocidad media en movimiento');
     approx(m.movingSeconds, 599, 3, 'tiempo en movimiento');
-    assert.equal(m.harshBrakes, 0);
-    assert.equal(m.harshAccelerations, 0);
+    assert.equal(m.gapCount, 0);
 }
 
 {
@@ -56,18 +55,30 @@ const approx = (actual, expected, tolerance, message) => assert.ok(Math.abs(actu
 }
 
 {
-    const profile = [...new Array(60).fill(30), 24, 18, 12, 6, 0, ...new Array(30).fill(0)];
-    const m = GPTripMetrics.compute(track(profile));
-    assert.equal(m.harshBrakes, 1, 'un frenazo de 30 m/s a 0 en 5 s');
-    assert.equal(m.harshAccelerations, 0);
+    const points = track(new Array(180).fill(25));
+    const tunnel = [...points.slice(0, 60), ...points.slice(120)];
+    const m = GPTripMetrics.compute(tunnel);
+    approx(m.distanceKm, 4.5, 0.1, 'el tramo sin señal de un túnel suma su distancia');
+    approx(m.avgSpeedKmh, 90, 2, 'la media incluye el túnel a la velocidad real');
+    approx(m.gapSeconds, 60, 2, 'segundos sin señal');
+    assert.equal(m.gapCount, 1);
+    assert.equal(m.percentAbove100, 0);
 }
 
 {
-    const profile = [...new Array(30).fill(0), ...Array.from({ length: 8 }, (_, i) => (i + 1) * 3.5), ...new Array(60).fill(28)];
-    const m = GPTripMetrics.compute(track(profile));
-    assert.equal(m.harshAccelerations, 1, 'una aceleración brusca de 0 a 100 en 8 s');
+    const points = track(new Array(180).fill(35));
+    const tunnel = [...points.slice(0, 60), ...points.slice(120)];
+    const m = GPTripMetrics.compute(tunnel);
+    approx(m.avgSpeedKmh, 126, 3, 'un túnel a 126 km/h se mide a 126 km/h');
+    assert.ok(m.percentAbove120 > 90, 'el tiempo sin señal cuenta por encima de 120');
 }
 
+{
+    const points = track(new Array(180).fill(20));
+    const parked = [...points.slice(0, 60), { ...points[59], t: points[59].t + 600000, speed: 0 }, { ...points[59], t: points[59].t + 601000, speed: 0 }];
+    const m = GPTripMetrics.compute(parked);
+    assert.equal(m.gapCount, 0, 'una parada larga sin señal no es un túnel');
+}
 {
     const points = track(new Array(300).fill(20));
     points[150] = { ...points[150], lat: points[150].lat + 0.03, speed: 20 };

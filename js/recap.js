@@ -102,19 +102,9 @@ const GPRecap = (() => {
         stats.tripCount = periodTrips.length;
         stats.tripKm = 0;
         stats.tripMaxKmh = 0;
-        let ecoSum = 0;
-        let ecoCount = 0;
         for (const trip of periodTrips) {
             stats.tripKm += trip.metrics.distanceKm || 0;
             stats.tripMaxKmh = Math.max(stats.tripMaxKmh, trip.metrics.maxSpeedKmh || 0);
-            if (typeof trip.metrics.ecoScore === 'number') {
-                ecoSum += trip.metrics.ecoScore;
-                ecoCount++;
-            }
-        }
-        stats.ecoAvg = null;
-        if (ecoCount > 0) {
-            stats.ecoAvg = ecoSum / ecoCount;
         }
         return stats;
     }
@@ -176,9 +166,6 @@ const GPRecap = (() => {
         }
         if (stats.tripCount > 0) {
             rows.push(['Viajes grabados', stats.tripCount + ' · ' + fmt(stats.tripKm, 0) + ' km']);
-            if (stats.ecoAvg !== null) {
-                rows.push(['Conducción eficiente', fmt(stats.ecoAvg, 0) + ' de 100']);
-            }
             if (stats.tripMaxKmh > 0) {
                 rows.push(['Velocidad máxima', fmt(stats.tripMaxKmh, 0) + ' km/h']);
             }

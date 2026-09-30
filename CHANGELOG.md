@@ -28,7 +28,7 @@ Primera versión pública de Gasolinera+.
 ### Viajes
 - Grabación manual con la pantalla apagada y detección automática de viajes (Android e iPhone).
 - Notificación «Viaje en curso» que abre la pantalla del viaje.
-- Métricas: distancia, velocidades, frenazos, puntuación de conducción y consumo estimado.
+- Métricas: distancia, velocidades (también en túneles y tramos sin señal) y consumo estimado.
 
 ### Aplicación y datos
 - Android e iPhone con la misma base que la web.

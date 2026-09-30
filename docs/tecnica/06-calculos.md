@@ -194,12 +194,10 @@ Entrada: puntos GPS `{ t (ms), lat, lon, acc (m), speed (m/s o nulo) }`.
 
 1. **Limpieza (`clean`):** ordena por tiempo; descarta tiempos repetidos, precisión peor de 25 m y saltos con velocidad implícita > 70 m/s (252 km/h).
 2. **Velocidades:** la del GPS si existe; si no, distancia/tiempo entre puntos vecinos. Se suavizan con una media móvil de ±2 puntos.
-3. **Movimiento:** un tramo cuenta si la velocidad en alguno de sus extremos es ≥ 1,4 m/s. Se acumulan metros y segundos en movimiento; tiempo parado = duración − movimiento.
+3. **Movimiento:** un tramo cuenta si la velocidad en alguno de sus extremos es ≥ 1,4 m/s. Si entre dos puntos válidos pasan más de 8 s (túnel, garaje, cobertura perdida), el tramo se mide con su **velocidad media real** (distancia en línea recta / tiempo transcurrido) en lugar de la de los extremos, cuenta como movimiento solo si esa media es ≥ 1,4 m/s y se acumula en `gapSeconds`. La distancia en línea recta subestima ligeramente un túnel curvo. Se acumulan metros y segundos en movimiento; tiempo parado = duración − movimiento.
 4. **Velocidad media** = metros en movimiento / segundos en movimiento. **Máxima** = velocidad suavizada máxima.
 5. **Franjas de velocidad:** segundos y metros en `0, 30, 50, 80, 100, 120 km/h`. Porcentaje del tiempo por encima de 100 y de 120.
-6. **Acelerones y frenazos:** aceleración `(v[i+1] − v[i−1]) / dt` con `dt ≤ 4 s`; ≥ 3,0 m/s² acelerón, ≤ −3,5 m/s² frenazo. **Solo cuenta si se repite en dos muestras seguidas** del mismo tipo (evita un pico de GPS).
-7. **Puntuación eco** (si el viaje tiene ≥ 1 km): `100 − min(50, 10 × (acelerones + frenazos)) − min(30, % tiempo > 120)`, mínimo 0.
-8. **Consumo estimado:**
+6. **Consumo estimado:**
    - Factor de velocidad = media de los factores por franja ponderada por metros, con `BAND_FACTORS = [1,45; 1,10; 0,90; 0,95; 1,15; 1,40]` (más consumo en ciudad lenta y en autopista rápida, mínimo hacia 50–80 km/h).
    - `relativo = limitar(factorViaje / factorReferencia, 0,7, 1,5)`; si no hay referencia, 1.
    - `litros = km × consumoMedio × relativo / 100` y `coste = litros × último precio pagado`.
