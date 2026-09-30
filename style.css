@@ -1341,3 +1341,7 @@ html.is-offline #view-stats > *:not(.offline-block) { opacity: 0.4; pointer-even
 .feedback-actions { display: flex; flex-direction: column; gap: 8px; }
 .feedback-actions .pill { width: 100%; min-height: 50px; text-align: center; font-weight: 700; }
 .feedback-note { margin: 12px 0 0; padding: 10px 12px; border-left: 4px solid var(--accent-bg); background: var(--field-bg); font-size: 0.88rem; font-weight: 600; }
+
+@media (min-width: 1024px) {
+    html { font-size: 125%; }
+}
