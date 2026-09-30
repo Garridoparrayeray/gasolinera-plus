@@ -79,10 +79,14 @@ const GPPermissions = (() => {
         if (typeof Notification !== 'undefined' && Notification.permission === 'denied' && !GPNative.isNative()) {
             permission = ' Las notificaciones están bloqueadas en el navegador.';
         }
-        if (on) {
-            return row('Avisos de bajada de precio', 'Activados', 'Te avisamos como mucho una vez al día si baja el precio de tus favoritas.' + permission, [['Desactivar', async () => say(await GP.setAlerts(false))]], 'on');
+        let browserNote = '';
+        if (!GPNative.isNative()) {
+            browserNote = ' En el navegador puede que las notificaciones no funcionen con la web cerrada; para recibirlas en segundo plano instala la app.';
         }
-        return row('Avisos de bajada de precio', 'Desactivados', 'Al activarlos se te pedirá permiso para enviar notificaciones.' + permission, [['Activar', async () => say(await GP.setAlerts(true))]], 'off');
+        if (on) {
+            return row('Avisos de bajada de precio', 'Activados', 'Te avisamos como mucho una vez al día si baja el precio de tus favoritas.' + permission + browserNote, [['Desactivar', async () => say(await GP.setAlerts(false))]], 'on');
+        }
+        return row('Avisos de bajada de precio', 'Desactivados', 'Al activarlos se te pedirá permiso para enviar notificaciones.' + permission + browserNote, [['Activar', async () => say(await GP.setAlerts(true))]], 'off');
     }
 
     async function tripRows() {

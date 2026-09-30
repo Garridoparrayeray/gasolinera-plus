@@ -26,7 +26,7 @@ Gasolinera+ existe en cuatro formas. Este documento dice qué hace cada una y qu
 | Grabar viaje manualmente | Solo con la pantalla encendida | Sí, con la pantalla apagada | Sí, con la pantalla apagada |
 | Detección automática de viajes (actividad física) | No | Sí | Sí |
 | Viaje automático al conectar el Bluetooth del coche | No | Sí | No (iOS no lo permite) |
-| Avisos de precio de favoritas | Solo con la web instalada en Chrome de Android | Sí | Sí |
+| Avisos de precio de favoritas | Se pueden activar, pero en el navegador puede que no lleguen con la web cerrada (funcionan en Chrome de Android con la web instalada) | Sí | Sí |
 | Copia de seguridad del garaje (exportar e importar) | Sí | Sí | Sí |
 
 ## Dónde se guardan tus datos

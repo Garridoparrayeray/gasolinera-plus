@@ -2007,6 +2007,8 @@
     syncOfflineBanner();
 
     const alertsToggle = document.getElementById('alerts-toggle');
+    const BROWSER_ALERTS_WARNING = 'Activados, pero en este navegador puede que las notificaciones no funcionen con la web cerrada: comprobaremos las bajadas de precio cada vez que abras Gasolinera+. Para recibir avisos en segundo plano, instala la app.';
+    let alertsWarning = '';
     const alertsNote = document.getElementById('alerts-note');
 
     function showAlertsNote(message) {
@@ -2042,13 +2044,15 @@
             return 'Has bloqueado las notificaciones. Actívalas en los ajustes del navegador para recibir avisos.';
         }
         const registration = await navigator.serviceWorker.ready;
+        alertsWarning = '';
         if (!('periodicSync' in registration)) {
-            return 'Los avisos en segundo plano solo funcionan con la app instalada desde Chrome en Android.';
-        }
-        try {
-            await registration.periodicSync.register('price-drop-check', { minInterval: 12 * 60 * 60 * 1000 });
-        } catch (e) {
-            return 'No se pudieron activar los avisos. Instala primero la app (menú del navegador, Instalar app).';
+            alertsWarning = BROWSER_ALERTS_WARNING;
+        } else {
+            try {
+                await registration.periodicSync.register('price-drop-check', { minInterval: 12 * 60 * 60 * 1000 });
+            } catch (e) {
+                alertsWarning = BROWSER_ALERTS_WARNING;
+            }
         }
         await AlertsStore.set('favorites', state.favoritesList);
         await AlertsStore.set('enabled', true);
@@ -2099,6 +2103,10 @@
             alertsToggle.checked = false;
             showAlertsNote(problem);
             return problem;
+        }
+        if (alertsWarning !== '') {
+            showAlertsNote(alertsWarning);
+            return alertsWarning;
         }
         showAlertsNote('Te avisaremos una vez al día, como mucho, si baja el precio de tus favoritas.');
         return '';
