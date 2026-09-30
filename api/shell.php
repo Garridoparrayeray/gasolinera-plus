@@ -587,24 +587,27 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             </div>
             <div class="garage-card feedback-card">
                 <h3>Sugerencias y errores</h3>
-                <p class="garage-note">¿Algo no funciona o se te ocurre una mejora? Escríbenos: se abrirá tu correo con el mensaje preparado y lo revisaremos.</p>
-                <label>Tipo
-                    <select id="feedback-kind">
-                        <option value="suggestion">Sugerencia</option>
-                        <option value="bug">Error o algo que no funciona</option>
-                        <option value="other">Otro comentario</option>
-                    </select>
-                </label>
-                <label>Mensaje
-                    <textarea id="feedback-message" rows="5" maxlength="1500" placeholder="Cuéntanos qué ha pasado o qué te gustaría, y en qué pantalla."></textarea>
-                </label>
-                <p id="feedback-count" class="garage-note">0 / 1500</p>
-                <label class="garage-check"><input type="checkbox" id="feedback-tech" checked> Incluir datos técnicos (versión, sistema y pantalla; nunca tu ubicación ni tus datos)</label>
-                <div class="about-links">
+                <p class="garage-note">¿Algo no funciona o se te ocurre una mejora? Cuéntanoslo y lo revisaremos.</p>
+                <div class="feedback-kinds" role="group" aria-label="Tipo de mensaje">
+                    <button type="button" class="feedback-kind" data-kind="suggestion" aria-pressed="true"><span class="feedback-kind-icon" aria-hidden="true">💡</span>Sugerencia</button>
+                    <button type="button" class="feedback-kind" data-kind="bug" aria-pressed="false"><span class="feedback-kind-icon" aria-hidden="true">🐞</span>Error</button>
+                    <button type="button" class="feedback-kind" data-kind="other" aria-pressed="false"><span class="feedback-kind-icon" aria-hidden="true">💬</span>Otro</button>
+                </div>
+                <select id="feedback-kind" hidden>
+                    <option value="suggestion">Sugerencia</option>
+                    <option value="bug">Error o algo que no funciona</option>
+                    <option value="other">Otro comentario</option>
+                </select>
+                <div class="feedback-field">
+                    <textarea id="feedback-message" rows="5" maxlength="1500" aria-label="Mensaje" placeholder="Cuéntanos qué ha pasado o qué te gustaría, y en qué pantalla."></textarea>
+                    <span id="feedback-count" class="feedback-count">0 / 1500</span>
+                </div>
+                <label class="feedback-tech-row"><input type="checkbox" id="feedback-tech" checked><span>Incluir datos técnicos <small>Versión, sistema y pantalla. Nunca tu ubicación ni tus datos.</small></span></label>
+                <div class="feedback-actions">
                     <button id="feedback-send" type="button" class="pill pill--primary">Enviar por correo</button>
                     <button id="feedback-copy" type="button" class="pill">Copiar mensaje</button>
                 </div>
-                <p id="feedback-note" class="garage-note" hidden></p>
+                <p id="feedback-note" class="feedback-note" hidden></p>
             </div>
             <div class="garage-card guide-card">
                 <h3>Guía de uso</h3>

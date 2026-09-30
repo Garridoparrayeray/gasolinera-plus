@@ -84,6 +84,14 @@ const GPFeedback = (() => {
         }
     }
 
+    document.querySelectorAll('.feedback-kind').forEach((button) => {
+        button.addEventListener('click', () => {
+            kind.value = button.dataset.kind;
+            document.querySelectorAll('.feedback-kind').forEach((other) => {
+                other.setAttribute('aria-pressed', String(other === button));
+            });
+        });
+    });
     message.addEventListener('input', () => {
         count.textContent = `${message.value.length} / ${MAX_MESSAGE}`;
         say('');
