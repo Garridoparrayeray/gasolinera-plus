@@ -1345,3 +1345,6 @@ html.is-offline #view-stats > *:not(.offline-block) { opacity: 0.4; pointer-even
 @media (min-width: 1024px) {
     html { font-size: 125%; }
 }
+
+.guide-card summary { align-items: center; padding: 4px 0; }
+.guide-card summary::after { font-size: 2rem; font-weight: 900; line-height: 1; flex-shrink: 0; -webkit-text-stroke: 2px currentColor; }
