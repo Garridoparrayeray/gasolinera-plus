@@ -101,6 +101,10 @@ cd android && ./gradlew assembleDebug      # JAVA_HOME = JDK 21 (el de Android S
 
 `vercel.json` (mismo patrón que bizkaibus+: `api/shell.php` debe existir físicamente dentro de `api/` desde el primer commit, o el deploy falla con "pattern doesn't match any Serverless Functions"). El cron de `.github/workflows/rebuild-schedule.yml` ejecuta `--mode=daily`, comitea `data/gasolinera.sqlite` si cambió, y despliega con `vercel deploy --prod`; necesita los secrets `TOKEN_GASOLINERA` (token de Vercel), `TEAM_ID` y `PROJECT_ID` configurados en el repo de GitHub.
 
+## Transparencia sobre el desarrollo
+
+Los últimos 20 commits del repositorio, desde `eed32df` (Versión 1.0.0) hasta `15927d6` (30 de septiembre de 2026), se han hecho con la ayuda de Claude, un asistente de IA de Anthropic, bajo la dirección y la revisión del autor. Solo se exceptúa `62cef12`, que es el snapshot diario automático de precios. A partir de ahora, cada commit hecho con esa ayuda lleva la línea `Co-Authored-By: Claude`.
+
 Más detalle de cada versión y sus funciones: [docs/funcionalidades.md](docs/funcionalidades.md).
 
 Documentación técnica completa para programadores: [docs/tecnica/](docs/tecnica/README.md).
