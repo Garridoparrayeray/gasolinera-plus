@@ -70,12 +70,12 @@ function load(id) {
 }
 
 onmessage = async (event) => {
-    const { id, type, points } = event.data;
+    const { id, type, points, avoidTolls } = event.data;
     try {
         const router = await load(id);
         if (type === 'route') {
             const started = Date.now();
-            const result = await router.route(points);
+            const result = await router.route(points, { avoidTolls: Boolean(avoidTolls) });
             result.ms = Date.now() - started;
             postMessage({ id, result });
             return;

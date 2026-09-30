@@ -109,10 +109,12 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `enableAlerts` | — | Activa los avisos: en app usa el ejecutor nativo; en web pide permiso y registra una sincronización periódica (solo Chrome en Android con la app instalada). |
 | `checkAndNotifyDrops` | — | Comprueba bajadas de precio de favoritas ahora y muestra notificaciones. |
 | `disableAlerts` | — | Desactiva los avisos y anula la sincronización periódica. |
+| `changeAlerts` | `enabled` | Activa o desactiva los avisos de bajada de precio desde el interruptor o desde Permisos; devuelve el problema o la advertencia para mostrarlo. |
 | `restoreFuelPreference` | — | Restaura el carburante guardado en el selector al arrancar. |
 | `handleDeepLink` | — | Interpreta `?station=` y `?view=` de la URL para abrir una ficha o una vista. |
 | `showUpdateBanner` | `version, url` | Muestra el aviso de versión nueva con su enlace de descarga. |
 | `useVehicleFuel` | `fuel` | Cambia el filtro de carburante al del coche activo y relanza la búsqueda. |
+| `applyOpenRequest` | `request` | Abre la vista pedida por un enlace o por la notificación del viaje y, si procede, la pantalla del viaje en curso. |
 
 ### `js/api.js`
 
@@ -165,6 +167,7 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `refreshOfflineData` | — | Descarga `stations-lite.json` como máximo cada 20 horas y lo guarda para uso sin servidor. |
 | `cachedOfflineStations` | — | Lee las gasolineras descargadas o nulo. |
 | `setupGetApp` | — | Muestra los botones de instalación en web según el sistema. |
+| `handleOpenUrl` | `rawUrl` | Interpreta un enlace abierto en la app: ficha de gasolinera o vista (`?view=`, `?trip=1`). |
 | `setupNativeShell` | — | Ajusta la app nativa: clases del `<html>`, enlaces externos, botón atrás y enlaces de la app. |
 
 ### `js/splash.js`
@@ -246,8 +249,8 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | Función | Parámetros | Qué hace |
 |---|---|---|
 | `recorder` | — | Plugin nativo `TripRecorder` o nulo en la web. |
-| `say` | — | Muestra un mensaje bajo la lista de permisos. |
-| `row` | — | Construye una fila de permiso: título, estado, explicación y botones. |
+| `say` | `text` | Muestra un mensaje bajo la lista de permisos. |
+| `row` | `title, status, detail, buttons, kind` | Construye una fila de permiso: título, estado, explicación y botones. |
 | `openSystemSettings` | — | Abre los ajustes de la app (en el navegador explica cómo cambiar el permiso). |
 | `locationRow` | — | Fila de ubicación: bloqueada, activada o desactivada, con su botón. |
 | `alertsRow` | — | Fila de avisos de bajada de precio con su botón. |
@@ -322,6 +325,14 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `saveSetting` | `key, value` | Guarda un ajuste. |
 | `deleteVehicle` | `id` | Borra coche, repostajes y viajes en una transacción. |
 | `exportAll` | `includeTrips, extra` | Vuelca todo a un objeto de copia de seguridad. |
+| `clean` | `value, max` | Convierte a texto y recorta a una longitud máxima. |
+| `finite` | `value` | Número finito o nulo. |
+| `sanitizeVehicle` | `row` | Valida y reconstruye un coche importado; descarta el registro si es inválido. |
+| `sanitizeRefuel` | `row` | Valida y reconstruye un repostaje importado. |
+| `sanitizeMetrics` | `metrics` | Deja solo números, booleanos y nulos en las métricas de un viaje importado. |
+| `sanitizeTrip` | `row` | Valida y reconstruye un viaje importado, con su recorrido limitado. |
+| `sanitizeSetting` | `row` | Acepta solo el ajuste `activeVehicleId` con un identificador válido. |
+| `sanitizeRows` | `store, rows` | Aplica la validación de cada almacén y el máximo de registros al importar una copia. |
 | `importAll` | `payload` | Importa una copia (añade y reemplaza por clave). |
 
 ### `js/backup.js`
@@ -341,7 +352,7 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `fmt` | `value, digits` | Formatea números en español. |
 | `periodPrefix` | `period` | Prefijo de fecha del periodo (`AAAA-MM`, `AAAA` o vacío). |
 | `periodLabel` | `period` | Texto del periodo («septiembre 2026», «2026», «desde el principio»). |
-| `compute` | `vehicle, refuels, period` | Calcula las cifras del resumen de un coche y un periodo. |
+| `compute` | `vehicle, refuels, period, trips = []` | Calcula las cifras del resumen de un coche y un periodo. |
 | `fitText` | `ctx, text, maxWidth` | Recorta un texto con puntos suspensivos para que quepa en el lienzo. |
 | `rowsOf` | `stats` | Filas de datos que aparecen en la imagen. |
 | `draw` | `stats` | Dibuja el resumen en un lienzo de 1080×1920. |
@@ -498,6 +509,7 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `setAuto` | `enabled` | Activa o desactiva la detección automática pidiendo los permisos necesarios. |
 | `speedColor` | `kmh` | Color HSL de un tramo del recorrido según su velocidad. |
 | `renderList` | — | Lista de viajes guardados con fecha, distancia, duración y coche. |
+| `escapeText` | `value` | Escapa un texto para insertarlo como HTML. |
 | `tile` | `label, value` | Crea una tarjeta de cifra (etiqueta y valor). |
 | `shiftOdometer` | `vehicleId, km` | Suma kilómetros al odómetro del coche. |
 | `summaryTiles` | `metrics` | Tarjetas de cifras de un viaje (distancia, duración, medias, máxima, eco, consumo, coste). |
@@ -508,6 +520,7 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `openTrip` | `trip` | Abre el detalle de un viaje: mapa coloreado por velocidad, cifras y gráficos de franjas. |
 | `deleteOpenTrip` | — | Borra el viaje abierto, restando sus km del coche, tras confirmar. |
 | `sync` | — | Importa viajes pendientes y refresca el estado. |
+| `openTripScreen` | — | Refresca el estado y muestra la pantalla del viaje si se está grabando (al tocar la notificación). |
 
 ## Cliente · ruta
 
@@ -533,22 +546,24 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `segmentInfo` | `ref` | Extremos, longitud, tiempo, sentido único y peaje de un tramo. |
 | `findMainEdge` | `node, s, reversed` | Busca el arco de un tramo principal en un cruce y sentido. |
 | `projectOnSegment` | `ref, lat, lon` | Proyecta un punto sobre un tramo y devuelve distancia, posición y trozo. |
-| `snap` | `lat, lon` | Engancha un punto al tramo más cercano en 2,5 km, con penalización de 40 m para autopistas. |
+| `snapCandidates` | `lat, lon, count` | Los mejores tramos candidatos (radio 2,5 km, penalización de 40 m para autopistas) para enganchar un punto. |
+| `snap` | `lat, lon` | Engancha un punto al tramo más cercano: el primer candidato de `snapCandidates`. |
 | `endpointCosts` | `snapped, leaving` | Coste de salir o llegar por cada extremo de un tramo según el sentido. |
 | `heuristic` | `node, targetLat, targetLon` | Estimación optimista del tiempo restante en línea recta. |
-| `search` | `origin, destination` | A* de mínimo tiempo entre dos puntos enganchados. |
+| `search` | `origin, destination, avoidTolls` | A* de mínimo tiempo entre dos puntos enganchados; con `avoidTolls` descarta los tramos de peaje. |
 | `detailEdgeId` | `edge` | Identificador numérico de una arista de detalle. |
 | `orientedPoints` | `ref, reversed` | Puntos de un tramo en el sentido de la marcha. |
 | `partial` | `snapped, fromStart, reversedDirection` | Fragmento de un tramo enganchado desde o hasta el punto proyectado. |
-| `leg` | `origin, destination` | Reconstruye un tramo de ruta: geometría, metros, segundos y peaje. |
+| `leg` | `origin, destination, avoidTolls` | Reconstruye un tramo de ruta: geometría, metros, segundos y peaje. |
 | `directOnSegment` | `origin, destination` | Ruta directa cuando origen y destino están en el mismo tramo. |
-| `route` | `points` | Encadena tramos entre todos los puntos y devuelve el resultado o el error (`no-road`, `no-connection`). |
+| `route` | `points, options = {}` | Encadena tramos entre todos los puntos, probando candidatos de enganche y con opción de evitar peajes; devuelve el resultado o el error (`no-road`, `no-connection`). |
 
 ### `js/router-worker.js`
 
 | Función | Parámetros | Qué hace |
 |---|---|---|
 | `readBuffer` | `url, onProgress` | Descarga un fichero con progreso y lo descomprime si es gzip. |
+| `readGraphFile` | `path, onProgress` | Lee un fichero del grafo probando primero la versión `.gz` y después la que no está comprimida (como en el APK). |
 | `load` | `id` | Carga el manifiesto y el fichero principal una sola vez y crea el motor. |
 
 ### `js/route.js`
@@ -581,6 +596,7 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `run` | `points` | Ejecuta un cálculo de ruta con estados y mensajes de error legibles. |
 | `calculate` | `event` | Evita cálculos simultáneos y envuelve el cálculo con el aviso de carga. |
 | `calculateNow` | `event` | Resuelve origen y destino, calcula la ruta, la dibuja y busca gasolineras. |
+| `recalculate` | — | Recalcula la ruta y el corredor al cambiar «Evitar peajes», conservando la parada. |
 | `setStop` | `entry` | Recalcula la ruta pasando por una gasolinera y muestra el sobrecoste. |
 | `clearStop` | — | Quita la parada y restaura la ruta directa. |
 | `navigate` | — | Abre Google Maps con origen, destino y parada. |

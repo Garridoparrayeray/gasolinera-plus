@@ -292,6 +292,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
                         </div>
                         <ul id="route-to-suggestions" class="route-suggestions" hidden></ul>
                     </div>
+                    <label class="garage-check"><input type="checkbox" id="route-avoid-tolls"> Evitar peajes</label>
                     <details id="route-settings">
                     <summary>Ajustes: desvío y orden</summary>
                     <div class="route-options">

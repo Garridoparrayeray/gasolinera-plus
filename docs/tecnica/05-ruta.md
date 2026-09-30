@@ -53,6 +53,8 @@ Para cada punto (origen, destino, parada) se busca el tramo más cercano:
 4. **Penalización de vías rápidas:** en `main`, si el tramo es de clase autopista o troncal (`segClass < 4`), se suma 40 m a la puntuación. Sirve para no engancharse a una autopista que pasa cerca de un pueblo cuando lo razonable es la carretera local.
 5. Gana la menor puntuación (distancia + penalización). Si ninguna cae dentro del radio, no hay carretera y se devuelve `error: 'no-road'`.
 
+**Alternativas de enganche.** `snapCandidates(lat, lon, 4)` devuelve los 4 mejores tramos, no solo el más cercano. `route` prueba combinaciones de origen y destino (máximo 6 búsquedas por tramo) hasta que una conecta: un punto puede quedar pegado a un tramo aislado (por ejemplo, una calle de sentido único sin salida hacia la red) y con el segundo o tercer candidato sí hay ruta. En una ruta con parada, el punto intermedio conserva el candidato con el que llegó el tramo anterior.
+
 El punto enganchado guarda el tramo, la posición proyectada, la distancia recorrida a lo largo del tramo (`alongMeters`), la longitud total y el índice de segmento de la polilínea (`pieceIndex`).
 
 ## Carga de teselas (`ensureTiles`)
@@ -69,6 +71,10 @@ Antes de calcular se cargan las teselas alrededor de cada punto dentro de `DETAI
 - **Marcas por generación:** `stamp`, `closed`, `gScore` se reutilizan entre búsquedas sin limpiarlos, comparando con un contador `generation`. Evita reservar memoria en cada ruta.
 - **Fin:** se guarda el mejor destino visto (`bestTotal`); se detiene cuando la cabeza de la cola ya no puede mejorarlo.
 - **Arcos:** los de `main` (`firstEdge`) y los de detalle (`detailEdges`). Los de detalle se referencian con códigos negativos `-2 - id`.
+
+### Evitar peajes
+
+`route(points, { avoidTolls })` y `search(..., avoidTolls)`: cuando está activo, al recorrer los arcos de `main` se **descartan** los que pertenecen a un tramo con `segFlags = 1` (peaje). El resto del algoritmo no cambia. Si no existe ninguna ruta sin peajes, devuelve `no-connection` y la pantalla lo explica («No hay ninguna ruta sin peajes entre esos puntos…»). El casilla `route-avoid-tolls` recalcula la ruta al cambiarla, con la misma parada si la hay. Ejemplo real con el grafo: Bilbao–Barcelona, 609 km y 6 h 12 min con peaje frente a 595 km y 6 h 56 min sin él.
 
 ### Reconstrucción (`leg`)
 
@@ -133,5 +139,5 @@ El botón «Parar en esta gasolinera» (`route-refuel-go`) usa la primera parada
 
 - Fuera de la cobertura del grafo, o en puntos a más de 2,5 km de una carretera, devuelve `no-road`.
 - El tiempo usa velocidades teóricas; no hay tráfico ni cortes.
-- Los peajes solo se marcan (aviso «Con peaje»); no se calcula su coste.
+- Los peajes se pueden evitar o no (casilla «Evitar peajes»), pero no se calcula su coste. Solo se marcan los peajes de las carreteras principales del grafo (`main.bin`), no los de las teselas locales.
 - Sin grafo publicado, la ruta no funciona en ese despliegue (el proceso de compilación lo avisa).

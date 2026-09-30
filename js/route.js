@@ -9,6 +9,7 @@ const GPRoute = (() => {
         toSuggestions: $('route-to-suggestions'),
         swap: $('route-swap'),
         detour: $('route-detour'),
+        avoidTolls: $('route-avoid-tolls'),
         sort: $('route-sort'),
         submit: $('route-submit'),
         status: $('route-status'),
@@ -121,7 +122,7 @@ const GPRoute = (() => {
                     setStatus(`Cargando el mapa de carreteras (${number(total / 1e6, 0)} MB)… ${percent} %`);
                 },
             });
-            worker().postMessage({ id, type: 'route', points });
+            worker().postMessage({ id, type: 'route', points, avoidTolls: el.avoidTolls.checked });
         });
     }
 
@@ -633,7 +634,11 @@ const GPRoute = (() => {
                 return null;
             }
             if (result.error === 'no-connection') {
-                setStatus('No hay conexión por carretera entre esos puntos (¿una isla?).');
+                if (el.avoidTolls.checked) {
+                    setStatus('No hay ninguna ruta sin peajes entre esos puntos. Desmarca «Evitar peajes» para ver la más rápida.');
+                } else {
+                    setStatus('No hay conexión por carretera entre esos puntos (¿una isla?).');
+                }
                 return null;
             }
             setStatus(`Ruta calculada en ${number(result.ms / 1000, 1)} s.`);
@@ -702,6 +707,35 @@ const GPRoute = (() => {
             await refreshCorridor();
         } finally {
             el.submit.disabled = false;
+        }
+    }
+
+    let recalculating = false;
+
+    async function recalculate() {
+        if (!state.result || !state.from || !state.to || recalculating) {
+            return;
+        }
+        recalculating = true;
+        try {
+            const direct = await run([[state.from.lat, state.from.lon], [state.to.lat, state.to.lon]]);
+            if (!direct) {
+                el.avoidTolls.checked = !el.avoidTolls.checked;
+                return;
+            }
+            state.direct = direct;
+            state.result = direct;
+            if (state.stop) {
+                const withStop = await run([[state.from.lat, state.from.lon], [state.stop.station.lat, state.stop.station.lon], [state.to.lat, state.to.lon]]);
+                if (withStop) {
+                    state.result = withStop;
+                }
+            }
+            drawRoute();
+            renderSummary();
+            await refreshCorridor();
+        } finally {
+            recalculating = false;
         }
     }
 
@@ -781,6 +815,7 @@ const GPRoute = (() => {
         input.addEventListener('change', refreshCorridor);
     }
     el.sort.addEventListener('change', renderStations);
+    el.avoidTolls.addEventListener('change', () => GPSectionLoading.track('route', recalculate()));
     document.addEventListener('gp:location', (event) => {
         if (!el.from.value.trim()) {
             state.from = { lat: event.detail.lat, lon: event.detail.lon, label: 'Mi ubicación' };

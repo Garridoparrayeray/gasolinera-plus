@@ -15,6 +15,7 @@ Primera versión pública de Gasolinera+.
 
 ### Ruta
 - Ruta calculada en el propio dispositivo, sin servicios externos.
+- Opción «Evitar peajes», como en Google Maps.
 - Gasolineras del camino, plan de paradas según el depósito y coste estimado del trayecto.
 
 ### Tu coche

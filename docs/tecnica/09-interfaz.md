@@ -96,6 +96,7 @@ Además muestra los precios de todos los carburantes con su tendencia (▲ ▼ =
 | `route-from-here` | Botón «Mi ubicación» | Rellena el origen con tu posición | `useMyLocation` |
 | `route-swap` | Botón | Intercambia origen y destino | `swap` |
 | `route-to` | Campo | Destino | igual |
+| `route-avoid-tolls` | Casilla «Evitar peajes» | Recalcula la ruta sin usar tramos de peaje (y con la misma parada) | `recalculate` |
 | `route-detour` | Selector | Desvío máximo a la ruta (distancia perpendicular) para buscar gasolineras | `refreshCorridor` |
 | `route-submit` | Botón «Calcular ruta» | Envía el formulario | `calculate` |
 | `route-navigate` | Botón | Abre la ruta en Google Maps | `navigate` |

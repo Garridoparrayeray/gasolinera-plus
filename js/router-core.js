@@ -2,6 +2,8 @@ const GPRouter = (() => {
     const MAX_SPEED_MS = 120 / 3.6;
     const SNAP_RADIUS_M = 2500;
     const FAST_ROAD_SNAP_PENALTY_M = 40;
+    const SNAP_ALTERNATIVES = 4;
+    const MAX_LEG_ATTEMPTS = 6;
     const DETAIL_RADIUS_DEG = 0.12;
     const EARTH = 6371000;
     const RAD = Math.PI / 180;
@@ -314,20 +316,29 @@ const GPRouter = (() => {
             return best;
         }
 
-        snap(lat, lon) {
-            let best = null;
+        snapCandidates(lat, lon, count) {
+            const found = [];
+            let worst = Infinity;
             const consider = (ref, fromLat, fromLon, toLat, toLon, length, penalty = 0) => {
                 const nearEnd = Math.min(metersBetween(lat, lon, fromLat, fromLon), metersBetween(lat, lon, toLat, toLon));
                 if (nearEnd - length > SNAP_RADIUS_M) {
                     return;
                 }
-                if (best && nearEnd - length + penalty > best.score) {
+                if (found.length >= count && nearEnd - length + penalty > worst) {
                     return;
                 }
                 const projection = this.projectOnSegment(ref, lat, lon);
                 const score = projection.distance + penalty;
-                if (projection.distance <= SNAP_RADIUS_M && (!best || score < best.score)) {
-                    best = { ref, score, ...projection };
+                if (projection.distance > SNAP_RADIUS_M || (found.length >= count && score >= worst)) {
+                    return;
+                }
+                found.push({ ref, score, ...projection });
+                found.sort((a, b) => a.score - b.score);
+                if (found.length > count) {
+                    found.length = count;
+                }
+                if (found.length >= count) {
+                    worst = found[found.length - 1].score;
                 }
             };
             for (const tile of this.tiles.values()) {
@@ -356,11 +367,18 @@ const GPRouter = (() => {
                 }
                 consider({ s }, m.lat[a] / 1e6, m.lon[a] / 1e6, m.lat[b] / 1e6, m.lon[b] / 1e6, m.segLength[s], penalty);
             }
-            if (!best) {
+            for (const candidate of found) {
+                candidate.info = this.segmentInfo(candidate.ref);
+            }
+            return found;
+        }
+
+        snap(lat, lon) {
+            const found = this.snapCandidates(lat, lon, 1);
+            if (!found.length) {
                 return null;
             }
-            best.info = this.segmentInfo(best.ref);
-            return best;
+            return found[0];
         }
 
         endpointCosts(snapped, leaving) {
@@ -391,7 +409,7 @@ const GPRouter = (() => {
             return metersBetween(this.nodeLat[node] / 1e6, this.nodeLon[node] / 1e6, targetLat, targetLon) * 0.995 / MAX_SPEED_MS;
         }
 
-        search(origin, destination) {
+        search(origin, destination, avoidTolls) {
             this.generation++;
             const gen = this.generation;
             const heap = this.heap;
@@ -444,6 +462,9 @@ const GPRouter = (() => {
                 }
                 if (node < m.mainNodes) {
                     for (let e = m.firstEdge[node]; e < m.firstEdge[node + 1]; e++) {
+                        if (avoidTolls && m.segFlags[Math.floor(m.edgeSeg[e] / 2)] === 1) {
+                            continue;
+                        }
                         relax(node, m.edgeTarget[e], m.edgeTime[e] / 10, e);
                     }
                 }
@@ -486,10 +507,10 @@ const GPRouter = (() => {
             return [here, ...points.slice(cut + 1)];
         }
 
-        leg(origin, destination) {
-            const { bestNode, bestTotal, visited } = this.search(origin, destination);
+        leg(origin, destination, avoidTolls) {
+            const { bestNode, bestTotal, visited } = this.search(origin, destination, avoidTolls);
             const sameSegment = origin.ref.s === destination.ref.s && origin.ref.tile === destination.ref.tile;
-            if (sameSegment) {
+            if (sameSegment && !(avoidTolls && origin.info.toll)) {
                 const direct = this.directOnSegment(origin, destination);
                 if (direct && direct.time <= bestTotal) {
                     return direct;
@@ -588,19 +609,46 @@ const GPRouter = (() => {
             return { coords, meters, seconds, toll: info.toll, visited: 0, time: seconds };
         }
 
-        async route(points) {
+        async route(points, options = {}) {
+            const avoidTolls = Boolean(options.avoidTolls);
             await this.ensureTiles(points);
-            const snaps = points.map(([lat, lon]) => this.snap(lat, lon));
-            const failed = snaps.findIndex((snapped) => !snapped);
+            const candidates = points.map(([lat, lon]) => this.snapCandidates(lat, lon, SNAP_ALTERNATIVES));
+            const failed = candidates.findIndex((list) => list.length === 0);
             if (failed !== -1) {
                 return { error: 'no-road', index: failed };
             }
+            const snaps = [candidates[0][0]];
             const legs = [];
-            for (let i = 0; i < snaps.length - 1; i++) {
-                const result = this.leg(snaps[i], snaps[i + 1]);
+            for (let i = 0; i < candidates.length - 1; i++) {
+                const origins = [snaps[i]];
+                if (i === 0) {
+                    origins.length = 0;
+                    origins.push(...candidates[0]);
+                }
+                let result = null;
+                let chosen = null;
+                let attempts = 0;
+                for (const origin of origins) {
+                    for (const destination of candidates[i + 1]) {
+                        if (attempts >= MAX_LEG_ATTEMPTS) {
+                            break;
+                        }
+                        attempts++;
+                        result = this.leg(origin, destination, avoidTolls);
+                        if (result) {
+                            chosen = { origin, destination };
+                            break;
+                        }
+                    }
+                    if (result || attempts >= MAX_LEG_ATTEMPTS) {
+                        break;
+                    }
+                }
                 if (!result) {
                     return { error: 'no-connection', index: i };
                 }
+                snaps[i] = chosen.origin;
+                snaps[i + 1] = chosen.destination;
                 legs.push(result);
             }
             const coords = [];

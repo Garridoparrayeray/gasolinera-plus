@@ -99,4 +99,23 @@ if (status.includes('Ruta calculada')) {
     skip('ruta desde una direccion exacta', status);
 }
 
+s.where = 'peajes';
+await pickPlace('route-from', 'bilb', 'Bilbao');
+await pickPlace('route-to', 'Barcelo', 'Barcelona');
+check('ruta Bilbao-Barcelona calculada', await calculate(120000), await ev("document.getElementById('route-status').textContent"));
+const tollBefore = (await ev("!document.getElementById('route-toll').hidden")) === true;
+const kmBefore = await ev("parseFloat(document.getElementById('route-distance').textContent.replace('.', '').replace(',', '.'))");
+await ev("(()=>{const c=document.getElementById('route-avoid-tolls');c.checked=true;c.dispatchEvent(new Event('change',{bubbles:true}));})()");
+await sleep(500);
+await waitFor("!document.getElementById('route-submit').disabled", 120000);
+const avoidStatus = await ev("document.getElementById('route-status').textContent");
+if (tollBefore && avoidStatus.includes('Ruta calculada')) {
+    const kmAfter = await ev("parseFloat(document.getElementById('route-distance').textContent.replace('.', '').replace(',', '.'))");
+    check('evitar peajes quita el peaje de la ruta', (await ev("document.getElementById('route-toll').hidden")) === true, `${kmBefore} km con peaje, ${kmAfter} km sin peaje`);
+} else if (tollBefore) {
+    check('evitar peajes avisa si no hay alternativa', avoidStatus.includes('sin peajes'), avoidStatus);
+} else {
+    skip('evitar peajes', 'la ruta de prueba no tiene peajes en el grafo');
+}
+
 s.finish('RUTA');
