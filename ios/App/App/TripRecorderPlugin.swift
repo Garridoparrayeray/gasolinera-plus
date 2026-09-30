@@ -12,7 +12,7 @@ class MainViewController: CAPBridgeViewController {
 
 private let maxAccuracyM: Double = 25
 private let movingMs: Double = 2
-private let autoStopIdleS: TimeInterval = 5 * 60
+private let autoStopIdleS: TimeInterval = 20 * 60
 private let afterExitIdleS: TimeInterval = 2 * 60
 private let manualStopIdleS: TimeInterval = 60 * 60
 private let minAutoDistanceM: Double = 500

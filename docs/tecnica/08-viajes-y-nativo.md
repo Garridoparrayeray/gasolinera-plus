@@ -49,7 +49,7 @@ Los puntos se guardan en ficheros privados de la app hasta que el JS los importa
 
 ### Android
 
-**Servicio (`TripService`)**: servicio en primer plano de tipo `location` con una notificación «Viajes». Constantes: precisión máxima 25 m (`MAX_ACCURACY_M`), en movimiento a partir de 2 m/s (`MOVING_MS`), parada automática tras 5 min sin moverse en viajes automáticos (`AUTO_STOP_IDLE_MS`), 2 min tras bajarse del coche (`AFTER_EXIT_IDLE_MS`), 60 min en manuales (`MANUAL_STOP_IDLE_MS`) y descarte de viajes automáticos de menos de 500 m.
+**Servicio (`TripService`)**: servicio en primer plano de tipo `location` con una notificación «Viajes». Constantes: precisión máxima 25 m (`MAX_ACCURACY_M`), en movimiento a partir de 2 m/s (`MOVING_MS`), parada automática tras 20 min sin moverse en viajes automáticos (`AUTO_STOP_IDLE_MS`; así un atasco largo no corta el viaje), 2 min tras bajarse del coche (`AFTER_EXIT_IDLE_MS`), 60 min en manuales (`MANUAL_STOP_IDLE_MS`) y descarte de viajes automáticos de menos de 500 m.
 
 Funcionamiento:
 1. `onStartCommand` con `ACTION_START` crea el viaje (`TripStore.begin`), arranca el servicio en primer plano y pide actualizaciones cada segundo a `FusedLocationProviderClient` con máxima precisión.
@@ -69,7 +69,7 @@ Funcionamiento:
 - Si la actividad es `automotive` con confianza no baja y la detección está activa, arranca un viaje automático.
 - Si hay un viaje automático y la actividad pasa a andar, correr o bici, marca la salida del coche.
 - `considerAutoStart` mira los últimos 3 minutos de actividad al despertar la app, y `resumeAtLaunch` retoma un viaje que quedó abierto.
-- Mismas constantes de precisión (25 m), movimiento (2 m/s), paradas (5 min, 2 min, 60 min) y mínimo de 500 m.
+- Mismas constantes de precisión (25 m), movimiento (2 m/s), paradas (20 min, 2 min, 60 min) y mínimo de 500 m.
 - Los ficheros van a `Application Support/trips`. Bluetooth de coche no está disponible: iOS no lo permite a apps de terceros con la app cerrada.
 
 ### Web

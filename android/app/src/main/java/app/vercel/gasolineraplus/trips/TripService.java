@@ -43,7 +43,7 @@ public class TripService extends Service {
     private static final int NOTIFICATION_ID = 7301;
     private static final float MAX_ACCURACY_M = 25f;
     private static final float MOVING_MS = 2f;
-    private static final long AUTO_STOP_IDLE_MS = 5 * 60 * 1000L;
+    private static final long AUTO_STOP_IDLE_MS = 20 * 60 * 1000L;
     private static final long AFTER_EXIT_IDLE_MS = 2 * 60 * 1000L;
     private static final long MANUAL_STOP_IDLE_MS = 60 * 60 * 1000L;
     private static final double MIN_AUTO_DISTANCE_M = 500;
