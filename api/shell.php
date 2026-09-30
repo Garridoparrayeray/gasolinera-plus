@@ -1,51 +1,97 @@
 <?php
+require_once __DIR__ . '/Services/Seo.php';
+
 $isNative = getenv('GP_NATIVE') === '1';
-$ogTitle = 'Gasolinera+';
-$ogDescription = 'Precios de gasolina y diésel cerca de ti, actualizados a diario.';
-$ogUrl = 'https://gasolineraplus.vercel.app/';
+$siteUrl = \Services\Seo::siteUrl();
+$ogTitle = 'Gasolinera+ · Precios de gasolina y diésel hoy en España';
+$ogDescription = 'Encuentra la gasolinera más barata cerca de ti. Precios de gasolina y diésel actualizados cada día, mapa, rutas con paradas de repostaje y control de tu consumo.';
+$ogUrl = $siteUrl . '/';
+$canonicalUrl = $ogUrl;
+$robotsContent = 'index, follow';
+$structuredData = '';
+$provinceLinks = array();
 
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = parse_url($requestUri, PHP_URL_PATH);
 
-if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
-    $ideess = $matches[1];
-
+if (!$isNative) {
     require_once __DIR__ . '/Core/Config.php';
     require_once __DIR__ . '/Core/Database.php';
-    
     try {
         $pdo = \Core\Database::connection();
-        $stmt = $pdo->prepare('SELECT rotulo, direccion, municipio FROM stations WHERE ideess = ?');
-        $stmt->execute([$ideess]);
-        $station = $stmt->fetch();
-        
-        if ($station) {
-            $ogTitle = $station['rotulo'] . ' en ' . $station['municipio'];
-            
-            $priceStmt = $pdo->prepare("SELECT carburante, precio FROM current_prices WHERE ideess = ? AND carburante IN ('gasoleo_a', 'gasolina_95_e5')");
-            $priceStmt->execute([$ideess]);
-            $prices = $priceStmt->fetchAll();
-            
-            $priceText = [];
-            foreach ($prices as $p) {
-                $name = 'Gasolina 95';
-                if ($p['carburante'] === 'gasoleo_a') {
-                    $name = 'Gasóleo A';
+        $provinceLinks = \Services\Seo::provinces($pdo);
+
+        if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
+            $ideess = urldecode($matches[1]);
+            $stmt = $pdo->prepare('SELECT * FROM stations WHERE ideess = ?');
+            $stmt->execute([$ideess]);
+            $station = $stmt->fetch();
+
+            if ($station) {
+                $provinceName = \Services\Seo::display($station['provincia']);
+                $stationName = \Services\Seo::display($station['rotulo']);
+                $townName = \Services\Seo::display($station['municipio']);
+                $ogTitle = $stationName . ' · ' . $townName . ': precios hoy | Gasolinera+';
+
+                $priceStmt = $pdo->prepare('SELECT carburante, precio FROM current_prices WHERE ideess = ?');
+                $priceStmt->execute([$ideess]);
+                $prices = array();
+                foreach ($priceStmt->fetchAll() as $p) {
+                    $prices[$p['carburante']] = (float)$p['precio'];
                 }
-                $priceText[] = $name . ' a ' . number_format((float)$p['precio'], 3, ',', '.') . '€';
+
+                $priceText = array();
+                foreach (array('gasoleo_a', 'gasolina_95_e5') as $key) {
+                    if (isset($prices[$key])) {
+                        $priceText[] = \Services\Seo::FUELS[$key] . ' ' . \Services\Seo::price($prices[$key]) . ' €';
+                    }
+                }
+                $desc = $stationName . ', ' . \Services\Seo::display($station['direccion']) . ', ' . $townName . ' (' . $provinceName . ').';
+                if (!empty($priceText)) {
+                    $desc .= ' Hoy: ' . implode(', ', $priceText) . '.';
+                }
+                $ogDescription = $desc . ' Horario, ubicación y comparación con la zona en Gasolinera+.';
+                $ogUrl = $siteUrl . '/stations/' . rawurlencode($ideess);
+                $canonicalUrl = $ogUrl;
+
+                $updated = \Services\Seo::lastUpdate($pdo);
+                $provinceUrl = $siteUrl . '/gasolineras/' . \Services\Seo::slug($provinceName);
+                $structuredData = \Services\Seo::jsonLd(\Services\Seo::stationJsonLd($station, $prices, $updated, $provinceName));
+                $structuredData .= \Services\Seo::jsonLd(\Services\Seo::breadcrumb(array(
+                    array('Gasolinera+', $siteUrl . '/'),
+                    array('Gasolineras', $siteUrl . '/gasolineras'),
+                    array($provinceName, $provinceUrl),
+                    array($stationName, $ogUrl),
+                )));
+            } else {
+                $robotsContent = 'noindex, follow';
             }
-            
-            $desc = $station['direccion'];
-            if (!empty($priceText)) {
-                $desc .= '. ' . implode(', ', $priceText);
-            }
-            $ogDescription = $desc . '. Comprueba el precio actual en Gasolinera+.';
-            $ogUrl = 'https://gasolineraplus.vercel.app/stations/' . urlencode($ideess);
+        } elseif ($path === '/' || $path === '') {
+            $structuredData = \Services\Seo::jsonLd(array(
+                '@context' => 'https://schema.org',
+                '@type' => 'WebSite',
+                'name' => 'Gasolinera+',
+                'url' => $siteUrl . '/',
+                'inLanguage' => 'es',
+                'description' => $ogDescription,
+            ));
+            $structuredData .= \Services\Seo::jsonLd(array(
+                '@context' => 'https://schema.org',
+                '@type' => 'WebApplication',
+                'name' => 'Gasolinera+',
+                'url' => $siteUrl . '/',
+                'applicationCategory' => 'TravelApplication',
+                'operatingSystem' => 'Web, Android, iOS',
+                'inLanguage' => 'es',
+                'description' => $ogDescription,
+                'offers' => array('@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'EUR'),
+            ));
         }
     } catch (\Throwable $t) {
-        error_log('Gasolinera+ shell OG: ' . $t->getMessage());
+        error_log('Gasolinera+ shell SEO: ' . $t->getMessage());
     }
 }
+$verificationToken = getenv('GP_GSC_VERIFICATION');
 ?>
 <!DOCTYPE html>
 <html lang="es" class="is-loading">
@@ -60,7 +106,7 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <meta property="og:title" content="<?= htmlspecialchars($ogTitle) ?>">
     <meta property="og:description" content="<?= htmlspecialchars($ogDescription) ?>">
     <meta property="og:url" content="<?= htmlspecialchars($ogUrl) ?>">
-    <meta property="og:image" content="https://gasolineraplus.vercel.app/icons/og-image.png">
+    <meta property="og:image" content="<?= htmlspecialchars($siteUrl) ?>/icons/og-image.png">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1024">
     <meta property="og:image:height" content="1024">
@@ -68,7 +114,15 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <meta property="og:site_name" content="Gasolinera+">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:image" content="https://gasolineraplus.vercel.app/icons/og-image.png">
+    <meta name="twitter:image" content="<?= htmlspecialchars($siteUrl) ?>/icons/og-image.png">
+    <meta name="robots" content="<?= htmlspecialchars($robotsContent) ?>">
+    <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl) ?>">
+<?php if (is_string($verificationToken) && $verificationToken !== ''): ?>
+    <meta name="google-site-verification" content="<?= htmlspecialchars($verificationToken) ?>">
+<?php endif; ?>
+    <link rel="preload" href="/vendor/fonts/inter-latin-standard-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/vendor/fonts/bricolage-grotesque-latin-standard-normal.woff2" as="font" type="font/woff2" crossorigin>
+<?= $structuredData ?>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#111111">
     <link rel="apple-touch-icon" href="/icons/icon-maskable-192.png">
@@ -90,6 +144,8 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
     <div class="splash" aria-hidden="true"><span class="splash__word">GASOLINERA<span class="splash__plus">+</span></span></div>
 
     <main class="app-container">
+
+        <h1 class="sr-only">Precios de gasolina y diésel hoy en España</h1>
 
         <header>
             <div class="home-link-wrap">
@@ -566,6 +622,16 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         </section>
 
         <section id="view-about" hidden>
+<?php if (!$isNative && !empty($provinceLinks)): ?>
+            <div class="garage-card province-card">
+                <h3>Gasolineras por provincia</h3>
+                <ul class="province-links">
+<?php foreach ($provinceLinks as $item): ?>
+                    <li><a href="/gasolineras/<?= htmlspecialchars($item['slug']) ?>"><?= htmlspecialchars($item['name']) ?></a></li>
+<?php endforeach; ?>
+                </ul>
+            </div>
+<?php endif; ?>
             <div class="garage-card about-card">
                 <h3>Sobre el proyecto</h3>
                 <p>Gasolinera+ es un proyecto independiente y sin ánimo de lucro. Los precios salen de los datos abiertos del Ministerio para la Transición Ecológica y los mapas son de OpenStreetMap.</p>

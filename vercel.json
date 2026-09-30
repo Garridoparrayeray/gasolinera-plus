@@ -18,6 +18,26 @@
   },
   "headers": [
     {
+      "source": "/vendor/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=2592000" }]
+    },
+    {
+      "source": "/icons/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=2592000" }]
+    },
+    {
+      "source": "/js/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=300, stale-while-revalidate=86400" }]
+    },
+    {
+      "source": "/style.css",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=300, stale-while-revalidate=86400" }]
+    },
+    {
+      "source": "/data/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" }]
+    },
+    {
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
@@ -64,6 +84,26 @@
     {
       "source": "/stations/(.*)",
       "destination": "/api/shell.php"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/api/seo.php"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/seo.php"
+    },
+    {
+      "source": "/llms.txt",
+      "destination": "/api/seo.php"
+    },
+    {
+      "source": "/gasolineras",
+      "destination": "/api/seo.php"
+    },
+    {
+      "source": "/gasolineras/(.*)",
+      "destination": "/api/seo.php"
     },
     {
       "source": "/",

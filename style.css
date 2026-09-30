@@ -1348,3 +1348,7 @@ html.is-offline #view-stats > *:not(.offline-block) { opacity: 0.4; pointer-even
 
 .guide-card summary { align-items: center; padding: 4px 0; }
 .guide-card summary::after { font-size: 2rem; font-weight: 900; line-height: 1; flex-shrink: 0; -webkit-text-stroke: 2px currentColor; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.province-links { list-style: none; margin: 0; padding: 0; columns: 2 150px; column-gap: 16px; }
+.province-links li { padding: 5px 0; break-inside: avoid; }

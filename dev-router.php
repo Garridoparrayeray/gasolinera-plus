@@ -26,6 +26,10 @@ if (str_starts_with($uri, '/api/')) {
     require __DIR__ . '/api/index.php';
     return true;
 }
+if ($uri === '/robots.txt' || $uri === '/sitemap.xml' || $uri === '/llms.txt' || $uri === '/gasolineras' || preg_match('#^/gasolineras/#', $uri)) {
+    require __DIR__ . '/api/seo.php';
+    return true;
+}
 if ($uri === '/' || preg_match('#^/stations/#', $uri)) {
     require __DIR__ . '/api/shell.php';
     return true;
