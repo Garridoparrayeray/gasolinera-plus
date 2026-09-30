@@ -870,7 +870,24 @@ const GPTrips = (() => {
         }
     });
 
-    recoverWebTrip().then(() => sync()).catch(() => {});
+    async function openTripScreen() {
+        window.GP_PENDING_TRIP = false;
+        await refreshStatus();
+        if (state.live && state.live.recording) {
+            minimizeDrive(false);
+        }
+    }
+
+    document.addEventListener('gp:show-trip', () => {
+        openTripScreen().catch(() => {});
+    });
+
+    recoverWebTrip().then(() => sync()).then(() => {
+        if (window.GP_PENDING_TRIP) {
+            return openTripScreen();
+        }
+        return null;
+    }).catch(() => {});
 
     return { importPending, saveTrip, state };
 })();

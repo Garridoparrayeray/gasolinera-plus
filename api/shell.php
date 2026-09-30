@@ -357,8 +357,11 @@ if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
         <section id="view-garage" hidden>
             <div id="garage-empty" class="garage-card">
                 <h3>Tu garaje</h3>
-                <p>Añade tu coche para conocer tu consumo real, cuánto gastas al mes y hasta dónde llegas con lo que queda en el depósito. Todo se guarda solo en este dispositivo.</p>
-                <button id="garage-add-first" type="button" class="pill pill--primary">Añadir mi coche</button>
+                <p>Empieza con un coche nuevo o recupera tus datos importando una copia de seguridad. Así conocerás tu consumo real, cuánto gastas al mes y hasta dónde llegas con lo que queda en el depósito. Todo se guarda solo en este dispositivo.</p>
+                <div class="garage-actions">
+                    <button id="garage-add-first" type="button" class="pill pill--primary">Coche nuevo desde cero</button>
+                    <button id="garage-import-first" type="button" class="pill">Importar una copia</button>
+                </div>
             </div>
             <div id="garage-main" hidden>
                 <div id="garage-vehicles" role="tablist" aria-label="Tus coches"></div>

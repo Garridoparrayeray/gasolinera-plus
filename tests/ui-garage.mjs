@@ -50,6 +50,7 @@ s.where = 'vacio';
 await ev("document.getElementById('view-garage-btn').click()");
 check('la barra inferior es fija en movil', (await ev("getComputedStyle(document.getElementById('view-toggle')).position")) === 'fixed');
 check('el garaje vacio invita a anadir coche', await waitFor("!document.getElementById('garage-empty').hidden", 4000));
+check('el garaje vacio ofrece importar una copia', (await ev("getComputedStyle(document.getElementById('garage-import-first')).display !== 'none' && !document.getElementById('garage-import-first').closest('#garage-empty').hidden")) === true);
 check('en el garaje se ocultan buscador y filtros', (await ev("getComputedStyle(document.getElementById('search-form')).display")) === 'none');
 
 s.where = 'coche';

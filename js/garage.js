@@ -4,6 +4,7 @@ const GPGarage = (() => {
         empty: $('garage-empty'),
         main: $('garage-main'),
         addFirst: $('garage-add-first'),
+        importFirst: $('garage-import-first'),
         vehicles: $('garage-vehicles'),
         vehicleName: $('garage-vehicle-name'),
         vehicleFuel: $('garage-vehicle-fuel'),
@@ -1253,7 +1254,8 @@ const GPGarage = (() => {
             showError(el.recapNote, 'Primero añade tu coche.');
             return;
         }
-        const stats = GPRecap.compute(vehicle, state.refuels, state.recapPeriod);
+        const trips = await GarageStore.trips.forVehicle(vehicle.id);
+        const stats = GPRecap.compute(vehicle, state.refuels, state.recapPeriod, trips);
         if (stats.count === 0) {
             showError(el.recapNote, 'Todavía no hay repostajes en este periodo.');
             return;
@@ -1508,12 +1510,15 @@ const GPGarage = (() => {
             showBackupNote(`Importados ${counts.vehicles} coches, ${counts.refuels} repostajes y ${counts.trips} viajes.`);
             await refresh();
             announceActive();
+            GP.showToast('Copia importada');
         } catch (e) {
             showBackupNote('No se pudo importar: ' + e.message);
+            GP.showToast('No se pudo importar: ' + e.message);
         }
     }
 
     el.addFirst.addEventListener('click', () => openVehicleDialog(null));
+    el.importFirst.addEventListener('click', () => el.backupImport.click());
     el.edit.addEventListener('click', () => openVehicleDialog(activeVehicle()));
     el.vehicleForm.addEventListener('submit', saveVehicle);
     el.vehicleFuelInput.addEventListener('change', updateVehicleUnits);

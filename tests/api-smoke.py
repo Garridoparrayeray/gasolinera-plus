@@ -92,10 +92,10 @@ fuel = 'glp'
 like = f'%{query}%'
 expected_total = DB.execute(
     f'''SELECT COUNT(*) FROM stations s
-        WHERE (municipio_normalizado LIKE ? OR direccion_normalizada LIKE ? OR rotulo_normalizado LIKE ? OR cp LIKE ? OR localidad_normalizada LIKE ?)
+        WHERE (municipio_normalizado LIKE ? OR direccion_normalizada LIKE ? OR rotulo_normalizado LIKE ? OR REPLACE(rotulo_normalizado, ' ', '') LIKE ? OR cp LIKE ? OR localidad_normalizada LIKE ?)
         AND last_seen_date >= date((SELECT MAX(last_seen_date) FROM stations), '-{STALE_DAYS} days')
         AND EXISTS (SELECT 1 FROM current_prices cp WHERE cp.ideess = s.ideess AND cp.carburante = ?)''',
-    (like, like, like, query + '%', like, fuel)).fetchone()[0]
+    (like, like, like, like, query + '%', like, fuel)).fetchone()[0]
 broad = get(f'/api/stations/search?q={query}&fuel={fuel}&limit=10') or {}
 check(broad.get('total') == expected_total, f"search amplia: total {broad.get('total')} y la base tiene {expected_total} (truncado antes de filtrar)")
 

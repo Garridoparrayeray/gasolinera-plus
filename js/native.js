@@ -259,6 +259,25 @@ const GPNative = (() => {
         });
     }
 
+    function handleOpenUrl(rawUrl) {
+        let target;
+        try {
+            target = new URL(rawUrl);
+        } catch (error) {
+            return;
+        }
+        if (target.pathname.startsWith('/stations/')) {
+            window.location.href = target.pathname;
+            return;
+        }
+        const view = target.searchParams.get('view');
+        if (view) {
+            const request = { view, trip: target.searchParams.get('trip') === '1' };
+            window.GP_PENDING_OPEN = request;
+            document.dispatchEvent(new CustomEvent('gp:open-view', { detail: request }));
+        }
+    }
+
     function setupNativeShell() {
         if (!isNative()) {
             return;
@@ -293,13 +312,12 @@ const GPNative = (() => {
                 }
                 App.minimizeApp();
             });
-            App.addListener('appUrlOpen', (event) => {
-                const target = new URL(event.url);
-                if (target.pathname.startsWith('/stations/')) {
-                    window.location.href = target.pathname;
+            App.addListener('appUrlOpen', (event) => handleOpenUrl(event.url));
+            App.getLaunchUrl().then((launch) => {
+                if (launch && launch.url) {
+                    handleOpenUrl(launch.url);
                 }
-            });
-        }
+            }).catch(() => {});        }
     }
 
     setupNativeShell();

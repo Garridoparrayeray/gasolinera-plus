@@ -30,7 +30,7 @@ const GPRecap = (() => {
         return 'desde el principio';
     }
 
-    function compute(vehicle, refuels, period) {
+    function compute(vehicle, refuels, period, trips = []) {
         const prefix = periodPrefix(period);
         const list = refuels
             .filter((r) => r.vehicleId === vehicle.id && GPFuel.madridDate(r.date).startsWith(prefix))
@@ -94,6 +94,28 @@ const GPRecap = (() => {
         if (hasNational) {
             stats.versusNational = versusNational;
         }
+        stats.avgTicket = null;
+        if (stats.count > 0) {
+            stats.avgTicket = stats.total / stats.count;
+        }
+        const periodTrips = trips.filter((trip) => trip.vehicleId === vehicle.id && trip.metrics && GPFuel.madridDate(trip.startedAt).startsWith(prefix));
+        stats.tripCount = periodTrips.length;
+        stats.tripKm = 0;
+        stats.tripMaxKmh = 0;
+        let ecoSum = 0;
+        let ecoCount = 0;
+        for (const trip of periodTrips) {
+            stats.tripKm += trip.metrics.distanceKm || 0;
+            stats.tripMaxKmh = Math.max(stats.tripMaxKmh, trip.metrics.maxSpeedKmh || 0);
+            if (typeof trip.metrics.ecoScore === 'number') {
+                ecoSum += trip.metrics.ecoScore;
+                ecoCount++;
+            }
+        }
+        stats.ecoAvg = null;
+        if (ecoCount > 0) {
+            stats.ecoAvg = ecoSum / ecoCount;
+        }
         return stats;
     }
 
@@ -149,6 +171,18 @@ const GPRecap = (() => {
             }
             rows.push(['Frente a la media de España', text]);
         }
+        if (stats.avgTicket !== null && stats.count > 1) {
+            rows.push(['Gasto medio por repostaje', fmt(stats.avgTicket, 2) + ' €']);
+        }
+        if (stats.tripCount > 0) {
+            rows.push(['Viajes grabados', stats.tripCount + ' · ' + fmt(stats.tripKm, 0) + ' km']);
+            if (stats.ecoAvg !== null) {
+                rows.push(['Conducción eficiente', fmt(stats.ecoAvg, 0) + ' de 100']);
+            }
+            if (stats.tripMaxKmh > 0) {
+                rows.push(['Velocidad máxima', fmt(stats.tripMaxKmh, 0) + ' km/h']);
+            }
+        }
         return rows;
     }
 
@@ -190,17 +224,21 @@ const GPRecap = (() => {
         }
         ctx.fillText(`en ${stats.count} ${noun}`, 72, 722);
 
+        const rows = rowsOf(stats);
+        const step = Math.min(128, Math.floor(1090 / rows.length));
+        const labelSize = Math.round(step * 0.27);
+        const valueSize = Math.round(step * 0.36);
         let y = 770;
-        for (const [label, value] of rowsOf(stats)) {
+        for (const [label, value] of rows) {
             ctx.fillStyle = '#2A2A2A';
             ctx.fillRect(72, y, WIDTH - 144, 3);
             ctx.fillStyle = '#BDB8AE';
-            ctx.font = "600 34px 'Inter', sans-serif";
-            ctx.fillText(label, 72, y + 58);
+            ctx.font = `600 ${labelSize}px 'Inter', sans-serif`;
+            ctx.fillText(label, 72, y + Math.round(step * 0.45));
             ctx.fillStyle = '#FFFFFF';
-            ctx.font = "800 46px 'Bricolage Grotesque', 'Inter', sans-serif";
-            ctx.fillText(fitText(ctx, value, WIDTH - 144), 72, y + 112);
-            y += 128;
+            ctx.font = `800 ${valueSize}px 'Bricolage Grotesque', 'Inter', sans-serif`;
+            ctx.fillText(fitText(ctx, value, WIDTH - 144), 72, y + Math.round(step * 0.88));
+            y += step;
         }
 
         ctx.fillStyle = ORANGE;

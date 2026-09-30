@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.Looper;
@@ -298,18 +299,19 @@ public class TripService extends Service {
             manager.createNotificationChannel(channel);
         }
         Intent open = new Intent(this, MainActivity.class);
-        open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        open.setData(Uri.parse("https://gasolineraplus.vercel.app/?view=garage&trip=1"));
+        open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent openPending = PendingIntent.getActivity(this, 0, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         Intent stop = new Intent(this, TripService.class);
         stop.setAction(ACTION_STOP);
         PendingIntent stopPending = PendingIntent.getService(this, 1, stop, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-        String title = "Grabando viaje";
+        String title = "Viaje en curso";
         if (auto) {
-            title = "Viaje detectado · grabando";
+            title = "Viaje en curso (detectado)";
         }
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(title)
-                .setContentText(text)
+                .setContentText("Toca para más información · " + text)
                 .setSmallIcon(R.drawable.ic_stat_trip)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)

@@ -2228,6 +2228,20 @@
         },
     };
 
+    function applyOpenRequest(request) {
+        if (!request || !VIEWS.includes(request.view)) {
+            return;
+        }
+        window.GP_PENDING_OPEN = null;
+        switchView(request.view);
+        if (request.trip) {
+            window.GP_PENDING_TRIP = true;
+            document.dispatchEvent(new CustomEvent('gp:show-trip'));
+        }
+    }
+
+    document.addEventListener('gp:open-view', (event) => applyOpenRequest(event.detail));
+
     restoreFuelPreference();
     GPNative.refreshOfflineData();
     GPNative.checkForUpdate(showUpdateBanner);
@@ -2237,6 +2251,7 @@
     updateCompareCount();
     updateFavoritesCount();
     loadNationalHeadline();
+    applyOpenRequest(window.GP_PENDING_OPEN);
 
     const pathMatch = window.location.pathname.match(/^\/stations\/([^/]+)/);
     if (pathMatch) {
