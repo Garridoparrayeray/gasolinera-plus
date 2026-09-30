@@ -189,7 +189,11 @@ const GPNative = (() => {
             }
             const release = await response.json();
             if (isNewer(release.tag_name, info.version)) {
-                notify(release.tag_name.replace(/^v/, ''), APK_URL);
+                let page = APK_URL;
+                if (typeof release.html_url === 'string' && release.html_url.startsWith('https://github.com/')) {
+                    page = release.html_url;
+                }
+                notify(release.tag_name.replace(/^v/, ''), page);
             }
         } catch (e) {
             return;
