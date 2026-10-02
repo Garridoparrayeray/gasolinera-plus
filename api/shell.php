@@ -206,6 +206,7 @@ $verificationToken = \Services\Seo::verificationToken();
                 </span>
                 <svg id="national-stats-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
+            <p id="national-date" class="national-date" hidden></p>
             <div id="national-stats-detail" hidden>
                 <canvas id="national-chart" height="120"></canvas>
                 <p id="national-stats-note"></p>

@@ -36,6 +36,7 @@ for (const size of sizes.filter((x) => !sizeFilter || sizeFilter.includes(x.n)))
     check(`${tag} carga la lista de cercanas con ubicacion`, await waitFor("document.querySelectorAll('#stations-list li').length > 0", 12000), await ev("document.getElementById('stations-status').textContent + ' | dialogo=' + document.getElementById('geo-ask').open + ' | pref=' + localStorage.getItem('gasolinera_location_pref')"));
     check(`${tag} sin scroll horizontal`, (await ev('document.documentElement.scrollWidth - document.documentElement.clientWidth')) <= 0);
     check(`${tag} paginador sin NaN`, !(await ev("document.getElementById('pagination-status').textContent")).includes('NaN'));
+    check(`${tag} fecha de los precios visible`, await waitFor("!document.getElementById('national-date').hidden && /^Precios/.test(document.getElementById('national-date').textContent)", 6000));
     check(`${tag} media nacional cargada`, await waitFor("/\\d/.test(document.getElementById('national-gasoleo-a').textContent)", 6000));
     check(`${tag} sin librerias de CDN`, (await ev("[...document.scripts, ...document.querySelectorAll('link[rel=stylesheet]')].every(n => !/unpkg|jsdelivr|googleapis/.test(n.src || n.href))")) === true);
     await waitFor("!document.getElementById('get-app-desktop').hidden", 4000);

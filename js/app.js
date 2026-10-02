@@ -104,6 +104,7 @@
         nationalDetail: document.getElementById('national-stats-detail'),
         nationalGasoleoA: document.getElementById('national-gasoleo-a'),
         nationalGasolina95: document.getElementById('national-gasolina-95'),
+        nationalDate: document.getElementById('national-date'),
         nationalChart: document.getElementById('national-chart'),
         nationalNote: document.getElementById('national-stats-note'),
         statsFuel: document.getElementById('stats-fuel'),
@@ -490,6 +491,26 @@
 
     
 
+    function showPriceDate(fecha) {
+        if (!fecha || !el.nationalDate) {
+            return;
+        }
+        const parts = fecha.split('-').map(Number);
+        const label = new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+        el.nationalDate.classList.remove('is-stale');
+        let text = `Precios de hoy, ${label}`;
+        if (fecha !== todayIso()) {
+            if (fecha === daysAgoIso(1)) {
+                text = `Precios de ayer, ${label}. Los de hoy se publican por la mañana.`;
+            } else {
+                text = `Precios del ${label}. Aún no hay datos más recientes.`;
+                el.nationalDate.classList.add('is-stale');
+            }
+        }
+        el.nationalDate.textContent = text;
+        el.nationalDate.hidden = false;
+    }
+
     async function loadNationalHeadline() {
         const [gasoleoA, gasolina95] = await Promise.all([
             Api.nationalStats('gasoleo_a', daysAgoIso(14), todayIso()).catch(() => null),
@@ -506,6 +527,7 @@
         if (gasolina95) {
             state.nationalSeries.gasolina_95_e5 = gasolina95;
             if (gasolina95.hoy) {
+                showPriceDate(gasolina95.hoy.fecha);
                 el.nationalGasolina95.textContent = `${gasolina95.hoy.media.toFixed(3)} €`;
             } else {
                 el.nationalGasolina95.textContent = 'Sin datos';
