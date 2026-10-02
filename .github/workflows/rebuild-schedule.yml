@@ -2,7 +2,9 @@ name: Rebuild schedule data
 
 on:
   schedule:
-    - cron: '0 3 * * *'
+    - cron: '17 3 * * *'
+    - cron: '41 5 * * *'
+    - cron: '13 7 * * *'
   push:
     branches:
       - main
