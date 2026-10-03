@@ -278,6 +278,14 @@ const GPRoute = (() => {
             return;
         }
         state.map = L.map(el.map).setView([40.2, -3.7], 5);
+        if ('ResizeObserver' in window) {
+            new ResizeObserver(() => {
+                state.map.invalidateSize();
+                if (state.routeBounds) {
+                    state.map.fitBounds(state.routeBounds, { padding: [30, 30] });
+                }
+            }).observe(el.map);
+        }
         GPMaps.addBaseLayers(state.map);
         state.routeLayer = L.layerGroup().addTo(state.map);
         state.stationLayer = L.layerGroup().addTo(state.map);
@@ -586,7 +594,8 @@ const GPRoute = (() => {
         state.routeLayer.clearLayers();
         const line = L.polyline(state.result.coords, { color: '#1D4E89', weight: 5, opacity: 0.85 });
         line.addTo(state.routeLayer);
-        state.map.fitBounds(line.getBounds(), { padding: [30, 30] });
+        state.routeBounds = line.getBounds();
+        state.map.fitBounds(state.routeBounds, { padding: [30, 30] });
         if (state.stop) {
             L.circleMarker([state.stop.station.lat, state.stop.station.lon], { radius: 11, color: '#1D4E89', weight: 3, fillColor: GPNative.accentColor(), fillOpacity: 1 }).addTo(state.routeLayer);
         }

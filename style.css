@@ -1524,13 +1524,23 @@ html.desktop[data-view="route"] .filter-field:nth-child(3),
 html.desktop:not([data-view="list"]) #stations-status,
 html.desktop:not([data-view="list"]) #stations-progress { display: none; }
 
-.desktop #view-route:not([hidden]) { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.desktop #view-route:not([hidden]) { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.desktop #view-route:not([hidden]):has(#route-result:not([hidden])) { grid-template-columns: minmax(0, 320px) minmax(0, 340px) minmax(0, 1fr); }
 .desktop #view-route > * { grid-column: 1; margin: 0; }
-.desktop #view-route > #route-map-wrap { grid-column: 2; grid-row: 1 / span 6; }
+.desktop #view-route > .offline-block { grid-column: 1 / -1; }
+.desktop #view-route > #route-map-wrap { grid-column: -2 / -1; grid-row: 1 / span 3; }
 .desktop #route-map { height: calc(100vh - 230px); min-height: 520px; border-radius: 8px; }
+.desktop #view-route:has(#route-result:not([hidden])) > #route-map-wrap { align-self: stretch; height: 0; min-height: 100%; display: flex; flex-direction: column; gap: 8px; }
+.desktop #view-route:has(#route-result:not([hidden])) #route-map-wrap > .map-guard-wrap { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+.desktop #view-route:has(#route-result:not([hidden])) #route-map { flex: 1 1 auto; height: auto; min-height: 0; }
+.desktop #route-map-wrap .garage-note { margin: 0; }
 .desktop #route-form-card h3 { font-family: var(--font-display); font-size: 24px; font-weight: 800; }
-.desktop #route-result { display: flex; flex-direction: column; gap: 16px; }
+.desktop #route-result:not([hidden]) { display: contents; }
 .desktop #route-result[hidden] { display: none; }
+.desktop #route-result > .garage-card { grid-column: 1; margin: 0; }
+.desktop #route-result > .garage-card:last-child { grid-column: 2; grid-row: 1 / span 3; align-self: stretch; height: 0; min-height: 100%; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; }
+.desktop #route-result > .garage-card:last-child h3 { flex: none; }
+.desktop #route-stations { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin: 0 -20px; padding: 0 20px; overscroll-behavior: contain; }
 .desktop .route-input input,
 .desktop #route-submit,
 .desktop #route-navigate { border-radius: 6px; }
