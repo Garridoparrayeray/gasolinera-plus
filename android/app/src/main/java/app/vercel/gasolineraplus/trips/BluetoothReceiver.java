@@ -36,6 +36,11 @@ public class BluetoothReceiver extends BroadcastReceiver {
 
     private static void onCarConnected(Context context) {
         if (TripStore.currentTripId(context) != null) {
+            try {
+                TripService.sendAction(context, TripService.ACTION_VEHICLE_ENTER);
+            } catch (RuntimeException error) {
+                // El servicio ya no está en marcha y Android no deja arrancarlo desde aquí.
+            }
             return;
         }
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -44,6 +49,7 @@ public class BluetoothReceiver extends BroadcastReceiver {
         try {
             TripService.start(context, true, null);
         } catch (RuntimeException error) {
+            // Android puede negar el servicio en segundo plano si la app tiene ahorro de batería.
         }
     }
 }

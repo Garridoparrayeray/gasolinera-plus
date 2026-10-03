@@ -1590,6 +1590,9 @@ const GPGarage = (() => {
             showBackupNote(`Importados ${counts.vehicles} coches, ${counts.refuels} repostajes y ${counts.trips} viajes.`);
             await refresh();
             announceActive();
+            if (typeof GPTrips !== 'undefined') {
+                await GPTrips.renderList();
+            }
             GP.showToast('Copia importada');
         } catch (e) {
             showBackupNote('No se pudo importar: ' + e.message);

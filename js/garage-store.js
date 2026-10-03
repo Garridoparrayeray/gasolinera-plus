@@ -294,7 +294,7 @@ const GarageStore = (() => {
                 }
             }
         }
-        return {
+        const trip = {
             id: String(row.id),
             vehicleId,
             auto: Boolean(row.auto),
@@ -304,6 +304,29 @@ const GarageStore = (() => {
             track,
             createdAt: clean(row.createdAt, 40),
         };
+        const pauses = sanitizePauses(row.pauses);
+        if (pauses.length) {
+            trip.pauses = pauses;
+        }
+        return trip;
+    }
+
+    function sanitizePauses(raw) {
+        if (!Array.isArray(raw)) {
+            return [];
+        }
+        const out = [];
+        for (const pause of raw.slice(0, 200)) {
+            if (!Array.isArray(pause) || pause.length !== 2) {
+                continue;
+            }
+            const from = finite(pause[0]);
+            const to = finite(pause[1]);
+            if (from !== null && to !== null && to > from) {
+                out.push([from, to]);
+            }
+        }
+        return out;
     }
 
     function sanitizeSetting(row) {

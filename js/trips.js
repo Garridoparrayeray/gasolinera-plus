@@ -17,6 +17,7 @@ const GPTrips = (() => {
         bt: $('trip-bt'),
         btPicker: $('trip-bt-picker'),
         btDevice: $('trip-bt-device'),
+        btHelp: $('trip-bt-help'),
         permissions: $('trip-permissions'),
         permissionsText: $('trip-permissions-text'),
         permissionsFix: $('trip-permissions-fix'),
@@ -62,7 +63,14 @@ const GPTrips = (() => {
     const MIN_REFERENCE_KM = 30;
 
     const WEB_TRIP_KEY = 'webTripInProgress';
-    const BLUETOOTH_ENABLED = false;
+    const BT_HELP = {
+        android: 'Empareja antes el móvil con el coche en los ajustes de Bluetooth. Necesita la ubicación "Permitir todo el tiempo" y quitar el ahorro de batería para Gasolinera+. El viaje termina al desconectarte y, si lo habías pausado, se reanuda al volver a conectarte.',
+        ios: 'Conéctate al Bluetooth del coche o a CarPlay y elígelo aquí. En iPhone se nota al abrir la app o cuando la detección automática la despierta, así que conviene tenerla activada. Necesita la ubicación "Siempre".',
+    };
+    const BT_EMPTY = {
+        android: 'No hay dispositivos Bluetooth emparejados. Empareja tu coche en los ajustes de Bluetooth del móvil y vuelve aquí.',
+        ios: 'No hay ningún coche conectado. Conéctate al Bluetooth del coche o a CarPlay y vuelve a abrir esta opción.',
+    };
     const state = {
         live: null,
         timer: null,
@@ -569,20 +577,23 @@ const GPTrips = (() => {
     }
 
     async function renderBluetooth(status) {
-        el.btWrap.hidden = !BLUETOOTH_ENABLED || GPNative.platform() !== 'android';
+        const platform = GPNative.platform();
+        el.btWrap.hidden = platform !== 'android' && platform !== 'ios';
         if (el.btWrap.hidden) {
             return;
         }
-        const saved = status.bluetooth && status.bluetooth.address;
+        el.btHelp.textContent = BT_HELP[platform];
+        const bluetooth = status.bluetooth || {};
+        const saved = bluetooth.address;
         el.bt.checked = Boolean(saved) || el.btPicker.dataset.open === '1';
         el.btPicker.hidden = !el.bt.checked;
         if (!el.bt.checked) {
             return;
         }
-        await fillBluetoothDevices(saved);
+        await fillBluetoothDevices(saved, bluetooth.name);
     }
 
-    async function fillBluetoothDevices(saved) {
+    async function fillBluetoothDevices(saved, savedName) {
         const plugin = recorder();
         let devices = [];
         try {
@@ -601,11 +612,17 @@ const GPTrips = (() => {
             option.textContent = device.name || device.address;
             el.btDevice.appendChild(option);
         }
+        if (saved && !devices.some((device) => device.address === saved)) {
+            const option = document.createElement('option');
+            option.value = saved;
+            option.textContent = savedName || 'Tu coche';
+            el.btDevice.appendChild(option);
+        }
         if (saved) {
             el.btDevice.value = saved;
         }
-        if (devices.length === 0) {
-            note('No hay dispositivos Bluetooth emparejados. Empareja tu coche en los ajustes de Bluetooth del móvil y vuelve aquí.');
+        if (devices.length === 0 && !saved) {
+            note(BT_EMPTY[GPNative.platform()]);
         }
     }
 
@@ -627,7 +644,7 @@ const GPTrips = (() => {
             perms = await plugin.requestBluetooth();
         }
         if (perms.location && perms.bluetooth && !perms.background) {
-            const ok = window.confirm('Para empezar el viaje al conectarte al coche con la app cerrada, Android te pedirá permitir la ubicación "Todo el tiempo". Gasolinera+ solo la usa mientras vas en coche y los recorridos se quedan en tu móvil. ¿Continuar?');
+            const ok = window.confirm('Para empezar el viaje al conectarte al coche con la app cerrada, el móvil te pedirá permitir la ubicación "Siempre" o "Todo el tiempo". Gasolinera+ solo la usa mientras vas en coche y los recorridos se quedan en tu móvil. ¿Continuar?');
             if (ok) {
                 perms = await plugin.requestBackground();
             }
@@ -998,6 +1015,8 @@ const GPTrips = (() => {
         note('En el navegador los viajes solo se graban con la app abierta. En la app de Android y de iPhone se graban aunque bloquees el móvil.');
     }
 
+    // Si la app se abre ya en Coche (enlace o notificación), el aviso de vista llega antes que este script.
+    renderList();
     document.addEventListener('gp:view', (event) => {
         if (event.detail === 'garage') {
             renderList();

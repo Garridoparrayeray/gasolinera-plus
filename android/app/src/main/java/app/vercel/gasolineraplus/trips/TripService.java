@@ -40,6 +40,7 @@ public class TripService extends Service {
     public static final String ACTION_VEHICLE_EXIT = "app.vercel.gasolineraplus.trips.VEHICLE_EXIT";
     public static final String ACTION_PAUSE = "app.vercel.gasolineraplus.trips.PAUSE";
     public static final String ACTION_RESUME = "app.vercel.gasolineraplus.trips.RESUME";
+    public static final String ACTION_VEHICLE_ENTER = "app.vercel.gasolineraplus.trips.VEHICLE_ENTER";
     public static final String EXTRA_AUTO = "auto";
     public static final String EXTRA_VEHICLE_ID = "vehicleId";
 
@@ -153,6 +154,15 @@ public class TripService extends Service {
                 vehicleExitAt = System.currentTimeMillis();
             }
             return START_NOT_STICKY;
+        }
+        if (ACTION_VEHICLE_ENTER.equals(action)) {
+            if (tripId == null) {
+                stopSelf();
+                return START_NOT_STICKY;
+            }
+            resume();
+            vehicleExitAt = 0;
+            return START_STICKY;
         }
         if (ACTION_PAUSE.equals(action)) {
             pause();

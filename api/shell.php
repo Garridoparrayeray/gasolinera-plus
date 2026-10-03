@@ -606,7 +606,7 @@ function headlineDelta(array $headline, string $fuel): string
                         <label class="garage-check"><input type="checkbox" id="trip-bt"> Empezar al conectarme al Bluetooth de mi coche</label>
                         <div id="trip-bt-picker" hidden>
                             <label>Bluetooth de tu coche <select id="trip-bt-device"></select></label>
-                            <p class="garage-note">Empareja antes el móvil con el coche en los ajustes de Bluetooth. Necesita la ubicación "Permitir todo el tiempo" y quitar el ahorro de batería para Gasolinera+. El viaje termina al desconectarte.</p>
+                            <p class="garage-note" id="trip-bt-help"></p>
                         </div>
                     </div>
                     <div id="trip-permissions" hidden>

@@ -11,10 +11,12 @@
 - Favoritas y Comparar se abren en un panel lateral derecho; el comparador resalta el precio más bajo de cada carburante.
 - Pausa en los viajes: botón «Pausar» junto a «Terminar viaje» (también en la notificación de Android). El tiempo y los kilómetros en pausa no cuentan y la detección automática no corta el viaje mientras está en pausa.
 - Historial de viajes y repostajes: en Coche salen los 10 últimos y «Ver todo el historial» abre el resto con filtro de fechas y carga por páginas.
+- Viajes por el Bluetooth del coche: eliges tu coche y el viaje empieza al conectarte y termina al desconectarte. Si lo habías pausado para repostar, se reanuda al volver a conectarte. En Android funciona con la app cerrada; en iPhone se detecta también CarPlay, al abrir la app o cuando la detección automática la despierta.
 
 ### Cambios
 - En el ordenador ya no aparecen las funciones del móvil: grabar viajes, «Repostar aquí», «Actualizar km», mapas sin conexión, avisos en segundo plano ni la ventana de ubicación al entrar.
 - Detección automática de viajes: ahora también arranca si la activas con el viaje ya empezado o si el móvil se pierde el aviso de «has subido al coche» (Android comprueba la actividad cada minuto; iPhone mira la actividad reciente al activarla).
+- Las copias de seguridad conservan las pausas de cada viaje, y la lista de viajes se actualiza al importar una copia o al abrir la app directamente en Coche.
 - Carga más rápida: el mapa añade las gasolineras por tandas, los scripts se cargan en diferido y la web ya no descarga la librería de mapas sin conexión.
 
 ## 1.0.1
