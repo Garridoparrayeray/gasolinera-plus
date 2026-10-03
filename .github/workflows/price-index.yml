@@ -1,6 +1,9 @@
 name: Price index
 
 on:
+  workflow_run:
+    workflows: ['Rebuild schedule data']
+    types: [completed]
   schedule:
     - cron: '30 9 * * *'
   push:
@@ -25,6 +28,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'push')
     runs-on: ubuntu-latest
     timeout-minutes: 240
     env:
