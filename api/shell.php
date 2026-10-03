@@ -163,7 +163,7 @@ $verificationToken = \Services\Seo::verificationToken();
         <h1 class="sr-only">Precios de gasolina y diésel hoy en España</h1>
 
         <header>
-            <div class="home-link-wrap">
+            <a class="home-link-wrap" href="/" aria-label="Gasolinera+, ir a Buscar">
                 <span id="app-logomark" aria-hidden="true">
                     <svg class="logo-gasolinera" viewBox="0 0 512 512">
                         <rect width="512" height="512" rx="116" fill="#FF7A1A"/>
@@ -176,7 +176,7 @@ $verificationToken = \Services\Seo::verificationToken();
                     <strong id="app-title">GASOLINERA<span class="plus">+</span></strong>
                     <span id="app-subtitle">Precios reales de gasolineras</span>
                 </span>
-            </div>
+            </a>
             <nav id="view-toggle" role="tablist" aria-label="Secciones">
                 <button id="view-list-btn" type="button" role="tab" aria-selected="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>

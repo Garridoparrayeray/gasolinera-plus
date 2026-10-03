@@ -2307,6 +2307,14 @@
     }
     el.mapShowAll.addEventListener('click', clearSelection);
     document.getElementById('stats-province-all').addEventListener('click', toggleProvinceChart);
+    document.querySelector('.home-link-wrap').addEventListener('click', (event) => {
+        event.preventDefault();
+        if (el.stationModal.open) {
+            el.stationModal.close();
+        }
+        switchView('list');
+        window.scrollTo(0, 0);
+    });
     document.querySelectorAll('.site-footer [data-view]').forEach((button) => {
         button.addEventListener('click', () => {
             switchView(button.dataset.view);
