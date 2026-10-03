@@ -15,7 +15,12 @@ on:
       - 'package.json'
       - 'capacitor.config.json'
       - '.github/workflows/build-apps.yml'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Publicar la versión de package.json como release (crea la etiqueta vX.Y.Z)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -28,6 +33,19 @@ jobs:
       HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
     steps:
       - uses: actions/checkout@v7
+
+      - name: Release tag
+        id: release
+        if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release && github.ref == 'refs/heads/main')
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          tag="v${version}"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "${tag}" ]; then
+            echo "La etiqueta ${GITHUB_REF_NAME} no coincide con package.json (${version})" >&2
+            exit 1
+          fi
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -107,9 +125,10 @@ jobs:
           gh release upload android-debug dist/gasolinera-plus-debug.apk --clobber
 
       - name: Release notes from the changelog
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: steps.release.outputs.tag != ''
+        env:
+          version: ${{ steps.release.outputs.version }}
         run: |
-          version="${GITHUB_REF_NAME#v}"
           awk -v heading="## ${version}" '
             $0 == heading { found = 1; next }
             found && /^## / { exit }
@@ -126,13 +145,15 @@ jobs:
           } >> dist/release-notes.md
 
       - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v') && env.HAS_KEYSTORE == 'true'
+        if: steps.release.outputs.tag != '' && env.HAS_KEYSTORE == 'true'
         uses: softprops/action-gh-release@v3
         with:
-          name: Gasolinera+ ${{ github.ref_name }}
+          tag_name: ${{ steps.release.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: Gasolinera+ ${{ steps.release.outputs.tag }}
           body_path: dist/release-notes.md
           files: dist/gasolinera-plus.apk
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          prerelease: ${{ contains(steps.release.outputs.tag, '-') }}
           fail_on_unmatched_files: true
 
   ios:
