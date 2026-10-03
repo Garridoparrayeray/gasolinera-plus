@@ -124,7 +124,7 @@ public final class TripStore {
         }
     }
 
-    static synchronized JSONObject finish(Context context, String id, double distanceMeters, boolean discard) throws IOException, JSONException {
+    static synchronized JSONObject finish(Context context, String id, double distanceMeters, JSONArray pauses, boolean discard) throws IOException, JSONException {
         prefs(context).edit().remove(KEY_CURRENT).apply();
         if (discard) {
             delete(context, id);
@@ -134,6 +134,9 @@ public final class TripStore {
         meta.put("endedAt", System.currentTimeMillis());
         meta.put("finished", true);
         meta.put("distanceM", distanceMeters);
+        if (pauses != null && pauses.length() > 0) {
+            meta.put("pauses", pauses);
+        }
         writeText(metaFile(context, id), meta.toString());
         return meta;
     }

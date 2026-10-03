@@ -66,6 +66,36 @@ const GarageStore = (() => {
         return wrap(db.transaction(store).objectStore(store).index(index).getAll(value));
     }
 
+    async function newestInRange(store, index, lower, upper, offset, limit) {
+        const db = await open();
+        const range = IDBKeyRange.bound(lower, upper);
+        return new Promise((resolve, reject) => {
+            const rows = [];
+            let skipped = offset === 0;
+            const request = db.transaction(store).objectStore(store).index(index).openCursor(range, 'prev');
+            request.onsuccess = () => {
+                const cursor = request.result;
+                if (!cursor || rows.length >= limit) {
+                    resolve(rows);
+                    return;
+                }
+                if (!skipped) {
+                    skipped = true;
+                    cursor.advance(offset);
+                    return;
+                }
+                rows.push(cursor.value);
+                cursor.continue();
+            };
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async function countInRange(store, index, lower, upper) {
+        const db = await open();
+        return wrap(db.transaction(store).objectStore(store).index(index).count(IDBKeyRange.bound(lower, upper)));
+    }
+
     async function get(store, key) {
         const db = await open();
         return wrap(db.transaction(store).objectStore(store).get(key));
@@ -264,7 +294,7 @@ const GarageStore = (() => {
                 }
             }
         }
-        return {
+        const trip = {
             id: String(row.id),
             vehicleId,
             auto: Boolean(row.auto),
@@ -274,6 +304,29 @@ const GarageStore = (() => {
             track,
             createdAt: clean(row.createdAt, 40),
         };
+        const pauses = sanitizePauses(row.pauses);
+        if (pauses.length) {
+            trip.pauses = pauses;
+        }
+        return trip;
+    }
+
+    function sanitizePauses(raw) {
+        if (!Array.isArray(raw)) {
+            return [];
+        }
+        const out = [];
+        for (const pause of raw.slice(0, 200)) {
+            if (!Array.isArray(pause) || pause.length !== 2) {
+                continue;
+            }
+            const from = finite(pause[0]);
+            const to = finite(pause[1]);
+            if (from !== null && to !== null && to > from) {
+                out.push([from, to]);
+            }
+        }
+        return out;
     }
 
     function sanitizeSetting(row) {
@@ -343,6 +396,8 @@ const GarageStore = (() => {
         trips: {
             forVehicle: (vehicleId) => byIndex('trips', 'vehicleId', vehicleId),
             all: () => all('trips'),
+            between: (from, to, offset, limit) => newestInRange('trips', 'startedAt', from, to, offset, limit),
+            countBetween: (from, to) => countInRange('trips', 'startedAt', from, to),
             get: (id) => get('trips', id),
             save: (trip) => put('trips', trip),
             remove: (id) => remove('trips', id),

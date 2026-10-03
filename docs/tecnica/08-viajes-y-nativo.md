@@ -43,7 +43,7 @@ Los puntos se guardan en ficheros privados de la app hasta que el JS los importa
 | `listTrips()` / `readTrip({id})` / `deleteTrip({id})` | Viajes acabados pendientes de importar: lista, puntos (`[t, lat, lon, acc, velocidad, precisiónVel, rumbo, altitud]`) y borrado. No se puede borrar el viaje en curso |
 | `setAutoDetect({enabled})` | Activa o desactiva la detección automática. Al activar exige permisos completos |
 | `requestForeground()`, `requestActivity()`, `requestBackground()` | Piden ubicación (y notificaciones), actividad física y ubicación «todo el tiempo». Devuelven los permisos |
-| `requestBluetooth()`, `bluetoothDevices()`, `setBluetoothDevice({address,name})` | Solo Android: permiso, dispositivos emparejados y coche elegido (dirección vacía = desactivar) |
+| `requestBluetooth()`, `bluetoothDevices()`, `setBluetoothDevice({address,name})` | Permiso, dispositivos (Android: emparejados; iPhone: salida de audio actual del coche o CarPlay) y coche elegido (dirección vacía = desactivar) |
 | `openAppSettings()`, `openBatterySettings()` | Abre los ajustes del sistema |
 | Evento `tripUpdate` | Instantánea del viaje en curso (`recording`, `tripId`, `startedAt`, `distanceM`, `speedMs`, `maxSpeedMs`, `points`, `auto`) |
 
@@ -61,7 +61,7 @@ Funcionamiento:
 
 **Detección automática (`AutoDetect`)**: usa la API de transiciones de actividad de Google Play Services (`ActivityRecognition`): entrar o salir de `IN_VEHICLE`. `ActivityTransitionReceiver` recibe la transición: al entrar en el coche arranca `TripService` en modo automático; al salir, `ACTION_VEHICLE_EXIT` para empezar la cuenta de 2 min. `BootReceiver` reactiva la detección tras reiniciar el móvil o actualizar la app. Permisos: ubicación precisa, ubicación en segundo plano y actividad física (`AutoDetect.hasPermissions`).
 
-**Bluetooth del coche (`BluetoothReceiver`) — desactivado en la 1.0.** El código y los métodos del plugin existen, pero la interfaz oculta la opción (`BLUETOOTH_ENABLED = false` en `trips.js`) y se han quitado del manifiesto el receptor y los permisos de Bluetooth. Para reactivarlo hay que volver a declararlos, poner el indicador a `true` y probarlo en móviles reales. Diseño previsto: receptor declarado en el manifiesto para `ACTION_ACL_CONNECTED` y `ACTION_ACL_DISCONNECTED`. Si el dispositivo coincide con la dirección elegida (`TripStore.bluetoothAddress`): al conectarse, arranca un viaje automático (si no hay otro en curso y hay ubicación); al desconectarse, llama a `onExitVehicle`. Requiere emparejar antes el móvil con el coche. Como Android restringe arrancar servicios en primer plano desde segundo plano, la app debe estar excluida del ahorro de batería; si el sistema lo niega se captura la excepción y no se graba.
+**Bluetooth del coche (`BluetoothReceiver`).** Receptor declarado en el manifiesto para `ACTION_ACL_CONNECTED` y `ACTION_ACL_DISCONNECTED` (son difusiones protegidas, exentas de las restricciones de Android 8), con los permisos `BLUETOOTH` (hasta Android 11) y `BLUETOOTH_CONNECT`. Si el dispositivo coincide con la dirección elegida (`TripStore.bluetoothAddress`): al conectarse, arranca un viaje automático si no hay otro en curso y hay ubicación; si ya hay uno, envía `ACTION_VEHICLE_ENTER`, que lo reanuda si estaba en pausa y anula la salida pendiente. Al desconectarse llama a `onExitVehicle`. Requiere emparejar antes el móvil con el coche. Como Android restringe arrancar servicios en primer plano desde segundo plano, la app debe estar excluida del ahorro de batería; si el sistema lo niega se captura la excepción y no se graba.
 
 ### iPhone
 
@@ -70,7 +70,8 @@ Funcionamiento:
 - Si hay un viaje automático y la actividad pasa a andar, correr o bici, marca la salida del coche.
 - `considerAutoStart` mira los últimos 3 minutos de actividad al despertar la app, y `resumeAtLaunch` retoma un viaje que quedó abierto.
 - Mismas constantes de precisión (25 m), movimiento (2 m/s), paradas (20 min, 2 min, 60 min) y mínimo de 500 m.
-- Los ficheros van a `Application Support/trips`. Bluetooth de coche no está disponible: iOS no lo permite a apps de terceros con la app cerrada.
+- Los ficheros van a `Application Support/trips`.
+- **Coche por Bluetooth o CarPlay.** iOS no avisa a apps de terceros de las conexiones Bluetooth con la app cerrada, así que se usa la salida de audio: `bluetoothDevices()` devuelve las salidas actuales de tipo Bluetooth (A2DP, HFP, LE) o CarPlay (`uid` como `address`), y `setBluetoothDevice` guarda la elegida. `checkCarAudio` se ejecuta al cambiar la salida (`AVAudioSession.routeChangeNotification`), al arrancar y en cada aviso de ubicación (cambios significativos, que siguen activos mientras haya coche elegido). Solo actúa al conectarse de nuevo: arranca un viaje automático o reanuda el pausado. Al desconectarse marca la salida del coche en los viajes automáticos.
 
 ### Web
 

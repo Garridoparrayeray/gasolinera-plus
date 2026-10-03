@@ -116,6 +116,23 @@ s.where = 'persistencia';
 await go('/?view=garage', 2000);
 check('los datos siguen tras recargar', await waitFor("document.getElementById('garage-vehicle-name').textContent === 'Golf'", 5000));
 
+s.where = 'historial';
+await ev(`(async () => {
+    const vehicle = GPGarage.activeVehicle();
+    for (let i = 0; i < 15; i++) {
+        const date = new Date(Date.now() - (i + 40) * 86400000).toISOString();
+        await GarageStore.refuels.save({ id: 'hist-r' + i, vehicleId: vehicle.id, createdAt: date, date, odometer: 9000 - i * 300, liters: 40, pricePerUnit: 1.5, total: 60, full: true, missedBefore: false, updatedAt: date });
+    }
+    await GPGarage.refresh();
+})()`);
+check('Coche muestra solo los 10 ultimos repostajes', await waitFor("document.querySelectorAll('#garage-refuels li').length === 10", 4000), String(await ev("document.querySelectorAll('#garage-refuels li').length")));
+check('ofrece el historial de repostajes', (await ev("!document.getElementById('refuel-history-open').hidden")) === true);
+await ev("document.getElementById('refuel-history-open').click()");
+check('el historial abre los repostajes del ultimo mes', await waitFor("document.getElementById('history-dialog').open && document.querySelector('[data-history-kind=\"refuels\"]').getAttribute('aria-pressed') === 'true'", 4000));
+await ev("document.querySelector('[data-history-days=\"90\"]').click()");
+check('filtra por periodo', await waitFor("parseInt(document.getElementById('history-summary').textContent, 10) >= 15 && document.querySelectorAll('#history-list li').length === 15 + (parseInt(document.getElementById('history-summary').textContent, 10) - 15)", 4000), await ev("document.getElementById('history-summary').textContent"));
+await ev("document.getElementById('history-close').click()");
+
 if (process.env.SHOT) {
     const shot = await s.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true });
     const { writeFileSync } = await import('node:fs');

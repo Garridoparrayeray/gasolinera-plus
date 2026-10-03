@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.ActivityTransition;
 import com.google.android.gms.location.ActivityTransitionEvent;
 import com.google.android.gms.location.ActivityTransitionResult;
@@ -11,10 +12,19 @@ import com.google.android.gms.location.DetectedActivity;
 
 public class ActivityTransitionReceiver extends BroadcastReceiver {
     public static final String ACTION = "app.vercel.gasolineraplus.trips.TRANSITION";
+    public static final String ACTION_SAMPLE = "app.vercel.gasolineraplus.trips.SAMPLE";
+    private static final int MIN_CONFIDENCE = 75;
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (!TripStore.isAutoDetectEnabled(context) || !ActivityTransitionResult.hasResult(intent)) {
+        if (!TripStore.isAutoDetectEnabled(context)) {
+            return;
+        }
+        if (ActivityRecognitionResult.hasResult(intent)) {
+            onSample(context, ActivityRecognitionResult.extractResult(intent));
+            return;
+        }
+        if (!ActivityTransitionResult.hasResult(intent)) {
             return;
         }
         ActivityTransitionResult result = ActivityTransitionResult.extractResult(intent);
@@ -30,6 +40,22 @@ public class ActivityTransitionReceiver extends BroadcastReceiver {
             } else {
                 onExitVehicle(context);
             }
+        }
+    }
+
+    private static void onSample(Context context, ActivityRecognitionResult result) {
+        if (result == null) {
+            return;
+        }
+        DetectedActivity activity = result.getMostProbableActivity();
+        if (activity == null || activity.getConfidence() < MIN_CONFIDENCE) {
+            return;
+        }
+        int type = activity.getType();
+        if (type == DetectedActivity.IN_VEHICLE) {
+            onEnterVehicle(context);
+        } else if (type == DetectedActivity.ON_FOOT || type == DetectedActivity.WALKING || type == DetectedActivity.RUNNING) {
+            onExitVehicle(context);
         }
     }
 

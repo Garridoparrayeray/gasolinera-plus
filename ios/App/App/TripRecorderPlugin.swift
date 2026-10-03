@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import CoreLocation
 import CoreMotion
+import AVFoundation
 import Capacitor
 
 class MainViewController: CAPBridgeViewController {
@@ -15,9 +16,13 @@ private let movingMs: Double = 2
 private let autoStopIdleS: TimeInterval = 20 * 60
 private let afterExitIdleS: TimeInterval = 2 * 60
 private let manualStopIdleS: TimeInterval = 60 * 60
+private let pauseLimitS: TimeInterval = 60 * 60
 private let minAutoDistanceM: Double = 500
 private let keyCurrent = "trips.current"
 private let keyAutoDetect = "trips.autoDetect"
+private let keyCarAudioId = "trips.carAudio.id"
+private let keyCarAudioName = "trips.carAudio.name"
+private let carPortTypes: [AVAudioSession.Port] = [.bluetoothA2DP, .bluetoothHFP, .bluetoothLE, .carAudio]
 
 final class TripEngine: NSObject, CLLocationManagerDelegate {
     static let shared = TripEngine()
@@ -28,6 +33,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
     private var timer: Timer?
     private var authCallbacks: [() -> Void] = []
     private var activityUpdatesRunning = false
+    private var carWasConnected = false
 
     var onUpdate: (([String: Any]) -> Void)?
 
@@ -42,6 +48,10 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
     private var lastLocation: CLLocation?
     private var lastMovingAt = Date()
     private var vehicleExitAt: Date?
+    private(set) var paused = false
+    private var pausedAt: Int64 = 0
+    private var pausedMs: Int64 = 0
+    private var pauses: [[Int64]] = []
 
     override init() {
         super.init()
@@ -50,6 +60,9 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         manager.desiredAccuracy = kCLLocationAccuracyBest
         manager.distanceFilter = 5
         manager.pausesLocationUpdatesAutomatically = false
+        NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.checkCarAudio()
+        }
     }
 
     private var directory: URL {
@@ -131,6 +144,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             "background": status == .authorizedAlways,
             "activity": CMMotionActivityManager.isActivityAvailable() && CMMotionActivityManager.authorizationStatus() == .authorized,
             "notifications": true,
+            "bluetooth": true,
             "unrestrictedBattery": true
         ]
     }
@@ -195,8 +209,58 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             "speedMs": speedMs,
             "maxSpeedMs": maxSpeedMs,
             "points": pointCount,
-            "auto": isAuto
+            "auto": isAuto,
+            "paused": paused,
+            "pausedAt": pausedAt,
+            "pausedMs": pausedMs
         ]
+    }
+
+    private func nowMs() -> Int64 {
+        return Int64(Date().timeIntervalSince1970 * 1000)
+    }
+
+    private func savePauseState() {
+        guard let id = tripId, var meta = readMeta(id) else {
+            return
+        }
+        meta["pauses"] = pauses
+        meta["pausedAt"] = paused ? pausedAt : 0
+        writeMeta(id, meta)
+    }
+
+    func pause() {
+        guard recording, !paused else {
+            return
+        }
+        paused = true
+        pausedAt = nowMs()
+        speedMs = 0
+        vehicleExitAt = nil
+        savePauseState()
+        publish()
+    }
+
+    func resume() {
+        guard recording, paused else {
+            return
+        }
+        closePause(nowMs())
+        lastLocation = nil
+        lastMovingAt = Date()
+        vehicleExitAt = nil
+        savePauseState()
+        publish()
+    }
+
+    private func closePause(_ now: Int64) {
+        guard paused else {
+            return
+        }
+        pauses.append([pausedAt, now])
+        pausedMs += now - pausedAt
+        paused = false
+        pausedAt = 0
     }
 
     private func publish() {
@@ -235,6 +299,10 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         lastLocation = nil
         lastMovingAt = Date()
         vehicleExitAt = nil
+        paused = false
+        pausedAt = 0
+        pausedMs = 0
+        pauses = []
         recording = true
         manager.allowsBackgroundLocationUpdates = true
         manager.showsBackgroundLocationIndicator = true
@@ -250,6 +318,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         guard recording, let id = tripId else {
             return
         }
+        closePause(nowMs())
         recording = false
         timer?.invalidate()
         timer = nil
@@ -265,6 +334,8 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             meta["endedAt"] = Int64(Date().timeIntervalSince1970 * 1000)
             meta["finished"] = true
             meta["distanceM"] = distanceM
+            meta["pauses"] = pauses
+            meta["pausedAt"] = 0
             writeMeta(id, meta)
         }
         tripId = nil
@@ -276,6 +347,12 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             return
         }
         let now = Date()
+        if paused {
+            if Double(nowMs() - pausedAt) / 1000 > pauseLimitS {
+                stop()
+            }
+            return
+        }
         let idle = now.timeIntervalSince(lastMovingAt)
         if isAuto {
             if idle > autoStopIdleS {
@@ -297,9 +374,10 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             if autoDetectEnabled {
                 considerAutoStart()
             }
+            checkCarAudio()
             return
         }
-        guard let id = tripId else {
+        guard let id = tripId, !paused else {
             return
         }
         var lines = ""
@@ -353,6 +431,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         defaults.set(enabled, forKey: keyAutoDetect)
         if enabled {
             startMonitoring()
+            considerAutoStart()
         } else {
             stopMonitoring()
         }
@@ -376,7 +455,9 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
     }
 
     private func stopMonitoring() {
-        manager.stopMonitoringSignificantLocationChanges()
+        if carAudioId == nil {
+            manager.stopMonitoringSignificantLocationChanges()
+        }
         if activityUpdatesRunning {
             motion.stopActivityUpdates()
             activityUpdatesRunning = false
@@ -391,7 +472,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             }
             return
         }
-        if recording && isAuto && activity.confidence != .low && (activity.walking || activity.running || activity.cycling) {
+        if recording && isAuto && !paused && activity.confidence != .low && (activity.walking || activity.running || activity.cycling) {
             if vehicleExitAt == nil {
                 vehicleExitAt = Date()
             }
@@ -430,10 +511,84 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             }
             let started = (meta["startedAt"] as? Int64) ?? Int64((meta["startedAt"] as? Double) ?? 0)
             begin(id: id, startedAt: started, auto: (meta["auto"] as? Bool) ?? false, distance: distance, points: points.count)
+            if let saved = meta["pauses"] as? [[NSNumber]] {
+                pauses = saved.compactMap { pair in pair.count == 2 ? [pair[0].int64Value, pair[1].int64Value] : nil }
+                pausedMs = pauses.reduce(0) { $0 + ($1[1] - $1[0]) }
+            }
+            if let at = (meta["pausedAt"] as? NSNumber)?.int64Value, at > 0 {
+                paused = true
+                pausedAt = at
+            }
         }
         if autoDetectEnabled {
             startMonitoring()
         }
+        if carAudioId != nil {
+            manager.startMonitoringSignificantLocationChanges()
+            checkCarAudio()
+        }
+    }
+
+    // iOS no avisa a apps de terceros de las conexiones Bluetooth con la app cerrada.
+    // Se mira la salida de audio (Bluetooth del coche o CarPlay) cada vez que la app
+    // está despierta: abierta, al cambiar la salida o al despertar por ubicación.
+    var carAudioId: String? {
+        let id = defaults.string(forKey: keyCarAudioId) ?? ""
+        if id.isEmpty {
+            return nil
+        }
+        return id
+    }
+
+    var carAudioName: String {
+        return defaults.string(forKey: keyCarAudioName) ?? ""
+    }
+
+    func carOutputs() -> [[String: String]] {
+        return AVAudioSession.sharedInstance().currentRoute.outputs
+            .filter { carPortTypes.contains($0.portType) }
+            .map { ["address": $0.uid, "name": $0.portName] }
+    }
+
+    func setCarAudio(id: String, name: String) {
+        defaults.set(id, forKey: keyCarAudioId)
+        defaults.set(name, forKey: keyCarAudioName)
+        carWasConnected = false
+        if id.isEmpty {
+            if !autoDetectEnabled {
+                manager.stopMonitoringSignificantLocationChanges()
+            }
+            return
+        }
+        if authorization == .authorizedAlways {
+            manager.startMonitoringSignificantLocationChanges()
+        }
+        checkCarAudio()
+    }
+
+    private func checkCarAudio() {
+        guard let id = carAudioId else {
+            return
+        }
+        let connected = carOutputs().contains { $0["address"] == id }
+        if connected {
+            let justConnected = !carWasConnected
+            carWasConnected = true
+            if !justConnected {
+                return
+            }
+            if recording {
+                resume()
+                vehicleExitAt = nil
+            } else {
+                _ = start(auto: true, vehicleId: nil)
+            }
+            return
+        }
+        if carWasConnected && recording && isAuto && !paused && vehicleExitAt == nil {
+            vehicleExitAt = Date()
+        }
+        carWasConnected = false
     }
 }
 
@@ -445,6 +600,8 @@ public class TripRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "status", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "start", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "stop", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "pause", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "resume", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "listTrips", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "readTrip", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "deleteTrip", returnType: CAPPluginReturnPromise),
@@ -453,7 +610,10 @@ public class TripRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "requestActivity", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "requestBackground", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "openAppSettings", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "openBatterySettings", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "openBatterySettings", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "requestBluetooth", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "bluetoothDevices", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setBluetoothDevice", returnType: CAPPluginReturnPromise)
     ]
 
     override public func load() {
@@ -474,6 +634,7 @@ public class TripRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
                 "recording": engine.recording,
                 "autoDetect": engine.autoDetectEnabled,
                 "permissions": engine.permissions(),
+                "bluetooth": ["address": engine.carAudioId ?? "", "name": engine.carAudioName],
                 "sdk": 0
             ])
         }
@@ -493,6 +654,20 @@ public class TripRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
     @objc func stop(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             TripEngine.shared.stop()
+            call.resolve()
+        }
+    }
+
+    @objc func pause(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            TripEngine.shared.pause()
+            call.resolve()
+        }
+    }
+
+    @objc func resume(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            TripEngine.shared.resume()
             call.resolve()
         }
     }
@@ -575,5 +750,26 @@ public class TripRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func openBatterySettings(_ call: CAPPluginCall) {
         call.resolve()
+    }
+
+    @objc func requestBluetooth(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            call.resolve(TripEngine.shared.permissions())
+        }
+    }
+
+    @objc func bluetoothDevices(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            call.resolve(["devices": TripEngine.shared.carOutputs()])
+        }
+    }
+
+    @objc func setBluetoothDevice(_ call: CAPPluginCall) {
+        let id = call.getString("address") ?? ""
+        let name = call.getString("name") ?? ""
+        DispatchQueue.main.async {
+            TripEngine.shared.setCarAudio(id: id, name: name)
+            call.resolve()
+        }
     }
 }

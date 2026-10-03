@@ -10,6 +10,7 @@ import android.os.Build;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.ActivityTransition;
 import com.google.android.gms.location.ActivityTransitionRequest;
 import com.google.android.gms.location.DetectedActivity;
@@ -19,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class AutoDetect {
+    private static final long SAMPLE_INTERVAL_MS = 60 * 1000L;
+
     private AutoDetect() {
     }
 
@@ -30,6 +33,16 @@ public final class AutoDetect {
             flags |= PendingIntent.FLAG_MUTABLE;
         }
         return PendingIntent.getBroadcast(context, 0, intent, flags);
+    }
+
+    static PendingIntent samplingIntent(Context context) {
+        Intent intent = new Intent(context, ActivityTransitionReceiver.class);
+        intent.setAction(ActivityTransitionReceiver.ACTION_SAMPLE);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            flags |= PendingIntent.FLAG_MUTABLE;
+        }
+        return PendingIntent.getBroadcast(context, 1, intent, flags);
     }
 
     public static boolean hasPermissions(Context context) {
@@ -56,10 +69,16 @@ public final class AutoDetect {
                 .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
                 .build());
         ActivityTransitionRequest request = new ActivityTransitionRequest(transitions);
-        return ActivityRecognition.getClient(context).requestActivityTransitionUpdates(request, pendingIntent(context));
+        ActivityRecognitionClient client = ActivityRecognition.getClient(context);
+        // Las transiciones solo avisan al subir o bajar del coche; el muestreo periódico
+        // detecta también el viaje que ya estaba en marcha al activar la opción.
+        return client.requestActivityTransitionUpdates(request, pendingIntent(context))
+                .continueWithTask((task) -> client.requestActivityUpdates(SAMPLE_INTERVAL_MS, samplingIntent(context)));
     }
 
     public static Task<Void> disable(Context context) {
-        return ActivityRecognition.getClient(context).removeActivityTransitionUpdates(pendingIntent(context));
+        ActivityRecognitionClient client = ActivityRecognition.getClient(context);
+        return client.removeActivityTransitionUpdates(pendingIntent(context))
+                .continueWithTask((task) -> client.removeActivityUpdates(samplingIntent(context)));
     }
 }

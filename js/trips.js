@@ -9,6 +9,7 @@ const GPTrips = (() => {
         liveMax: $('trip-live-max'),
         start: $('trip-start'),
         stop: $('trip-stop'),
+        pause: $('trip-pause'),
         note: $('trip-note'),
         autoWrap: $('trip-auto-wrap'),
         auto: $('trip-auto'),
@@ -16,11 +17,13 @@ const GPTrips = (() => {
         bt: $('trip-bt'),
         btPicker: $('trip-bt-picker'),
         btDevice: $('trip-bt-device'),
+        btHelp: $('trip-bt-help'),
         permissions: $('trip-permissions'),
         permissionsText: $('trip-permissions-text'),
         permissionsFix: $('trip-permissions-fix'),
         battery: $('trip-battery'),
         list: $('trip-list'),
+        historyOpen: $('trip-history-open'),
         empty: $('trip-empty'),
         dialog: $('trip-dialog'),
         dialogClose: $('trip-dialog-close'),
@@ -40,8 +43,11 @@ const GPTrips = (() => {
         driveMax: $('trip-drive-max'),
         driveHint: $('trip-drive-hint'),
         driveStop: $('trip-drive-stop'),
+        drivePause: $('trip-drive-pause'),
+        driveLabel: $('trip-drive-label'),
         driveMin: $('trip-drive-min'),
         chip: $('trip-rec-chip'),
+        chipText: $('trip-rec-chip-text'),
         summary: $('trip-summary'),
         summaryTitle: $('trip-summary-title'),
         summaryTiles: $('trip-summary-tiles'),
@@ -57,7 +63,14 @@ const GPTrips = (() => {
     const MIN_REFERENCE_KM = 30;
 
     const WEB_TRIP_KEY = 'webTripInProgress';
-    const BLUETOOTH_ENABLED = false;
+    const BT_HELP = {
+        android: 'Empareja antes el móvil con el coche en los ajustes de Bluetooth. Necesita la ubicación "Permitir todo el tiempo" y quitar el ahorro de batería para Gasolinera+. El viaje termina al desconectarte y, si lo habías pausado, se reanuda al volver a conectarte.',
+        ios: 'Conéctate al Bluetooth del coche o a CarPlay y elígelo aquí. En iPhone se nota al abrir la app o cuando la detección automática la despierta, así que conviene tenerla activada. Necesita la ubicación "Siempre".',
+    };
+    const BT_EMPTY = {
+        android: 'No hay dispositivos Bluetooth emparejados. Empareja tu coche en los ajustes de Bluetooth del móvil y vuelve aquí.',
+        ios: 'No hay ningún coche conectado. Conéctate al Bluetooth del coche o a CarPlay y vuelve a abrir esta opción.',
+    };
     const state = {
         live: null,
         timer: null,
@@ -119,29 +132,62 @@ const GPTrips = (() => {
         return 'Deja la pantalla encendida: si la bloqueas se pausa la grabación.';
     }
 
+    function elapsedSeconds(live) {
+        const now = Date.now();
+        let paused = live.pausedMs || 0;
+        if (live.paused && live.pausedAt) {
+            paused += now - live.pausedAt;
+        }
+        return Math.max(0, (now - live.startedAt - paused) / 1000);
+    }
+
     function averageKmh(live) {
-        const seconds = (Date.now() - live.startedAt) / 1000;
+        const seconds = elapsedSeconds(live);
         if (seconds <= 0) {
             return 0;
         }
         return (live.distanceM / seconds) * 3.6;
     }
 
+    function paintPause(live) {
+        const paused = Boolean(live.paused);
+        el.drive.dataset.paused = String(paused);
+        el.driveLabel.textContent = 'GRABANDO';
+        el.chipText.textContent = 'EN CURSO';
+        el.drivePause.textContent = 'Pausar';
+        el.pause.textContent = 'Pausar';
+        if (paused) {
+            el.driveLabel.textContent = 'EN PAUSA';
+            el.chipText.textContent = 'EN PAUSA';
+            el.drivePause.textContent = 'Reanudar';
+            el.pause.textContent = 'Reanudar';
+        }
+        el.pause.setAttribute('aria-pressed', String(paused));
+        el.drivePause.setAttribute('aria-pressed', String(paused));
+    }
+
     function paintDrive(live) {
-        const kmh = live.speedMs * 3.6;
+        let kmh = live.speedMs * 3.6;
+        if (live.paused) {
+            kmh = 0;
+        }
         el.drive.dataset.level = speedLevel(kmh);
         el.driveSpeed.textContent = number(kmh, 0);
         el.driveBarFill.style.width = `${Math.min(100, (kmh / SPEED_BAR_MAX_KMH) * 100)}%`;
         el.driveDistance.textContent = number(live.distanceM / 1000, 1);
         el.driveMax.textContent = number(averageKmh(live), 0);
-        el.driveTime.textContent = clock((Date.now() - live.startedAt) / 1000);
+        el.driveTime.textContent = clock(elapsedSeconds(live));
     }
 
     function paintLiveCard(live) {
         el.liveDistance.textContent = `${number(live.distanceM / 1000, 1)} km`;
-        el.liveSpeed.textContent = `${number(live.speedMs * 3.6, 0)} km/h`;
+        let kmh = live.speedMs * 3.6;
+        if (live.paused) {
+            kmh = 0;
+        }
+        el.liveSpeed.textContent = `${number(kmh, 0)} km/h`;
         el.liveMax.textContent = `${number(averageKmh(live), 0)} km/h`;
-        el.liveTime.textContent = clock((Date.now() - live.startedAt) / 1000);
+        el.liveTime.textContent = clock(elapsedSeconds(live));
     }
 
     function showDrive(recording) {
@@ -157,6 +203,7 @@ const GPTrips = (() => {
         el.live.hidden = !recording;
         el.start.hidden = recording;
         el.stop.hidden = !recording;
+        el.pause.hidden = !recording;
         showDrive(recording);
         clearInterval(state.timer);
         state.timer = null;
@@ -167,6 +214,7 @@ const GPTrips = (() => {
         const paint = () => {
             paintLiveCard(live);
             paintDrive(live);
+            paintPause(live);
         };
         paint();
         state.timer = setInterval(paint, 1000);
@@ -219,7 +267,8 @@ const GPTrips = (() => {
         if (!vehicleId && active) {
             vehicleId = active.id;
         }
-        const metrics = GPTripMetrics.compute(points, vehicleOptions(await referenceFactorFor(vehicleId)));
+        const pauses = cleanPauses(info.pauses);
+        const metrics = GPTripMetrics.compute(points, { ...vehicleOptions(await referenceFactorFor(vehicleId)), pauses });
         if (info.auto && metrics.distanceKm < 0.5) {
             return null;
         }
@@ -237,12 +286,24 @@ const GPTrips = (() => {
             startedAt,
             endedAt,
             metrics,
-            track: GPTripMetrics.thin(points),
+            track: GPTripMetrics.thin(points, pauses),
             createdAt: now,
         };
+        if (pauses.length) {
+            trip.pauses = pauses;
+        }
         await GarageStore.trips.save(trip);
         await shiftOdometer(vehicleId, metrics.distanceKm);
         return trip;
+    }
+
+    function cleanPauses(raw) {
+        if (!Array.isArray(raw)) {
+            return [];
+        }
+        return raw
+            .filter((p) => Array.isArray(p) && p.length === 2 && Number(p[1]) > Number(p[0]))
+            .map((p) => [Number(p[0]), Number(p[1])]);
     }
 
     function pointsFromNative(rows) {
@@ -267,7 +328,7 @@ const GPTrips = (() => {
             const { trips } = await plugin.listTrips();
             for (const meta of trips) {
                 const data = await plugin.readTrip({ id: meta.id });
-                const saved = await saveTrip(pointsFromNative(data.points), { id: meta.id, auto: meta.auto, vehicleId: meta.vehicleId });
+                const saved = await saveTrip(pointsFromNative(data.points), { id: meta.id, auto: meta.auto, vehicleId: meta.vehicleId, pauses: meta.pauses });
                 await plugin.deleteTrip({ id: meta.id });
                 if (saved) {
                     imported++;
@@ -336,7 +397,7 @@ const GPTrips = (() => {
                 vehicleId = vehicle.id;
             }
             await plugin.start({ vehicleId });
-            state.live = { recording: true, startedAt: Date.now(), distanceM: 0, speedMs: 0, maxSpeedMs: 0 };
+            state.live = { recording: true, startedAt: Date.now(), distanceM: 0, speedMs: 0, maxSpeedMs: 0, paused: false, pausedMs: 0, pausedAt: 0 };
             note('Grabando. Puedes bloquear el móvil: el viaje sigue grabándose.');
             renderLive();
             return;
@@ -360,6 +421,52 @@ const GPTrips = (() => {
         await stopWeb();
     }
 
+    async function togglePause() {
+        const live = state.live;
+        if (!live || !live.recording) {
+            return;
+        }
+        const plugin = recorder();
+        const now = Date.now();
+        if (live.paused) {
+            if (plugin) {
+                await plugin.resume();
+            } else if (state.web) {
+                state.web.pauses.push([live.pausedAt, now]);
+                state.web.skipNext = true;
+                saveWebProgress();
+            }
+            live.pausedMs = (live.pausedMs || 0) + (now - live.pausedAt);
+            live.paused = false;
+            live.pausedAt = 0;
+            note('Viaje reanudado.');
+        } else {
+            if (plugin) {
+                await plugin.pause();
+            }
+            live.paused = true;
+            live.pausedAt = now;
+            live.speedMs = 0;
+            if (state.web) {
+                saveWebProgress();
+            }
+            note('Viaje en pausa: el tiempo y los kilómetros no cuentan hasta que lo reanudes.');
+        }
+        renderLive();
+    }
+
+    function saveWebProgress() {
+        const web = state.web;
+        if (!web) {
+            return;
+        }
+        const pauses = [...web.pauses];
+        if (state.live && state.live.paused) {
+            pauses.push([state.live.pausedAt, Date.now()]);
+        }
+        GarageStore.saveSetting(WEB_TRIP_KEY, { id: web.id, points: web.points, pauses }).catch(() => {});
+    }
+
     async function requestWakeLock() {
         if (!state.web || !('wakeLock' in navigator)) {
             return;
@@ -379,7 +486,7 @@ const GPTrips = (() => {
 
     function onWebPosition(position) {
         const web = state.web;
-        if (!web) {
+        if (!web || (state.live && state.live.paused)) {
             return;
         }
         const c = position.coords;
@@ -388,7 +495,11 @@ const GPTrips = (() => {
             speed = c.speed;
         }
         const point = { t: position.timestamp, lat: c.latitude, lon: c.longitude, acc: c.accuracy, speed };
-        const last = web.points[web.points.length - 1];
+        let last = web.points[web.points.length - 1];
+        if (web.skipNext) {
+            last = null;
+            web.skipNext = false;
+        }
         web.points.push(point);
         if (last && point.acc <= 25 && last.acc <= 25 && point.t > last.t) {
             const step = GPTripMetrics.distance(last, point);
@@ -403,7 +514,7 @@ const GPTrips = (() => {
             }
         }
         if (web.points.length % 10 === 0) {
-            GarageStore.saveSetting(WEB_TRIP_KEY, { id: web.id, points: web.points }).catch(() => {});
+            saveWebProgress();
         }
     }
 
@@ -412,8 +523,8 @@ const GPTrips = (() => {
             note('Este navegador no puede usar el GPS.');
             return;
         }
-        state.web = { id: GarageStore.newId(), points: [], watchId: null, wakeLock: null };
-        state.live = { recording: true, startedAt: Date.now(), distanceM: 0, speedMs: 0, maxSpeedMs: 0 };
+        state.web = { id: GarageStore.newId(), points: [], pauses: [], skipNext: false, watchId: null, wakeLock: null };
+        state.live = { recording: true, startedAt: Date.now(), distanceM: 0, speedMs: 0, maxSpeedMs: 0, paused: false, pausedMs: 0, pausedAt: 0 };
         state.web.watchId = navigator.geolocation.watchPosition(onWebPosition, () => {
             note('El GPS no responde. Comprueba que la ubicación está activada.');
         }, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
@@ -433,12 +544,16 @@ const GPTrips = (() => {
             web.wakeLock.release().catch(() => {});
         }
         document.removeEventListener('visibilitychange', onVisibility);
+        const pauses = [...web.pauses];
+        if (state.live && state.live.paused) {
+            pauses.push([state.live.pausedAt, Date.now()]);
+        }
         state.web = null;
         state.live = null;
         renderLive();
         await GarageStore.saveSetting(WEB_TRIP_KEY, null);
         if (web.points.length >= 2) {
-            const saved = await saveTrip(web.points, { id: web.id, auto: false });
+            const saved = await saveTrip(web.points, { id: web.id, auto: false, pauses });
             await GPGarage.refresh();
             note('Viaje guardado.');
             await openSummary(saved);
@@ -457,25 +572,28 @@ const GPTrips = (() => {
             return;
         }
         await GarageStore.saveSetting(WEB_TRIP_KEY, null);
-        await saveTrip(pending.points, { id: pending.id, auto: false });
+        await saveTrip(pending.points, { id: pending.id, auto: false, pauses: pending.pauses });
         GP.showToast('Se ha guardado un viaje que quedó sin terminar');
     }
 
     async function renderBluetooth(status) {
-        el.btWrap.hidden = !BLUETOOTH_ENABLED || GPNative.platform() !== 'android';
+        const platform = GPNative.platform();
+        el.btWrap.hidden = platform !== 'android' && platform !== 'ios';
         if (el.btWrap.hidden) {
             return;
         }
-        const saved = status.bluetooth && status.bluetooth.address;
+        el.btHelp.textContent = BT_HELP[platform];
+        const bluetooth = status.bluetooth || {};
+        const saved = bluetooth.address;
         el.bt.checked = Boolean(saved) || el.btPicker.dataset.open === '1';
         el.btPicker.hidden = !el.bt.checked;
         if (!el.bt.checked) {
             return;
         }
-        await fillBluetoothDevices(saved);
+        await fillBluetoothDevices(saved, bluetooth.name);
     }
 
-    async function fillBluetoothDevices(saved) {
+    async function fillBluetoothDevices(saved, savedName) {
         const plugin = recorder();
         let devices = [];
         try {
@@ -494,11 +612,17 @@ const GPTrips = (() => {
             option.textContent = device.name || device.address;
             el.btDevice.appendChild(option);
         }
+        if (saved && !devices.some((device) => device.address === saved)) {
+            const option = document.createElement('option');
+            option.value = saved;
+            option.textContent = savedName || 'Tu coche';
+            el.btDevice.appendChild(option);
+        }
         if (saved) {
             el.btDevice.value = saved;
         }
-        if (devices.length === 0) {
-            note('No hay dispositivos Bluetooth emparejados. Empareja tu coche en los ajustes de Bluetooth del móvil y vuelve aquí.');
+        if (devices.length === 0 && !saved) {
+            note(BT_EMPTY[GPNative.platform()]);
         }
     }
 
@@ -520,7 +644,7 @@ const GPTrips = (() => {
             perms = await plugin.requestBluetooth();
         }
         if (perms.location && perms.bluetooth && !perms.background) {
-            const ok = window.confirm('Para empezar el viaje al conectarte al coche con la app cerrada, Android te pedirá permitir la ubicación "Todo el tiempo". Gasolinera+ solo la usa mientras vas en coche y los recorridos se quedan en tu móvil. ¿Continuar?');
+            const ok = window.confirm('Para empezar el viaje al conectarte al coche con la app cerrada, el móvil te pedirá permitir la ubicación "Siempre" o "Todo el tiempo". Gasolinera+ solo la usa mientras vas en coche y los recorridos se quedan en tu móvil. ¿Continuar?');
             if (ok) {
                 perms = await plugin.requestBackground();
             }
@@ -603,37 +727,55 @@ const GPTrips = (() => {
         return `hsl(${Math.round(220 - (clamped / 130) * 220)}, 75%, 45%)`;
     }
 
-    async function renderList() {
-        const trips = (await GarageStore.trips.all()).sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+    const RECENT_LIMIT = 10;
+    const FIRST_ISO = '0000';
+    const LAST_ISO = '9999';
+
+    async function vehicleNames() {
         const vehicles = await GarageStore.vehicles.list();
-        const names = new Map(vehicles.map((v) => [v.id, v.name]));
+        return new Map(vehicles.map((v) => [v.id, v.name]));
+    }
+
+    function tripItem(trip, names) {
+        const m = trip.metrics;
+        const li = document.createElement('li');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'garage-refuel-item';
+        button.innerHTML = '<strong></strong><small></small>';
+        const date = new Date(trip.startedAt);
+        let title = `${date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} · ${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} · ${number(m.distanceKm, 1)} km`;
+        if (trip.auto) {
+            title += ' · automático';
+        }
+        button.querySelector('strong').textContent = title;
+        const parts = [minutesText(m.durationSeconds), `media ${number(m.avgSpeedKmh, 0)} km/h`, `máx. ${number(m.maxSpeedKmh, 0)} km/h`];
+        if (m.cost !== null) {
+            parts.push(`${number(m.cost, 2)} €`);
+        }
+        if (names.get(trip.vehicleId)) {
+            parts.push(names.get(trip.vehicleId));
+        }
+        button.querySelector('small').textContent = parts.join(' · ');
+        button.addEventListener('click', () => openTrip(trip));
+        li.appendChild(button);
+        return li;
+    }
+
+    async function renderList() {
+        const [trips, total, names] = await Promise.all([
+            GarageStore.trips.between(FIRST_ISO, LAST_ISO, 0, RECENT_LIMIT),
+            GarageStore.trips.countBetween(FIRST_ISO, LAST_ISO),
+            vehicleNames(),
+        ]);
         el.empty.hidden = trips.length > 0;
         el.list.innerHTML = '';
         for (const trip of trips) {
-            const m = trip.metrics;
-            const li = document.createElement('li');
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'garage-refuel-item';
-            button.innerHTML = '<strong></strong><small></small>';
-            const date = new Date(trip.startedAt);
-            let title = `${date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} · ${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} · ${number(m.distanceKm, 1)} km`;
-            if (trip.auto) {
-                title += ' · automático';
-            }
-            button.querySelector('strong').textContent = title;
-            const parts = [minutesText(m.durationSeconds), `media ${number(m.avgSpeedKmh, 0)} km/h`, `máx. ${number(m.maxSpeedKmh, 0)} km/h`];
-            if (m.cost !== null) {
-                parts.push(`${number(m.cost, 2)} €`);
-            }
-            if (names.get(trip.vehicleId)) {
-                parts.push(names.get(trip.vehicleId));
-            }
-            button.querySelector('small').textContent = parts.join(' · ');
-            button.addEventListener('click', () => openTrip(trip));
-            li.appendChild(button);
-            el.list.appendChild(li);
+            el.list.appendChild(tripItem(trip, names));
         }
+        el.historyOpen.hidden = total <= RECENT_LIMIT;
+        el.historyOpen.textContent = `Ver todo el historial (${total.toLocaleString('es-ES')} viajes)`;
+        document.dispatchEvent(new CustomEvent('gp:history-refresh'));
     }
 
     function escapeText(value) {
@@ -728,10 +870,15 @@ const GPTrips = (() => {
             tile('Duración', minutesText(m.durationSeconds)),
             tile('En marcha', minutesText(m.movingSeconds)),
             tile('Parado', minutesText(m.stoppedSeconds)),
+        ];
+        if (m.pausedSeconds > 0) {
+            tiles.push(tile('En pausa', minutesText(m.pausedSeconds)));
+        }
+        tiles.push(
             tile('Velocidad media', `${number(m.avgSpeedKmh, 0)} km/h`),
             tile('Velocidad máxima', `${number(m.maxSpeedKmh, 0)} km/h`),
             tile('Por encima de 120', `${number(m.percentAbove120, 0)} %`),
-        ];
+        );
         if (m.gapSeconds > 0) {
             tiles.push(tile('Sin señal GPS (túneles)', minutesText(m.gapSeconds)));
         }
@@ -823,6 +970,8 @@ const GPTrips = (() => {
     el.start.addEventListener('click', () => start().catch((error) => note(error.message)));
     el.stop.addEventListener('click', () => stop().catch((error) => note(error.message)));
     el.driveStop.addEventListener('click', () => stop().catch((error) => note(error.message)));
+    el.pause.addEventListener('click', () => togglePause().catch((error) => note(error.message)));
+    el.drivePause.addEventListener('click', () => togglePause().catch((error) => note(error.message)));
     el.summaryClose.addEventListener('click', () => el.summary.close());
     el.driveMin.addEventListener('click', () => minimizeDrive(true));
     el.chip.addEventListener('click', () => minimizeDrive(false));
@@ -866,6 +1015,8 @@ const GPTrips = (() => {
         note('En el navegador los viajes solo se graban con la app abierta. En la app de Android y de iPhone se graban aunque bloquees el móvil.');
     }
 
+    // Si la app se abre ya en Coche (enlace o notificación), el aviso de vista llega antes que este script.
+    renderList();
     document.addEventListener('gp:view', (event) => {
         if (event.detail === 'garage') {
             renderList();
@@ -894,5 +1045,7 @@ const GPTrips = (() => {
         return null;
     }).catch(() => {});
 
-    return { importPending, saveTrip, state };
+    el.historyOpen.addEventListener('click', () => GPHistory.open('trips'));
+
+    return { importPending, saveTrip, state, tripItem, vehicleNames, renderList };
 })();

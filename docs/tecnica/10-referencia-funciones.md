@@ -502,8 +502,8 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `startWeb` | — | Empieza a grabar con `watchPosition` y bloqueo de pantalla. |
 | `stopWeb` | — | Termina la grabación web y guarda el viaje si hay al menos 2 puntos. |
 | `recoverWebTrip` | — | Recupera un viaje web que quedó a medias al cerrar el navegador. |
-| `renderBluetooth` | `status` | Muestra u oculta el bloque de Bluetooth (solo Android) y su selector. |
-| `fillBluetoothDevices` | `saved` | Rellena el selector con los dispositivos emparejados y marca el guardado. |
+| `renderBluetooth` | `status` | Muestra u oculta el bloque de Bluetooth (app de Android e iPhone), su ayuda y su selector. |
+| `fillBluetoothDevices` | `saved`, `savedName` | Rellena el selector con los dispositivos disponibles y añade y marca el guardado aunque no esté conectado. |
 | `setBluetooth` | `enabled` | Activa o desactiva el arranque por Bluetooth: pide permisos, explica lo necesario y muestra el selector. |
 | `chooseBluetoothDevice` | — | Guarda el dispositivo elegido como coche. |
 | `setAuto` | `enabled` | Activa o desactiva la detección automática pidiendo los permisos necesarios. |
