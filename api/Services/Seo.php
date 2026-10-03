@@ -117,6 +117,33 @@ class Seo
         return $out;
     }
 
+    public static function nationalHeadline(\PDO $pdo): array
+    {
+        $stmt = $pdo->query("SELECT fecha, carburante, media, estaciones FROM national_price_history WHERE carburante IN ('gasoleo_a', 'gasolina_95_e5') ORDER BY fecha DESC LIMIT 6");
+        $series = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $series[$row['carburante']][] = $row;
+        }
+        $headline = [];
+        foreach (self::HEADLINE_FUELS as $fuel) {
+            if (empty($series[$fuel])) {
+                continue;
+            }
+            $today = $series[$fuel][0];
+            $delta = null;
+            if (isset($series[$fuel][1])) {
+                $delta = (float)$today['media'] - (float)$series[$fuel][1]['media'];
+            }
+            $headline[$fuel] = [
+                'fecha' => (string)$today['fecha'],
+                'media' => (float)$today['media'],
+                'estaciones' => (int)$today['estaciones'],
+                'delta' => $delta,
+            ];
+        }
+        return $headline;
+    }
+
     public static function lastUpdate(\PDO $pdo): string
     {
         $value = $pdo->query('SELECT MAX(fecha) FROM current_prices')->fetchColumn();
