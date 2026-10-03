@@ -1147,6 +1147,8 @@ a { color: var(--primary); }
 @keyframes stations-slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
 #stations-status { margin: 0 0 12px; padding: 4px 0; font-size: 0.95rem; font-weight: 600; color: var(--text); }
 #stations-status:empty { display: none; }
+#stations-progress[hidden] { display: block; visibility: hidden; }
+@media (max-width: 599px) { html:not(.desktop) #stations-status { min-height: 68px; box-sizing: border-box; } html:not(.desktop) #stations-status:empty { display: block; } }
 #stations-status.is-flash { animation: status-flash 1s ease-out; }
 @keyframes status-flash { from { background: var(--primary-tint); } to { background: transparent; } }
 #stations-list.is-loading { opacity: 0.45; pointer-events: none; transition: opacity 0.15s; }
@@ -1316,7 +1318,7 @@ html.is-offline #view-stats > *:not(.offline-block) { opacity: 0.4; pointer-even
 
 html.desktop { font-size: 100%; }
 .desktop body { display: flex; flex-direction: column; min-height: 100vh; padding: 0; }
-.desktop .app-container { flex: 1 0 auto; }
+.desktop .app-container { flex: 1 0 auto; min-height: 100vh; box-sizing: border-box; }
 .desktop .desktop-only { display: revert; }
 .desktop .tab-desktop { display: inline; }
 .desktop .tab-short, .desktop .tab-mobile, .desktop #view-list-btn .tab-long { display: none; }
@@ -1438,9 +1440,10 @@ html.desktop { font-size: 100%; }
 .desktop #search-nearby { width: auto; height: 44px; min-height: 44px; margin: 0; padding: 0 18px; border-radius: 6px; font-family: var(--font-body); font-size: 15px; font-weight: 600; letter-spacing: 0; cursor: pointer; }
 .desktop #search-nearby { display: inline-block; border: 1px solid var(--field-border); background: var(--surface); color: var(--text); }
 .desktop #back-to-nearby { order: 10; flex-basis: 100%; margin: 0; padding: 0; font-size: 14px; text-align: left; }
-.desktop #stations-progress { margin: 0 0 12px; }
+.desktop #stations-progress { position: fixed; top: 0; left: var(--sidebar-w); right: 0; z-index: 1300; margin: 0; }
 
-.desktop #view-list > #stations-status { margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--border); font-family: var(--font-display); font-size: 18px; font-weight: 800; line-height: 1.3; }
+.desktop #view-list > #stations-status:empty { display: block; }
+.desktop #view-list > #stations-status { min-height: 52px; box-sizing: border-box; margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--border); font-family: var(--font-display); font-size: 18px; font-weight: 800; line-height: 1.3; }
 .desktop #geo-fallback { margin: 0 0 12px; }
 .desktop #view-list { grid-column: 1; min-width: 0; margin: 0 0 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
 .desktop #stations-geocoded-note { margin: 12px 16px; }

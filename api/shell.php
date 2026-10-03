@@ -10,6 +10,7 @@ $canonicalUrl = $ogUrl;
 $robotsContent = 'index, follow';
 $structuredData = '';
 $provinceLinks = array();
+$headline = array();
 
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = parse_url($requestUri, PHP_URL_PATH);
@@ -20,6 +21,7 @@ if (!$isNative) {
     try {
         $pdo = \Core\Database::connection();
         $provinceLinks = \Services\Seo::provinces($pdo);
+        $headline = \Services\Seo::nationalHeadline($pdo);
 
         if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
             $ideess = urldecode($matches[1]);
@@ -92,6 +94,58 @@ if (!$isNative) {
     }
 }
 $verificationToken = \Services\Seo::verificationToken();
+
+$headlineDay = null;
+$headlineDate = '';
+$headlineStale = false;
+$headlineStaleClass = '';
+if (isset($headline['gasoleo_a'])) {
+    $months = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
+    $madrid = new \DateTimeZone('Europe/Madrid');
+    $fecha = $headline['gasoleo_a']['fecha'];
+    $parts = explode('-', $fecha);
+    $label = (int)$parts[2] . ' de ' . $months[(int)$parts[1] - 1];
+    $today = (new \DateTime('now', $madrid))->format('Y-m-d');
+    $yesterday = (new \DateTime('yesterday', $madrid))->format('Y-m-d');
+    if ($fecha === $today) {
+        $headlineDay = 'Hoy, ' . $label;
+        $headlineDate = 'Precios de hoy, ' . $label;
+    } elseif ($fecha === $yesterday) {
+        $headlineDay = 'Ayer, ' . $label;
+        $headlineDate = 'Precios de ayer, ' . $label . '. Los de hoy se publican por la mañana.';
+    } else {
+        $headlineDay = 'Precios del ' . $label;
+        $headlineDate = 'Precios del ' . $label . '. Aún no hay datos más recientes.';
+        $headlineStale = true;
+        $headlineStaleClass = ' is-stale';
+    }
+}
+
+function headlinePrice(array $headline, string $fuel): string
+{
+    if (!isset($headline[$fuel])) {
+        return '—';
+    }
+    return number_format($headline[$fuel]['media'], 3, '.', '') . ' €';
+}
+
+function headlineDelta(array $headline, string $fuel): string
+{
+    $delta = $headline[$fuel]['delta'] ?? null;
+    if ($delta === null) {
+        return '<span class="national-line__delta"></span>';
+    }
+    if (abs($delta) < 0.0005) {
+        return '<span class="national-line__delta">sin cambios desde ayer</span>';
+    }
+    $class = 'is-up';
+    $arrow = '▲';
+    if ($delta < 0) {
+        $class = 'is-down';
+        $arrow = '▼';
+    }
+    return '<span class="national-line__delta ' . $class . '">' . $arrow . ' ' . number_format(abs($delta), 3, '.', '') . ' desde ayer</span>';
+}
 ?>
 <!DOCTYPE html>
 <html lang="es" class="is-loading">
@@ -243,13 +297,27 @@ $verificationToken = \Services\Seo::verificationToken();
         <section id="national-stats">
             <button id="national-stats-toggle" type="button" aria-expanded="false">
                 <span class="national-stats__figures">
-                    <span><small>Gasóleo A hoy en España</small><strong id="national-gasoleo-a">—</strong></span>
-                    <span><small>Gasolina 95 hoy en España</small><strong id="national-gasolina-95">—</strong></span>
+                    <span><small>Gasóleo A hoy en España</small><strong id="national-gasoleo-a"><?= htmlspecialchars(headlinePrice($headline, 'gasoleo_a')) ?></strong></span>
+                    <span><small>Gasolina 95 hoy en España</small><strong id="national-gasolina-95"><?= htmlspecialchars(headlinePrice($headline, 'gasolina_95_e5')) ?></strong></span>
                 </span>
                 <svg id="national-stats-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
+<?php if ($headlineDay !== null): ?>
+            <p id="national-date" class="national-date<?= $headlineStaleClass ?>"><?= htmlspecialchars($headlineDate) ?></p>
+            <div id="national-line" class="national-line">
+                <div class="national-line__day<?= $headlineStaleClass ?>"><small>Precios medios en España</small><strong><?= htmlspecialchars($headlineDay) ?></strong></div>
+<?php foreach (array('gasoleo_a' => 'Gasóleo A', 'gasolina_95_e5' => 'Gasolina 95') as $fuelKey => $fuelName): ?>
+<?php if (isset($headline[$fuelKey])): ?>
+                <div class="national-kpi"><small><?= $fuelName ?></small><strong><?= htmlspecialchars(headlinePrice($headline, $fuelKey)) ?></strong><?= headlineDelta($headline, $fuelKey) ?></div>
+<?php endif; ?>
+<?php endforeach; ?>
+                <div class="national-kpi"><small>Gasolineras con precio</small><strong><?= number_format($headline['gasoleo_a']['estaciones'], 0, ',', '.') ?></strong><span class="national-line__delta">datos del Ministerio</span></div>
+                <button type="button" class="national-line__stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/></svg>Ver estadísticas</button>
+            </div>
+<?php else: ?>
             <p id="national-date" class="national-date" hidden></p>
-            <p id="national-line" class="national-line" hidden></p>
+            <div id="national-line" class="national-line" hidden></div>
+<?php endif; ?>
             <div id="national-stats-detail" hidden>
                 <canvas id="national-chart" height="120"></canvas>
                 <p id="national-stats-note"></p>
