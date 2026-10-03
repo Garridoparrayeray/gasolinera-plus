@@ -2625,11 +2625,30 @@
         }
     });
 
+    const UPDATE_DISMISSED_KEY = 'gasolinera_update_dismissed';
+
     function showUpdateBanner(version, url) {
+        let dismissed = null;
+        try {
+            dismissed = localStorage.getItem(UPDATE_DISMISSED_KEY);
+        } catch (e) {
+            dismissed = null;
+        }
+        if (dismissed === version) {
+            return;
+        }
+        const banner = document.getElementById('update-banner');
         document.getElementById('update-version').textContent = version;
-        const link = document.getElementById('update-link');
-        link.href = url;
-        document.getElementById('update-banner').hidden = false;
+        document.getElementById('update-link').href = url;
+        document.getElementById('update-close').onclick = () => {
+            banner.hidden = true;
+            try {
+                localStorage.setItem(UPDATE_DISMISSED_KEY, version);
+            } catch (e) {
+                return;
+            }
+        };
+        banner.hidden = false;
     }
 
     function useVehicleFuel(fuel) {

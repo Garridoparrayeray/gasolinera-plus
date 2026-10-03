@@ -106,13 +106,33 @@ jobs:
           fi
           gh release upload android-debug dist/gasolinera-plus-debug.apk --clobber
 
+      - name: Release notes from the changelog
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v heading="## ${version}" '
+            $0 == heading { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > dist/release-notes.md
+          if ! grep -q '[^[:space:]]' dist/release-notes.md; then
+            echo "CHANGELOG.md no tiene la sección ## ${version}" >&2
+            exit 1
+          fi
+          {
+            echo ""
+            echo "### Instalar"
+            echo "Descarga \`gasolinera-plus.apk\` en el móvil Android y ábrelo. Si ya tienes la app, se instala encima y conserva tus datos."
+          } >> dist/release-notes.md
+
       - name: Publish release
         if: startsWith(github.ref, 'refs/tags/v') && env.HAS_KEYSTORE == 'true'
         uses: softprops/action-gh-release@v3
         with:
+          name: Gasolinera+ ${{ github.ref_name }}
+          body_path: dist/release-notes.md
           files: dist/gasolinera-plus.apk
           prerelease: ${{ contains(github.ref_name, '-') }}
-          generate_release_notes: true
           fail_on_unmatched_files: true
 
   ios:

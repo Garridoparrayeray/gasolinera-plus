@@ -2,6 +2,7 @@ const GPNative = (() => {
     const SITE_URL = 'https://gasolineraplus.vercel.app';
     const RELEASES_API = 'https://api.github.com/repos/Garridoparrayeray/gasolinera-plus/releases/latest';
     const APK_URL = 'https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest';
+    const RELEASES_URL = 'https://github.com/Garridoparrayeray/gasolinera-plus/releases';
     const OFFLINE_REFRESH_MS = 20 * 60 * 60 * 1000;
     const backHandlers = [];
 
@@ -189,11 +190,7 @@ const GPNative = (() => {
             }
             const release = await response.json();
             if (isNewer(release.tag_name, info.version)) {
-                let page = APK_URL;
-                if (typeof release.html_url === 'string' && release.html_url.startsWith('https://github.com/')) {
-                    page = release.html_url;
-                }
-                notify(release.tag_name.replace(/^v/, ''), page);
+                notify(release.tag_name.replace(/^v/, ''), RELEASES_URL);
             }
         } catch (e) {
             return;
