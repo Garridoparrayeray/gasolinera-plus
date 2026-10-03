@@ -120,6 +120,21 @@ $verificationToken = \Services\Seo::verificationToken();
 <?php if (is_string($verificationToken) && $verificationToken !== ''): ?>
     <meta name="google-site-verification" content="<?= htmlspecialchars($verificationToken) ?>">
 <?php endif; ?>
+<?php if (!$isNative): ?>
+    <script>
+        (function () {
+            var wide = window.matchMedia('(min-width: 1024px)');
+            function apply() {
+                document.documentElement.classList.toggle('desktop', wide.matches && !window.Capacitor);
+            }
+            apply();
+            wide.addEventListener('change', function () {
+                apply();
+                document.dispatchEvent(new CustomEvent('gp:layout'));
+            });
+        })();
+    </script>
+<?php endif; ?>
     <link rel="preload" href="/vendor/fonts/inter-latin-standard-normal.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/vendor/fonts/bricolage-grotesque-latin-standard-normal.woff2" as="font" type="font/woff2" crossorigin>
 <?= $structuredData ?>
@@ -148,7 +163,7 @@ $verificationToken = \Services\Seo::verificationToken();
         <h1 class="sr-only">Precios de gasolina y diésel hoy en España</h1>
 
         <header>
-            <div class="home-link-wrap">
+            <a class="home-link-wrap" href="/" aria-label="Gasolinera+, ir a Buscar">
                 <span id="app-logomark" aria-hidden="true">
                     <svg class="logo-gasolinera" viewBox="0 0 512 512">
                         <rect width="512" height="512" rx="116" fill="#FF7A1A"/>
@@ -161,20 +176,47 @@ $verificationToken = \Services\Seo::verificationToken();
                     <strong id="app-title">GASOLINERA<span class="plus">+</span></strong>
                     <span id="app-subtitle">Precios reales de gasolineras</span>
                 </span>
-            </div>
+            </a>
+            <nav id="view-toggle" role="tablist" aria-label="Secciones">
+                <button id="view-list-btn" type="button" role="tab" aria-selected="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                    <span class="tab-long">Listado/Mapa</span><span class="tab-short">Listado</span><span class="tab-desktop">Buscar</span>
+                </button>
+                <button id="view-route-btn" type="button" role="tab" aria-selected="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h8.5a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H16"/></svg>
+                    <span>Ruta</span>
+                </button>
+                <button id="view-garage-btn" type="button" role="tab" aria-selected="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14v-5l-2-5H7l-2 5v5z"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/></svg>
+                    <span>Coche</span>
+                </button>
+                <button id="view-stats-btn" type="button" role="tab" aria-selected="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/></svg>
+                    <span class="tab-long">Estadísticas</span><span class="tab-short">Estad.</span>
+                </button>
+                <button id="view-about-btn" type="button" role="tab" aria-selected="false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span class="tab-mobile">Info</span><span class="tab-desktop">Información</span>
+                </button>
+            </nav>
             <span class="header-actions">
                 <button id="geo-toggle" class="btn-icon" type="button" aria-label="Activar ubicación" aria-pressed="false" hidden>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.5C12 21.5 5 15.2 5 9.8C5 5.9 8.1 2.5 12 2.5C15.9 2.5 19 5.9 19 9.8C19 15.2 12 21.5 12 21.5Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
                 </button>
                 <button id="favorites-open" class="btn-icon" type="button" aria-label="Ver favoritas">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20.5C12 20.5 3.5 15.4 3.5 9.5C3.5 6.5 5.8 4.5 8.5 4.5C10.1 4.5 11.3 5.3 12 6.5C12.7 5.3 13.9 4.5 15.5 4.5C18.2 4.5 20.5 6.5 20.5 9.5C20.5 15.4 12 20.5 12 20.5Z"/></svg>
+                    <span class="btn-label">Favoritas</span>
                     <span id="favorites-count" class="count-badge" hidden>0</span>
                 </button>
                 <button id="compare-open" class="btn-icon" type="button" aria-label="Ver comparador">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="10" width="6" height="11"/><rect x="15" y="4" width="6" height="17"/></svg>
+                    <span class="btn-label">Comparar</span>
                     <span id="compare-count" class="count-badge" hidden>0</span>
                 </button>
             </span>
+<?php if (!$isNative): ?>
+            <p class="sidebar-note">Viajes, avisos y mapas sin conexión, en la <a href="https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest" target="_blank" rel="noopener">app para Android</a>.</p>
+<?php endif; ?>
         </header>
 
         <p id="update-banner" role="status" hidden>Hay una versión nueva de Gasolinera+ (<span id="update-version"></span>). <a id="update-link" href="#">Descargar e instalar</a></p>
@@ -207,19 +249,23 @@ $verificationToken = \Services\Seo::verificationToken();
                 <svg id="national-stats-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <p id="national-date" class="national-date" hidden></p>
+            <p id="national-line" class="national-line" hidden></p>
             <div id="national-stats-detail" hidden>
                 <canvas id="national-chart" height="120"></canvas>
                 <p id="national-stats-note"></p>
             </div>
         </section>
 
+        <div id="search-panel">
         <form id="search-form" autocomplete="off">
+            <label for="search-input" class="field-label">Dónde</label>
             <input id="search-input" type="search" placeholder="Municipio, calle o marca" aria-label="Buscar gasolinera" autocomplete="off">
             <ul id="search-suggestions" hidden></ul>
         </form>
         <button id="back-to-nearby" type="button" hidden>« Volver a gasolineras cerca de mí</button>
 
         <div id="filters-bar">
+            <label class="filter-field"><span class="field-label">Carburante</span>
             <select id="filter-fuel" aria-label="Carburante">
                 <option value="gasoleo_a">Gasóleo A</option>
                 <option value="gasolina_95_e5">Gasolina 95 E5</option>
@@ -246,6 +292,8 @@ $verificationToken = \Services\Seo::verificationToken();
                     <option value="hidrogeno">Hidrógeno</option>
                 </optgroup>
             </select>
+            </label>
+            <label class="filter-field"><span class="field-label">Radio</span>
             <select id="filter-radius" aria-label="Radio de búsqueda">
                 <option value="1">1 km</option>
                 <option value="3">3 km</option>
@@ -253,42 +301,27 @@ $verificationToken = \Services\Seo::verificationToken();
                 <option value="10">10 km</option>
                 <option value="25">25 km</option>
             </select>
+            </label>
+            <label class="filter-field"><span class="field-label">Orden</span>
             <select id="filter-sort" aria-label="Ordenar por">
                 <option value="price">Más barata</option>
                 <option value="distance">Más cercana</option>
             </select>
+            </label>
+            <label class="filter-field"><span class="field-label">Horario</span>
             <select id="filter-open" aria-label="Apertura">
                 <option value="">Cualquier horario</option>
                 <option value="now">Abierto ahora</option>
                 <option value="24h">Abierto 24h</option>
             </select>
+            </label>
         </div>
         <button id="stations-search-btn" type="button">Buscar gasolineras</button>
+        <button id="search-nearby" type="button" class="desktop-only">Cerca de mí</button>
+        </div>
         <div id="stations-progress" hidden><span></span></div>
         <p id="stations-status" role="status" aria-live="polite"></p>
 
-        <nav id="view-toggle" role="tablist" aria-label="Secciones">
-            <button id="view-list-btn" type="button" role="tab" aria-selected="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-                <span class="tab-long">Listado/Mapa</span><span class="tab-short">Listado</span>
-            </button>
-            <button id="view-route-btn" type="button" role="tab" aria-selected="false">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h8.5a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H16"/></svg>
-                <span>Ruta</span>
-            </button>
-            <button id="view-garage-btn" type="button" role="tab" aria-selected="false">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14v-5l-2-5H7l-2 5v5z"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/></svg>
-                <span>Coche</span>
-            </button>
-            <button id="view-stats-btn" type="button" role="tab" aria-selected="false">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/></svg>
-                <span class="tab-long">Estadísticas</span><span class="tab-short">Estad.</span>
-            </button>
-            <button id="view-about-btn" type="button" role="tab" aria-selected="false">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                <span>Info</span>
-            </button>
-        </nav>
 
         <p id="geo-fallback" hidden>
             No hemos podido acceder a tu ubicación. Puedes buscar por municipio o dirección arriba, o
@@ -297,6 +330,12 @@ $verificationToken = \Services\Seo::verificationToken();
 
         <section id="view-list">
             <p id="stations-geocoded-note" hidden></p>
+            <div id="stations-head" class="desktop-only" aria-hidden="true">
+                <span>Gasolinera</span>
+                <span id="stations-head-primary">Gasóleo A</span>
+                <span id="stations-head-secondary">Gasolina 95</span>
+                <span></span>
+            </div>
             <ul id="stations-list"></ul>
             <p id="stations-empty" hidden>No hay gasolineras que coincidan con la búsqueda.</p>
             <nav id="stations-pagination" hidden aria-label="Paginación de resultados">
@@ -446,6 +485,7 @@ $verificationToken = \Services\Seo::verificationToken();
                         <button id="garage-odometer" type="button" class="pill">Actualizar km</button>
                     </div>
                 </div>
+                <div class="garage-col garage-col--main">
                 <div class="garage-card">
                     <h3>Consumo real</h3>
                     <canvas id="garage-consumption-chart" height="160"></canvas>
@@ -473,8 +513,11 @@ $verificationToken = \Services\Seo::verificationToken();
                     <p id="garage-refuels-empty" class="garage-note">Todavía no has anotado ningún repostaje. Anota los llenos con los km del cuentakilómetros para calcular tu consumo real.</p>
                     <ul id="garage-refuels"></ul>
                 </div>
+                </div>
+                <div class="garage-col garage-col--side">
                 <div class="garage-card" id="garage-trips-card">
                     <h3>Viajes</h3>
+                    <p class="garage-note desktop-only">Los viajes se graban con la app del móvil. Aquí ves los que traigas con una copia de seguridad.</p>
                     <div id="trip-live" hidden>
                         <div class="garage-tiles">
                             <div><small>Distancia</small><strong id="trip-live-distance">0,0 km</strong></div>
@@ -538,12 +581,14 @@ $verificationToken = \Services\Seo::verificationToken();
                     </div>
                     <p id="backup-note" class="garage-note" hidden></p>
                 </div>
+                </div>
             </div>
         </section>
 
         <section id="view-stats" hidden>
             <p class="offline-only offline-block" role="status">Las estadísticas necesitan conexión. Cuando vuelvas a tener internet se activarán solas.</p>
-            <div class="stats-block">
+            <div class="stats-block" id="stats-filters">
+                <h2 class="desktop-only stats-title">Estadísticas</h2>
                 <h3>Filtros</h3>
                 <div class="stats-controls">
                     <select id="stats-fuel" aria-label="Carburante para las estadísticas">
@@ -584,7 +629,14 @@ $verificationToken = \Services\Seo::verificationToken();
                 <p id="stats-range-note"></p>
             </div>
 
-            <div class="stats-block">
+            <div id="stats-kpis" class="desktop-only">
+                <div class="stats-kpi"><small>Gasóleo A hoy</small><strong id="stats-kpi-a">—</strong><small id="stats-kpi-a-delta"></small></div>
+                <div class="stats-kpi"><small>Gasolina 95 hoy</small><strong id="stats-kpi-95">—</strong><small id="stats-kpi-95-delta"></small></div>
+                <div class="stats-kpi"><small>Provincia más barata</small><strong id="stats-kpi-cheap">—</strong><small id="stats-kpi-cheap-name"></small></div>
+                <div class="stats-kpi"><small>Provincia más cara</small><strong id="stats-kpi-dear">—</strong><small id="stats-kpi-dear-name"></small></div>
+            </div>
+
+            <div class="stats-block" id="stats-national-block">
                 <h3>Media nacional</h3>
                 <p id="stats-national-variation"></p>
                 <canvas id="stats-national-chart" height="180"></canvas>
@@ -595,14 +647,25 @@ $verificationToken = \Services\Seo::verificationToken();
                 <canvas id="stats-by-fuel-chart" height="220"></canvas>
             </div>
 
-            <div class="stats-block">
+            <div class="stats-block" id="stats-province-block">
                 <h3>Precio medio por provincia hoy</h3>
+                <div id="stats-province-ranks" class="desktop-only">
+                    <div>
+                        <h4>Provincias más baratas</h4>
+                        <ol id="stats-province-cheap"></ol>
+                    </div>
+                    <div>
+                        <h4>Provincias más caras</h4>
+                        <ol id="stats-province-dear"></ol>
+                    </div>
+                </div>
+                <button id="stats-province-all" type="button" class="desktop-only link-button" aria-expanded="false">Ver las provincias</button>
                 <div id="stats-province-chart-wrap">
                     <canvas id="stats-province-chart"></canvas>
                 </div>
             </div>
 
-            <div class="stats-block">
+            <div class="stats-block" id="stats-distribution-block">
                 <h3>Distribución de precios hoy</h3>
                 <p id="stats-distribution-note"></p>
                 <canvas id="stats-distribution-chart" height="200"></canvas>
@@ -631,6 +694,31 @@ $verificationToken = \Services\Seo::verificationToken();
                     <li><a href="/gasolineras/<?= htmlspecialchars($item['slug']) ?>"><?= htmlspecialchars($item['name']) ?></a></li>
 <?php endforeach; ?>
                 </ul>
+            </div>
+<?php endif; ?>
+<?php if (!$isNative): ?>
+            <div class="garage-card mobile-features-card desktop-only" id="mobile-features">
+                <h3>Gasolinera+ en tu móvil</h3>
+                <p class="garage-note">Estas funciones necesitan llevar el móvil encima, por eso no están en la web del ordenador:</p>
+                <ul class="mobile-features">
+                    <li><strong>Grabar viajes</strong> a mano o de forma automática al subir al coche, con su recorrido, distancia y velocidad.</li>
+                    <li><strong>Repostar aquí</strong> desde la ficha de la gasolinera y <strong>actualizar los kilómetros</strong> en el surtidor.</li>
+                    <li><strong>Avisos de bajada de precio</strong> de tus favoritas, aunque la app esté cerrada.</li>
+                    <li><strong>Mapas sin conexión</strong> de tu comunidad para usar el mapa sin datos.</li>
+                    <li><strong>Compartir tu resumen</strong> como imagen directamente desde el móvil.</li>
+                </ul>
+                <div class="store-blocks">
+                    <div class="store-block">
+                        <h4>Android</h4>
+                        <p>La app completa, con todas las funciones de la lista.</p>
+                        <a class="pill pill--primary" href="https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest" target="_blank" rel="noopener">Descargar para Android</a>
+                    </div>
+                    <div class="store-block" id="store-iphone">
+                        <h4>iPhone</h4>
+                        <p>Ábrela en Safari, pulsa <strong>Compartir</strong> y después <strong>Añadir a pantalla de inicio</strong>. Se abre como una app. Los viajes automáticos, los avisos con la app cerrada y los mapas sin conexión son de la app de Android.</p>
+                    </div>
+                </div>
+                <p class="garage-note">Tus repostajes y viajes del móvil se pueden ver aquí: exporta una copia en el móvil e impórtala en Coche.</p>
             </div>
 <?php endif; ?>
             <div class="garage-card about-card">
@@ -724,6 +812,42 @@ $verificationToken = \Services\Seo::verificationToken();
         </section>
 
     </main>
+<?php if (!$isNative): ?>
+
+    <footer class="site-footer desktop-only">
+        <div class="site-footer__cols">
+            <div class="site-footer__brand">
+                <span class="site-footer__name">GASOLINERA<span>+</span></span>
+                <p>Precios de gasolina y diésel de toda España, actualizados cada día. Proyecto independiente y sin ánimo de lucro, hecho por Yeray Garrido.</p>
+            </div>
+            <nav aria-label="Secciones">
+                <h2>Secciones</h2>
+                <button type="button" data-view="list">Buscar gasolineras</button>
+                <button type="button" data-view="route">Planificar una ruta</button>
+                <button type="button" data-view="garage">Tu coche</button>
+                <button type="button" data-view="stats">Estadísticas</button>
+            </nav>
+            <nav aria-label="La app">
+                <h2>La app</h2>
+                <a href="https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest" target="_blank" rel="noopener">Descargar para Android</a>
+                <button type="button" data-view="about" data-target="store-iphone">Instalar en iPhone</button>
+                <a href="/docs/guia-usuario.pdf" target="_blank" rel="noopener">Guía de uso en PDF</a>
+                <button type="button" data-view="about" data-target="feedback-message">Sugerencias y errores</button>
+            </nav>
+            <nav aria-label="Proyecto">
+                <h2>Proyecto</h2>
+                <a href="https://www.linkedin.com/in/yeray-garrido" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                <a href="https://www.yeraygarrido.dev/" target="_blank" rel="noopener noreferrer">Portfolio</a>
+                <a href="https://github.com/Garridoparrayeray" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <button type="button" data-legal>Aviso legal y privacidad</button>
+            </nav>
+        </div>
+        <div class="site-footer__bottom">
+            <span>Precios: Ministerio para la Transición Ecológica · Mapas: © OpenStreetMap</span>
+            <span>© 2026 Yeray Garrido</span>
+        </div>
+    </footer>
+<?php endif; ?>
 
     <dialog id="legal-panel">
         <button id="legal-close" class="btn-icon" type="button" aria-label="Cerrar">
@@ -762,7 +886,8 @@ $verificationToken = \Services\Seo::verificationToken();
         <div id="modal-zone-comparison"></div>
         <canvas id="modal-chart" height="140"></canvas>
         <div id="modal-actions">
-            <a id="modal-directions" class="pill" target="_blank" rel="noopener">Cómo llegar</a>
+            <button id="modal-route" type="button" class="pill pill--primary desktop-only">Ruta hasta aquí</button>
+            <a id="modal-directions" class="pill" target="_blank" rel="noopener"><span class="tab-mobile">Cómo llegar</span><span class="tab-desktop">Abrir en Google Maps</span></a>
             <button id="modal-compare-toggle" type="button" class="pill">Añadir a comparar</button>
             <button id="modal-refuel" type="button" class="pill">Repostar aquí</button>
         </div>
@@ -961,6 +1086,7 @@ $verificationToken = \Services\Seo::verificationToken();
         <ul id="favorites-list"></ul>
         <label id="alerts-toggle-wrap"><input type="checkbox" id="alerts-toggle"> Avisarme cuando bajen de precio</label>
         <p id="alerts-note" hidden></p>
+        <p class="drawer-note desktop-only">Los avisos cuando bajan de precio están en la app del móvil.</p>
     </dialog>
 
     <dialog id="compare-panel">
@@ -968,38 +1094,41 @@ $verificationToken = \Services\Seo::verificationToken();
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
         </button>
         <h3>Comparar gasolineras</h3>
+        <p class="drawer-subtitle desktop-only">El precio más bajo de cada carburante va resaltado.</p>
         <p id="compare-empty">Añade gasolineras desde su ficha o desde la lista para compararlas aquí, una junto a otra.</p>
         <div id="compare-table"></div>
     </dialog>
 
     <p id="toast" hidden></p>
 
-    <script src="/vendor/leaflet/leaflet.js"></script>
-    <script src="/vendor/markercluster/leaflet.markercluster.js"></script>
-    <script src="/vendor/leaflet-heat/leaflet-heat.js"></script>
-    <script src="/vendor/chartjs/chart.umd.js"></script>
-    <script src="/vendor/protomaps-leaflet/protomaps-leaflet.js"></script>
-    <script src="/js/native.js"></script>
-    <script src="/js/splash.js"></script>
-    <script src="/js/map-guard.js"></script>
-    <script src="/js/offline-maps.js"></script>
-    <script src="/js/background.js"></script>
-    <script src="/js/alerts-store.js"></script>
-    <script src="/js/api.js"></script>
-    <script src="/js/app.js"></script>
-    <script src="/js/price-index-core.js"></script>
-    <script src="/js/price-index.js"></script>
-    <script src="/js/fuel-math.js"></script>
-    <script src="/js/garage-store.js"></script>
-    <script src="/js/backup.js"></script>
-    <script src="/js/trip-metrics.js"></script>
-    <script src="/js/recap.js"></script>
-    <script src="/js/garage.js"></script>
-    <script src="/js/trips.js"></script>
-    <script src="/js/router-core.js"></script>
-    <script src="/js/route.js"></script>
-    <script src="/js/permissions.js"></script>
-    <script src="/js/feedback.js"></script>
+    <script defer src="/vendor/leaflet/leaflet.js"></script>
+    <script defer src="/vendor/markercluster/leaflet.markercluster.js"></script>
+    <script defer src="/vendor/leaflet-heat/leaflet-heat.js"></script>
+    <script defer src="/vendor/chartjs/chart.umd.js"></script>
+<?php if ($isNative): ?>
+    <script defer src="/vendor/protomaps-leaflet/protomaps-leaflet.js"></script>
+<?php endif; ?>
+    <script defer src="/js/native.js"></script>
+    <script defer src="/js/splash.js"></script>
+    <script defer src="/js/map-guard.js"></script>
+    <script defer src="/js/offline-maps.js"></script>
+    <script defer src="/js/background.js"></script>
+    <script defer src="/js/alerts-store.js"></script>
+    <script defer src="/js/api.js"></script>
+    <script defer src="/js/app.js"></script>
+    <script defer src="/js/price-index-core.js"></script>
+    <script defer src="/js/price-index.js"></script>
+    <script defer src="/js/fuel-math.js"></script>
+    <script defer src="/js/garage-store.js"></script>
+    <script defer src="/js/backup.js"></script>
+    <script defer src="/js/trip-metrics.js"></script>
+    <script defer src="/js/recap.js"></script>
+    <script defer src="/js/garage.js"></script>
+    <script defer src="/js/trips.js"></script>
+    <script defer src="/js/router-core.js"></script>
+    <script defer src="/js/route.js"></script>
+    <script defer src="/js/permissions.js"></script>
+    <script defer src="/js/feedback.js"></script>
 <?php if (!$isNative): ?>
     <script>
         if ('serviceWorker' in navigator && !window.Capacitor) {
