@@ -697,8 +697,8 @@ $verificationToken = \Services\Seo::verificationToken();
             </div>
 <?php endif; ?>
 <?php if (!$isNative): ?>
-            <div class="garage-card mobile-features-card desktop-only">
-                <h3>Solo en la app del móvil</h3>
+            <div class="garage-card mobile-features-card desktop-only" id="mobile-features">
+                <h3>Gasolinera+ en tu móvil</h3>
                 <p class="garage-note">Estas funciones necesitan llevar el móvil encima, por eso no están en la web del ordenador:</p>
                 <ul class="mobile-features">
                     <li><strong>Grabar viajes</strong> a mano o de forma automática al subir al coche, con su recorrido, distancia y velocidad.</li>
@@ -707,10 +707,18 @@ $verificationToken = \Services\Seo::verificationToken();
                     <li><strong>Mapas sin conexión</strong> de tu comunidad para usar el mapa sin datos.</li>
                     <li><strong>Compartir tu resumen</strong> como imagen directamente desde el móvil.</li>
                 </ul>
-                <p class="garage-note">Tus repostajes y viajes del móvil se pueden ver aquí: exporta una copia en el móvil e impórtala en Coche.</p>
-                <div class="about-links">
-                    <a class="pill pill--primary" href="https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest" target="_blank" rel="noopener">Descargar para Android</a>
+                <div class="store-blocks">
+                    <div class="store-block">
+                        <h4>Android</h4>
+                        <p>La app completa, con todas las funciones de la lista.</p>
+                        <a class="pill pill--primary" href="https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest" target="_blank" rel="noopener">Descargar para Android</a>
+                    </div>
+                    <div class="store-block" id="store-iphone">
+                        <h4>iPhone</h4>
+                        <p>Ábrela en Safari, pulsa <strong>Compartir</strong> y después <strong>Añadir a pantalla de inicio</strong>. Se abre como una app. Los viajes automáticos, los avisos con la app cerrada y los mapas sin conexión son de la app de Android.</p>
+                    </div>
                 </div>
+                <p class="garage-note">Tus repostajes y viajes del móvil se pueden ver aquí: exporta una copia en el móvil e impórtala en Coche.</p>
             </div>
 <?php endif; ?>
             <div class="garage-card about-card">
@@ -804,6 +812,42 @@ $verificationToken = \Services\Seo::verificationToken();
         </section>
 
     </main>
+<?php if (!$isNative): ?>
+
+    <footer class="site-footer desktop-only">
+        <div class="site-footer__cols">
+            <div class="site-footer__brand">
+                <span class="site-footer__name">GASOLINERA<span>+</span></span>
+                <p>Precios de gasolina y diésel de toda España, actualizados cada día. Proyecto independiente y sin ánimo de lucro, hecho por Yeray Garrido.</p>
+            </div>
+            <nav aria-label="Secciones">
+                <h2>Secciones</h2>
+                <button type="button" data-view="list">Buscar gasolineras</button>
+                <button type="button" data-view="route">Planificar una ruta</button>
+                <button type="button" data-view="garage">Tu coche</button>
+                <button type="button" data-view="stats">Estadísticas</button>
+            </nav>
+            <nav aria-label="La app">
+                <h2>La app</h2>
+                <a href="https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest" target="_blank" rel="noopener">Descargar para Android</a>
+                <button type="button" data-view="about" data-target="store-iphone">Instalar en iPhone</button>
+                <a href="/docs/guia-usuario.pdf" target="_blank" rel="noopener">Guía de uso en PDF</a>
+                <button type="button" data-view="about" data-target="feedback-message">Sugerencias y errores</button>
+            </nav>
+            <nav aria-label="Proyecto">
+                <h2>Proyecto</h2>
+                <a href="https://www.linkedin.com/in/yeray-garrido" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                <a href="https://www.yeraygarrido.dev/" target="_blank" rel="noopener noreferrer">Portfolio</a>
+                <a href="https://github.com/Garridoparrayeray" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <button type="button" data-legal>Aviso legal y privacidad</button>
+            </nav>
+        </div>
+        <div class="site-footer__bottom">
+            <span>Precios: Ministerio para la Transición Ecológica · Mapas: © OpenStreetMap</span>
+            <span>© 2026 Yeray Garrido</span>
+        </div>
+    </footer>
+<?php endif; ?>
 
     <dialog id="legal-panel">
         <button id="legal-close" class="btn-icon" type="button" aria-label="Cerrar">
@@ -1042,6 +1086,7 @@ $verificationToken = \Services\Seo::verificationToken();
         <ul id="favorites-list"></ul>
         <label id="alerts-toggle-wrap"><input type="checkbox" id="alerts-toggle"> Avisarme cuando bajen de precio</label>
         <p id="alerts-note" hidden></p>
+        <p class="drawer-note desktop-only">Los avisos cuando bajan de precio están en la app del móvil.</p>
     </dialog>
 
     <dialog id="compare-panel">
@@ -1049,6 +1094,7 @@ $verificationToken = \Services\Seo::verificationToken();
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
         </button>
         <h3>Comparar gasolineras</h3>
+        <p class="drawer-subtitle desktop-only">El precio más bajo de cada carburante va resaltado.</p>
         <p id="compare-empty">Añade gasolineras desde su ficha o desde la lista para compararlas aquí, una junto a otra.</p>
         <div id="compare-table"></div>
     </dialog>

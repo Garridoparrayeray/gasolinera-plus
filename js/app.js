@@ -379,8 +379,33 @@
                 renderFavoritesPanel();
             });
             li.appendChild(openBtn);
+            const prices = document.createElement('div');
+            prices.className = 'favorites-item-prices';
+            li.appendChild(prices);
             li.appendChild(removeBtn);
             el.favoritesList.appendChild(li);
+            if (isDesktop()) {
+                fillFavoritePrices(entry.ideess, prices);
+            }
+        }
+    }
+
+    async function fillFavoritePrices(ideess, container) {
+        let station;
+        try {
+            station = await Api.station(ideess);
+        } catch (e) {
+            return;
+        }
+        const slugs = ['gasoleo_a', 'gasolina_95_e5', 'adblue'].filter((slug) => station.combustibles[slug]);
+        for (const slug of slugs) {
+            const tile = document.createElement('span');
+            const label = document.createElement('small');
+            const value = document.createElement('strong');
+            label.textContent = SHORT_FUEL_NAMES[slug] || fuelLabel(slug);
+            value.textContent = priceText(station.combustibles[slug].precio, slug);
+            tile.append(label, value);
+            container.append(tile);
         }
     }
 
@@ -621,35 +646,47 @@
         return { text: `Precios del ${label}`, stale: true };
     }
 
+    function nationalKpi(label, value, note) {
+        const item = document.createElement('div');
+        item.className = 'national-kpi';
+        const small = document.createElement('small');
+        const strong = document.createElement('strong');
+        small.textContent = label;
+        strong.textContent = value;
+        item.append(small, strong, note);
+        return item;
+    }
+
     function renderNationalLine(gasoleoA, gasolina95) {
         if (!gasoleoA || !gasoleoA.hoy) {
             return;
         }
         const line = el.nationalLine;
         line.textContent = '';
-        const day = document.createElement('span');
+        const day = document.createElement('div');
         const dayLabel = priceDayLabel(gasoleoA.hoy.fecha);
         day.className = 'national-line__day';
         day.classList.toggle('is-stale', dayLabel.stale);
-        day.textContent = dayLabel.text;
+        const caption = document.createElement('small');
+        const title = document.createElement('strong');
+        caption.textContent = 'Precios medios en España';
+        title.textContent = dayLabel.text;
+        day.append(caption, title);
         line.append(day);
         for (const [name, data] of [['Gasóleo A', gasoleoA], ['Gasolina 95', gasolina95]]) {
             if (!data || !data.hoy) {
                 continue;
             }
-            const item = document.createElement('span');
-            const price = document.createElement('strong');
-            price.textContent = `${data.hoy.media.toFixed(3)} €`;
-            item.append(`${name} `, price, ' ', deltaElement(seriesDelta(data), ''));
-            line.append(item);
+            line.append(nationalKpi(name, `${data.hoy.media.toFixed(3)} €`, deltaElement(seriesDelta(data), ' desde ayer')));
         }
-        const count = document.createElement('span');
-        count.textContent = `Media de ${gasoleoA.hoy.estaciones.toLocaleString('es-ES')} gasolineras`;
-        line.append(count);
+        const source = document.createElement('span');
+        source.className = 'national-line__delta';
+        source.textContent = 'datos del Ministerio';
+        line.append(nationalKpi('Gasolineras con precio', gasoleoA.hoy.estaciones.toLocaleString('es-ES'), source));
         const link = document.createElement('button');
         link.type = 'button';
-        link.className = 'link-button';
-        link.textContent = 'Ver estadísticas';
+        link.className = 'national-line__stats';
+        link.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/></svg>Ver estadísticas';
         link.addEventListener('click', () => switchView('stats'));
         line.append(link);
         line.hidden = false;
@@ -1311,6 +1348,9 @@
         GPMaps.addBaseLayers(state.map);
 
         state.markerLayer = L.markerClusterGroup({ chunkedLoading: true });
+        if ('ResizeObserver' in window) {
+            new ResizeObserver(() => state.map.invalidateSize()).observe(el.map);
+        }
         state.map.addLayer(state.markerLayer);
 
         if (state.userLat !== null) {
@@ -2119,13 +2159,19 @@
         for (const slug of allFuelSlugs) {
             const row = document.createElement('tr');
             let cells = `<td>${escapeHtml(fuelLabel(slug))}</td>`;
+            const values = details.map((d) => d && d.combustibles[slug] && d.combustibles[slug].precio).filter((v) => typeof v === 'number');
+            const lowest = Math.min(...values);
             for (const d of details) {
                 const info = d && d.combustibles[slug];
                 let cellText = '—';
+                let cellClass = '';
                 if (info) {
                     cellText = priceText(info.precio, slug);
+                    if (values.length > 1 && info.precio === lowest) {
+                        cellClass = ' class="is-best"';
+                    }
                 }
-                cells += `<td>${cellText}</td>`;
+                cells += `<td${cellClass}>${cellText}</td>`;
             }
             row.innerHTML = cells;
             table.appendChild(row);
@@ -2261,6 +2307,21 @@
     }
     el.mapShowAll.addEventListener('click', clearSelection);
     document.getElementById('stats-province-all').addEventListener('click', toggleProvinceChart);
+    document.querySelectorAll('.site-footer [data-view]').forEach((button) => {
+        button.addEventListener('click', () => {
+            switchView(button.dataset.view);
+            const target = document.getElementById(button.dataset.target || '');
+            if (target) {
+                target.scrollIntoView({ block: 'center' });
+                target.focus({ preventScroll: true });
+            } else {
+                window.scrollTo(0, 0);
+            }
+        });
+    });
+    document.querySelectorAll('.site-footer [data-legal]').forEach((button) => {
+        button.addEventListener('click', () => el.legalPanel.showModal());
+    });
     el.searchNearby.addEventListener('click', () => {
         el.searchInput.value = '';
         el.stationsGeocodedNote.hidden = true;

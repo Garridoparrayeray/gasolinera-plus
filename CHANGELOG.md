@@ -5,7 +5,10 @@
 ### Novedades
 - Web en el ordenador rediseñada: menú lateral, buscador en una fila, resultados en tabla con el mapa y la ficha de la gasolinera al lado, y paneles nuevos en Coche y Estadísticas.
 - Estadísticas: cifras clave del día y las provincias más baratas y más caras, con el gráfico completo a un clic.
-- Información: tarjeta con las funciones que solo están en la app del móvil.
+- Información: tarjeta «Gasolinera+ en tu móvil» con las funciones que solo están en el móvil, la descarga para Android y cómo instalarla en iPhone.
+- Cifras del día en una banda destacada con acceso directo a Estadísticas.
+- Pie de página con secciones, la app y enlaces del proyecto.
+- Favoritas y Comparar se abren en un panel lateral derecho; el comparador resalta el precio más bajo de cada carburante.
 
 ### Cambios
 - En el ordenador ya no aparecen las funciones del móvil: grabar viajes, «Repostar aquí», «Actualizar km», mapas sin conexión, avisos en segundo plano ni la ventana de ubicación al entrar.
