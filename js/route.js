@@ -828,6 +828,13 @@ const GPRoute = (() => {
             onShow();
         }
     });
+    document.addEventListener('gp:route-to', (event) => {
+        state.to = event.detail;
+        el.to.value = event.detail.label;
+        ensureMap();
+        updatePointMarkers();
+        el.from.focus();
+    });
 
     return { calculate, state };
 })();

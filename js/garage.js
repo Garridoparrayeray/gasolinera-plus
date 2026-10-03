@@ -327,6 +327,10 @@ const GPGarage = (() => {
         if (typeof Chart === 'undefined') {
             return;
         }
+        if (document.documentElement.classList.contains('desktop')) {
+            canvas.width = canvas.parentNode.clientWidth || 600;
+            canvas.height = 240;
+        }
         state.charts[key] = new Chart(canvas, config);
     }
 

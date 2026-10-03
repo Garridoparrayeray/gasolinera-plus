@@ -1,5 +1,16 @@
 # Cambios
 
+## Próxima versión
+
+### Novedades
+- Web en el ordenador rediseñada: menú lateral, buscador en una fila, resultados en tabla con el mapa y la ficha de la gasolinera al lado, y paneles nuevos en Coche y Estadísticas.
+- Estadísticas: cifras clave del día y las provincias más baratas y más caras, con el gráfico completo a un clic.
+- Información: tarjeta con las funciones que solo están en la app del móvil.
+
+### Cambios
+- En el ordenador ya no aparecen las funciones del móvil: grabar viajes, «Repostar aquí», «Actualizar km», mapas sin conexión, avisos en segundo plano ni la ventana de ubicación al entrar.
+- Carga más rápida: el mapa añade las gasolineras por tandas, los scripts se cargan en diferido y la web ya no descarga la librería de mapas sin conexión.
+
 ## 1.0.1
 
 ### Novedades
