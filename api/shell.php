@@ -273,7 +273,10 @@ function headlineDelta(array $headline, string $fuel): string
 <?php endif; ?>
         </header>
 
-        <p id="update-banner" role="status" hidden>Hay una versión nueva de Gasolinera+ (<span id="update-version"></span>). <a id="update-link" href="#">Descargar e instalar</a></p>
+        <p id="update-banner" role="status" hidden>
+            <span>Hay un parche nuevo de Gasolinera+ (<span id="update-version"></span>). <a id="update-link" href="#" target="_blank" rel="noopener">Ver novedades y descargar</a></span>
+            <button id="update-close" type="button" aria-label="Cerrar aviso">&times;</button>
+        </p>
 
         <p id="offline-banner" role="status" hidden>Sin conexión: usas los datos guardados en tu móvil. El histórico y las estadísticas no están disponibles hasta que vuelvas a conectarte.</p>
 

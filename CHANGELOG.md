@@ -1,6 +1,6 @@
 # Cambios
 
-## Próxima versión
+## 1.0.2
 
 ### Novedades
 - Web en el ordenador rediseñada: menú lateral, buscador en una fila, resultados en tabla con el mapa y la ficha de la gasolinera al lado, y paneles nuevos en Coche y Estadísticas.
@@ -17,6 +17,7 @@
 - En el ordenador ya no aparecen las funciones del móvil: grabar viajes, «Repostar aquí», «Actualizar km», mapas sin conexión, avisos en segundo plano ni la ventana de ubicación al entrar.
 - Detección automática de viajes: ahora también arranca si la activas con el viaje ya empezado o si el móvil se pierde el aviso de «has subido al coche» (Android comprueba la actividad cada minuto; iPhone mira la actividad reciente al activarla).
 - Las copias de seguridad conservan las pausas de cada viaje, y la lista de viajes se actualiza al importar una copia o al abrir la app directamente en Coche.
+- Aviso de actualización: «Hay un parche nuevo» lleva a la página de versiones de GitHub con las novedades y se puede cerrar (no vuelve a salir para esa versión).
 - Carga más rápida: el mapa añade las gasolineras por tandas, los scripts se cargan en diferido y la web ya no descarga la librería de mapas sin conexión.
 
 ## 1.0.1
