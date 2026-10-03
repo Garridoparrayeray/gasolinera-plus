@@ -580,6 +580,7 @@ function headlineDelta(array $headline, string $fuel): string
                     <h3>Repostajes</h3>
                     <p id="garage-refuels-empty" class="garage-note">Todavía no has anotado ningún repostaje. Anota los llenos con los km del cuentakilómetros para calcular tu consumo real.</p>
                     <ul id="garage-refuels"></ul>
+                    <button id="refuel-history-open" type="button" class="pill history-open" hidden>Ver todo el historial</button>
                 </div>
                 </div>
                 <div class="garage-col garage-col--side">
@@ -596,6 +597,7 @@ function headlineDelta(array $headline, string $fuel): string
                     </div>
                     <div class="garage-actions">
                         <button id="trip-start" type="button" class="pill pill--primary">Empezar viaje</button>
+                        <button id="trip-pause" type="button" class="pill" hidden>Pausar</button>
                         <button id="trip-stop" type="button" class="pill pill--danger" hidden>Terminar viaje</button>
                     </div>
                     <p id="trip-note" class="garage-note"></p>
@@ -616,6 +618,7 @@ function headlineDelta(array $headline, string $fuel): string
                     </div>
                     <ul id="trip-list"></ul>
                     <p id="trip-empty" class="garage-note">Todavía no hay viajes grabados.</p>
+                    <button id="trip-history-open" type="button" class="pill history-open" hidden>Ver todo el historial</button>
                 </div>
                 <div class="garage-card" id="offline-maps-card" hidden>
                     <h3>Mapas sin conexión</h3>
@@ -1084,7 +1087,7 @@ function headlineDelta(array $headline, string $fuel): string
 
     <div id="trip-drive" role="dialog" aria-label="Viaje en curso" hidden>
         <div id="trip-drive-top">
-            <span id="trip-drive-status"><span id="trip-drive-dot"></span>GRABANDO</span>
+            <span id="trip-drive-status"><span id="trip-drive-dot"></span><span id="trip-drive-label">GRABANDO</span></span>
             <button id="trip-drive-min" type="button">Minimizar</button>
         </div>
         <div id="trip-drive-main">
@@ -1098,7 +1101,10 @@ function headlineDelta(array $headline, string $fuel): string
             <div><small>Media</small><strong id="trip-drive-max">0</strong><em>km/h</em></div>
         </div>
         <p id="trip-drive-hint"></p>
-        <button id="trip-drive-stop" type="button">Terminar viaje</button>
+        <div id="trip-drive-actions">
+            <button id="trip-drive-pause" type="button">Pausar</button>
+            <button id="trip-drive-stop" type="button">Terminar viaje</button>
+        </div>
     </div>
 
     <dialog id="trip-summary">
@@ -1130,6 +1136,30 @@ function headlineDelta(array $headline, string $fuel): string
         <div class="dialog-actions">
             <button id="trip-delete" type="button" class="pill pill--danger">Borrar viaje</button>
         </div>
+    </dialog>
+
+    <dialog id="history-dialog" aria-labelledby="history-title">
+        <button id="history-close" class="btn-icon" type="button" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+        <h3 id="history-title">Historial</h3>
+        <div class="garage-segment" role="group" aria-label="Qué quieres ver">
+            <button type="button" class="pill" data-history-kind="trips" aria-pressed="true">Viajes</button>
+            <button type="button" class="pill" data-history-kind="refuels" aria-pressed="false">Repostajes</button>
+        </div>
+        <div class="history-range">
+            <label>Desde <input id="history-from" type="date"></label>
+            <label>Hasta <input id="history-to" type="date"></label>
+        </div>
+        <div class="history-presets" role="group" aria-label="Periodos rápidos">
+            <button type="button" class="pill" data-history-days="30">30 días</button>
+            <button type="button" class="pill" data-history-days="90">3 meses</button>
+            <button type="button" class="pill" data-history-days="365">1 año</button>
+            <button type="button" class="pill" data-history-days="0">Todo</button>
+        </div>
+        <p id="history-summary" class="garage-note" role="status"></p>
+        <ul id="history-list"></ul>
+        <button id="history-more" type="button" class="pill" hidden>Cargar más</button>
     </dialog>
 
     <dialog id="odometer-dialog">
@@ -1193,6 +1223,7 @@ function headlineDelta(array $headline, string $fuel): string
     <script defer src="/js/recap.js"></script>
     <script defer src="/js/garage.js"></script>
     <script defer src="/js/trips.js"></script>
+    <script defer src="/js/history.js"></script>
     <script defer src="/js/router-core.js"></script>
     <script defer src="/js/route.js"></script>
     <script defer src="/js/permissions.js"></script>

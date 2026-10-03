@@ -9,9 +9,12 @@
 - Cifras del día en una banda destacada con acceso directo a Estadísticas.
 - Pie de página con secciones, la app y enlaces del proyecto.
 - Favoritas y Comparar se abren en un panel lateral derecho; el comparador resalta el precio más bajo de cada carburante.
+- Pausa en los viajes: botón «Pausar» junto a «Terminar viaje» (también en la notificación de Android). El tiempo y los kilómetros en pausa no cuentan y la detección automática no corta el viaje mientras está en pausa.
+- Historial de viajes y repostajes: en Coche salen los 10 últimos y «Ver todo el historial» abre el resto con filtro de fechas y carga por páginas.
 
 ### Cambios
 - En el ordenador ya no aparecen las funciones del móvil: grabar viajes, «Repostar aquí», «Actualizar km», mapas sin conexión, avisos en segundo plano ni la ventana de ubicación al entrar.
+- Detección automática de viajes: ahora también arranca si la activas con el viaje ya empezado o si el móvil se pierde el aviso de «has subido al coche» (Android comprueba la actividad cada minuto; iPhone mira la actividad reciente al activarla).
 - Carga más rápida: el mapa añade las gasolineras por tandas, los scripts se cargan en diferido y la web ya no descarga la librería de mapas sin conexión.
 
 ## 1.0.1

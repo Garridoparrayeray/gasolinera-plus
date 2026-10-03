@@ -32,7 +32,7 @@ const GPTripMetrics = (() => {
         return diff;
     }
 
-    function clean(raw) {
+    function clean(raw, pauses = []) {
         const sorted = [...raw].sort((a, b) => a.t - b.t);
         const good = [];
         let total = 0;
@@ -44,7 +44,7 @@ const GPTripMetrics = (() => {
             if (!(point.acc <= MAX_ACCURACY_M)) {
                 continue;
             }
-            if (good.length) {
+            if (good.length && !crossesPause(pauses, good[good.length - 1].t, point.t)) {
                 const last = good[good.length - 1];
                 const implied = distance(last, point) / ((point.t - last.t) / 1000);
                 if (implied > MAX_JUMP_MS) {
@@ -106,7 +106,7 @@ const GPTripMetrics = (() => {
         }
         return {
             startedAt, endedAt, durationSeconds,
-            distanceKm: 0, movingSeconds: 0, stoppedSeconds: durationSeconds,
+            distanceKm: 0, movingSeconds: 0, stoppedSeconds: durationSeconds, pausedSeconds: 0,
             avgSpeedKmh: 0, maxSpeedKmh: 0,
             gapSeconds: 0, gapCount: 0,
             percentAbove100: 0, percentAbove120: 0,
@@ -138,8 +138,28 @@ const GPTripMetrics = (() => {
         return (distanceKm * options.consumption * relative) / 100;
     }
 
+    function crossesPause(pauses, from, to) {
+        return pauses.some(([start, end]) => start < to && end > from);
+    }
+
+    function pausedSecondsBetween(pauses, from, to) {
+        let seconds = 0;
+        for (const [start, end] of pauses) {
+            const overlap = Math.min(end, to) - Math.max(start, from);
+            if (overlap > 0) {
+                seconds += overlap / 1000;
+            }
+        }
+        return seconds;
+    }
+
+    function validPauses(raw) {
+        return (raw || []).filter((p) => Array.isArray(p) && p[1] > p[0]);
+    }
+
     function compute(raw, options = {}) {
-        const { good, total } = clean(raw);
+        const pauses = validPauses(options.pauses);
+        const { good, total } = clean(raw, pauses);
         if (good.length < 2) {
             return emptyResult([...raw].sort((a, b) => a.t - b.t), total, true);
         }
@@ -154,6 +174,9 @@ const GPTripMetrics = (() => {
         const bands = BANDS_KMH.map(() => 0);
         const bandMeters = BANDS_KMH.map(() => 0);
         for (let i = 1; i < good.length; i++) {
+            if (crossesPause(pauses, good[i - 1].t, good[i].t)) {
+                continue;
+            }
             const dt = (good[i].t - good[i - 1].t) / 1000;
             const segment = distance(good[i - 1], good[i]);
             let segmentSpeed = (speed[i] + speed[i - 1]) / 2;
@@ -193,7 +216,8 @@ const GPTripMetrics = (() => {
             }
         }
 
-        const durationSeconds = (good[good.length - 1].t - good[0].t) / 1000;
+        const pausedSeconds = pausedSecondsBetween(pauses, good[0].t, good[good.length - 1].t);
+        const durationSeconds = Math.max(0, (good[good.length - 1].t - good[0].t) / 1000 - pausedSeconds);
         const distanceKm = meters / 1000;
         let avgSpeedKmh = 0;
         let percentAbove100 = 0;
@@ -216,6 +240,7 @@ const GPTripMetrics = (() => {
             distanceKm,
             movingSeconds: moving,
             stoppedSeconds: Math.max(0, durationSeconds - moving),
+            pausedSeconds,
             avgSpeedKmh,
             maxSpeedKmh: maxSpeed * 3.6,
             gapSeconds,
@@ -232,8 +257,8 @@ const GPTripMetrics = (() => {
         };
     }
 
-    function thin(raw) {
-        const { good } = clean(raw);
+    function thin(raw, pauses) {
+        const { good } = clean(raw, validPauses(pauses));
         if (!good.length) {
             return [];
         }

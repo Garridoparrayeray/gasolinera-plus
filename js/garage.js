@@ -33,6 +33,7 @@ const GPGarage = (() => {
         stationResults: $('refuel-station-results'),
         stationClear: $('refuel-station-clear'),
         refuels: $('garage-refuels'),
+        refuelHistoryOpen: $('refuel-history-open'),
         refuelsEmpty: $('garage-refuels-empty'),
         backupIncludeTrips: $('backup-include-trips'),
         backupExport: $('backup-export'),
@@ -281,42 +282,71 @@ const GPGarage = (() => {
         setMetric(el.odometerValue, number(s.odometer, 0), 'km');
     }
 
-    function renderRefuels(vehicle) {
-        const unit = unitOf(vehicle.fuel);
+    const RECENT_REFUELS = 10;
+
+    function refuelIntervals() {
         const intervalsByEnd = new Map();
         for (const interval of GPFuel.intervals(state.refuels)) {
             intervalsByEnd.set(interval.to, interval);
         }
-        const list = [...state.refuels].sort((a, b) => b.date.localeCompare(a.date));
+        return intervalsByEnd;
+    }
+
+    function refuelItem(refuel, unit, intervalsByEnd) {
+        const li = document.createElement('li');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'garage-refuel-item';
+        let kind = 'lleno';
+        if (!refuel.full) {
+            kind = 'parcial';
+        }
+        let consumption = '';
+        const interval = intervalsByEnd.get(refuel.date);
+        if (interval && !interval.suspicious) {
+            consumption = ` · ${number(interval.lPer100, 1)} ${unit}/100 km`;
+        } else if (interval) {
+            consumption = ' · consumo raro, revisa los km';
+        }
+        let station = '';
+        if (refuel.stationName) {
+            station = ` · ${refuel.stationName}`;
+        }
+        button.innerHTML = `<strong></strong><small></small>`;
+        button.querySelector('strong').textContent = `${shortDate(refuel.date)} · ${money(refuel.total)}`;
+        button.querySelector('small').textContent = `${number(refuel.liters, 2)} ${unit} a ${number(refuel.pricePerUnit, 3)} €/${unit} · ${number(refuel.odometer, 0)} km · ${kind}${consumption}${station}`;
+        button.addEventListener('click', () => openRefuelDialog(refuel, null));
+        li.appendChild(button);
+        return li;
+    }
+
+    function sortedRefuels() {
+        return [...state.refuels].sort((a, b) => b.date.localeCompare(a.date));
+    }
+
+    function renderRefuels(vehicle) {
+        const unit = unitOf(vehicle.fuel);
+        const intervalsByEnd = refuelIntervals();
+        const list = sortedRefuels();
         el.refuelsEmpty.hidden = list.length > 0;
         el.refuels.innerHTML = '';
-        for (const refuel of list) {
-            const li = document.createElement('li');
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'garage-refuel-item';
-            let kind = 'lleno';
-            if (!refuel.full) {
-                kind = 'parcial';
-            }
-            let consumption = '';
-            const interval = intervalsByEnd.get(refuel.date);
-            if (interval && !interval.suspicious) {
-                consumption = ` · ${number(interval.lPer100, 1)} ${unit}/100 km`;
-            } else if (interval) {
-                consumption = ' · consumo raro, revisa los km';
-            }
-            let station = '';
-            if (refuel.stationName) {
-                station = ` · ${refuel.stationName}`;
-            }
-            button.innerHTML = `<strong></strong><small></small>`;
-            button.querySelector('strong').textContent = `${shortDate(refuel.date)} · ${money(refuel.total)}`;
-            button.querySelector('small').textContent = `${number(refuel.liters, 2)} ${unit} a ${number(refuel.pricePerUnit, 3)} €/${unit} · ${number(refuel.odometer, 0)} km · ${kind}${consumption}${station}`;
-            button.addEventListener('click', () => openRefuelDialog(refuel, null));
-            li.appendChild(button);
-            el.refuels.appendChild(li);
+        for (const refuel of list.slice(0, RECENT_REFUELS)) {
+            el.refuels.appendChild(refuelItem(refuel, unit, intervalsByEnd));
         }
+        el.refuelHistoryOpen.hidden = list.length <= RECENT_REFUELS;
+        el.refuelHistoryOpen.textContent = `Ver todo el historial (${list.length.toLocaleString('es-ES')} repostajes)`;
+        document.dispatchEvent(new CustomEvent('gp:history-refresh'));
+    }
+
+    function refuelHistory(fromIso, toIso) {
+        const vehicle = activeVehicle();
+        if (!vehicle) {
+            return { list: [], unit: 'L', build: () => document.createElement('li') };
+        }
+        const unit = unitOf(vehicle.fuel);
+        const intervalsByEnd = refuelIntervals();
+        const list = sortedRefuels().filter((refuel) => refuel.date >= fromIso && refuel.date <= toIso);
+        return { list, unit, build: (refuel) => refuelItem(refuel, unit, intervalsByEnd) };
     }
 
     function replaceChart(key, canvas, config) {
@@ -1658,10 +1688,13 @@ const GPGarage = (() => {
         GP.showToast('No se pudo abrir tu garaje en este navegador');
     });
 
+    el.refuelHistoryOpen.addEventListener('click', () => GPHistory.open('refuels'));
+
     return {
         refresh,
         activeVehicle,
         summary,
         reload: load,
+        refuelHistory,
     };
 })();

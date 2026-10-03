@@ -31,8 +31,8 @@ const html = execFileSync(findPhp(), [join(root, 'api', 'shell.php')], {
 let page = html.toString('utf8');
 if (process.env.GP_API_BASE) {
     const injected = `<script>window.GP_API_BASE = ${JSON.stringify(process.env.GP_API_BASE)};</script>
-    <script src="/js/native.js"></script>`;
-    page = page.replace('<script src="/js/native.js"></script>', injected);
+    <script defer src="/js/native.js"></script>`;
+    page = page.replace('<script defer src="/js/native.js"></script>', injected);
     console.log('API apuntando a ' + process.env.GP_API_BASE + ' (solo para pruebas)');
 }
 writeFileSync(join(out, 'index.html'), page);

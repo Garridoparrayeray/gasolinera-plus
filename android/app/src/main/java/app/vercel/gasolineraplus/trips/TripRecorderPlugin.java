@@ -45,6 +45,10 @@ public class TripRecorderPlugin extends Plugin {
     @Override
     public void load() {
         TripService.setListener((snapshot) -> notifyListeners("tripUpdate", snapshotJson(snapshot)));
+        Context context = getContext();
+        if (TripStore.isAutoDetectEnabled(context) && AutoDetect.hasPermissions(context)) {
+            AutoDetect.enable(context);
+        }
     }
 
     @Override
@@ -96,6 +100,9 @@ public class TripRecorderPlugin extends Plugin {
         out.put("maxSpeedMs", snapshot.maxSpeedMs);
         out.put("points", snapshot.points);
         out.put("auto", snapshot.auto);
+        out.put("paused", snapshot.paused);
+        out.put("pausedAt", snapshot.pausedAt);
+        out.put("pausedMs", snapshot.pausedMs);
         return out;
     }
 
@@ -132,6 +139,22 @@ public class TripRecorderPlugin extends Plugin {
     public void stop(PluginCall call) {
         if (TripStore.currentTripId(getContext()) != null) {
             TripService.sendAction(getContext(), TripService.ACTION_STOP);
+        }
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void pause(PluginCall call) {
+        if (TripStore.currentTripId(getContext()) != null) {
+            TripService.sendAction(getContext(), TripService.ACTION_PAUSE);
+        }
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void resume(PluginCall call) {
+        if (TripStore.currentTripId(getContext()) != null) {
+            TripService.sendAction(getContext(), TripService.ACTION_RESUME);
         }
         call.resolve();
     }

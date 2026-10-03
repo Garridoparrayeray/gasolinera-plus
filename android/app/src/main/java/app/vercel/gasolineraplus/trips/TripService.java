@@ -26,6 +26,8 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 
+import org.json.JSONArray;
+
 import java.util.List;
 import java.util.Locale;
 
@@ -36,6 +38,8 @@ public class TripService extends Service {
     public static final String ACTION_START = "app.vercel.gasolineraplus.trips.START";
     public static final String ACTION_STOP = "app.vercel.gasolineraplus.trips.STOP";
     public static final String ACTION_VEHICLE_EXIT = "app.vercel.gasolineraplus.trips.VEHICLE_EXIT";
+    public static final String ACTION_PAUSE = "app.vercel.gasolineraplus.trips.PAUSE";
+    public static final String ACTION_RESUME = "app.vercel.gasolineraplus.trips.RESUME";
     public static final String EXTRA_AUTO = "auto";
     public static final String EXTRA_VEHICLE_ID = "vehicleId";
 
@@ -46,6 +50,7 @@ public class TripService extends Service {
     private static final long AUTO_STOP_IDLE_MS = 20 * 60 * 1000L;
     private static final long AFTER_EXIT_IDLE_MS = 2 * 60 * 1000L;
     private static final long MANUAL_STOP_IDLE_MS = 60 * 60 * 1000L;
+    private static final long PAUSE_LIMIT_MS = 60 * 60 * 1000L;
     private static final double MIN_AUTO_DISTANCE_M = 500;
 
     public interface Listener {
@@ -61,8 +66,12 @@ public class TripService extends Service {
         public final int points;
         public final boolean auto;
         public final boolean recording;
+        public final boolean paused;
+        public final long pausedAt;
+        public final long pausedMs;
 
-        Snapshot(String tripId, long startedAt, double distanceM, float speedMs, float maxSpeedMs, int points, boolean auto, boolean recording) {
+        Snapshot(String tripId, long startedAt, double distanceM, float speedMs, float maxSpeedMs, int points, boolean auto, boolean recording,
+                 boolean paused, long pausedAt, long pausedMs) {
             this.tripId = tripId;
             this.startedAt = startedAt;
             this.distanceM = distanceM;
@@ -71,6 +80,9 @@ public class TripService extends Service {
             this.points = points;
             this.auto = auto;
             this.recording = recording;
+            this.paused = paused;
+            this.pausedAt = pausedAt;
+            this.pausedMs = pausedMs;
         }
     }
 
@@ -90,6 +102,10 @@ public class TripService extends Service {
     private float maxSpeedMs;
     private int points;
     private long lastNotificationAt;
+    private boolean paused;
+    private long pausedAt;
+    private long pausedMs;
+    private JSONArray pauses = new JSONArray();
 
     public static void setListener(Listener value) {
         listener = value;
@@ -133,10 +149,18 @@ public class TripService extends Service {
         if (ACTION_VEHICLE_EXIT.equals(action)) {
             if (tripId == null) {
                 stopSelf();
-            } else {
+            } else if (!paused) {
                 vehicleExitAt = System.currentTimeMillis();
             }
             return START_NOT_STICKY;
+        }
+        if (ACTION_PAUSE.equals(action)) {
+            pause();
+            return START_STICKY;
+        }
+        if (ACTION_RESUME.equals(action)) {
+            resume();
+            return START_STICKY;
         }
         if (tripId != null) {
             return START_STICKY;
@@ -164,6 +188,10 @@ public class TripService extends Service {
         distanceM = 0;
         maxSpeedMs = 0;
         points = 0;
+        paused = false;
+        pausedAt = 0;
+        pausedMs = 0;
+        pauses = new JSONArray();
         requestUpdates();
         publish(true);
         return START_STICKY;
@@ -201,8 +229,58 @@ public class TripService extends Service {
         }
     }
 
+    private void pause() {
+        if (tripId == null || paused) {
+            return;
+        }
+        paused = true;
+        pausedAt = System.currentTimeMillis();
+        speedMs = 0f;
+        vehicleExitAt = 0;
+        notifyText("En pausa");
+        publish(true);
+    }
+
+    private void resume() {
+        if (tripId == null || !paused) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        closePause(now);
+        lastGood = null;
+        lastMovingAt = now;
+        vehicleExitAt = 0;
+        notifyText(String.format(Locale.forLanguageTag("es-ES"), "%.1f km", distanceM / 1000.0));
+        publish(true);
+    }
+
+    private void closePause(long now) {
+        if (!paused) {
+            return;
+        }
+        JSONArray interval = new JSONArray();
+        interval.put(pausedAt);
+        interval.put(now);
+        pauses.put(interval);
+        pausedMs += now - pausedAt;
+        paused = false;
+        pausedAt = 0;
+    }
+
+    private void notifyText(String text) {
+        lastNotificationAt = System.currentTimeMillis();
+        NotificationManager manager = getSystemService(NotificationManager.class);
+        manager.notify(NOTIFICATION_ID, buildNotification(text));
+    }
+
     private void handle(List<Location> locations) {
         if (tripId == null || locations.isEmpty()) {
+            return;
+        }
+        if (paused) {
+            if (System.currentTimeMillis() - pausedAt > PAUSE_LIMIT_MS) {
+                stopRecording(false);
+            }
             return;
         }
         try {
@@ -256,7 +334,7 @@ public class TripService extends Service {
     }
 
     private void publish(boolean recording) {
-        Snapshot snapshot = new Snapshot(tripId, startedAt, distanceM, speedMs, maxSpeedMs, points, auto, recording);
+        Snapshot snapshot = new Snapshot(tripId, startedAt, distanceM, speedMs, maxSpeedMs, points, auto, recording, paused, pausedAt, pausedMs);
         lastSnapshot = snapshot;
         Listener current = listener;
         if (current != null) {
@@ -270,9 +348,10 @@ public class TripService extends Service {
         }
         callback = null;
         if (tripId != null) {
+            closePause(System.currentTimeMillis());
             boolean tooShort = auto && distanceM < MIN_AUTO_DISTANCE_M;
             try {
-                TripStore.finish(this, tripId, distanceM, discard || tooShort);
+                TripStore.finish(this, tripId, distanceM, pauses, discard || tooShort);
             } catch (Exception error) {
                 TripStore.delete(this, tripId);
             }
@@ -305,6 +384,14 @@ public class TripService extends Service {
         Intent stop = new Intent(this, TripService.class);
         stop.setAction(ACTION_STOP);
         PendingIntent stopPending = PendingIntent.getService(this, 1, stop, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent toggle = new Intent(this, TripService.class);
+        String toggleLabel = "Pausar";
+        toggle.setAction(ACTION_PAUSE);
+        if (paused) {
+            toggleLabel = "Reanudar";
+            toggle.setAction(ACTION_RESUME);
+        }
+        PendingIntent togglePending = PendingIntent.getService(this, 2, toggle, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         String title = "Viaje en curso";
         if (auto) {
             title = "Viaje en curso (detectado)";
@@ -316,6 +403,7 @@ public class TripService extends Service {
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setContentIntent(openPending)
+                .addAction(0, toggleLabel, togglePending)
                 .addAction(0, "Terminar viaje", stopPending)
                 .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
                 .build();

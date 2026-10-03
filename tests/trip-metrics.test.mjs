@@ -133,4 +133,16 @@ const approx = (actual, expected, tolerance, message) => assert.ok(Math.abs(actu
     assert.deepEqual(thin[thin.length - 1].slice(0, 3), round(points[1199]), 'conserva el último punto');
 }
 
+{
+    const before = track(new Array(300).fill(50 / 3.6));
+    const pauseStart = before[before.length - 1].t + 1000;
+    const pauseEnd = pauseStart + 10 * 60 * 1000;
+    const after = track(new Array(300).fill(50 / 3.6)).map((p) => ({ ...p, t: p.t - START + pauseEnd, lat: p.lat + 0.05 }));
+    const m = GPTripMetrics.compute([...before, ...after], { pauses: [[pauseStart, pauseEnd]] });
+    approx(m.pausedSeconds, 600, 1, 'tiempo en pausa');
+    approx(m.durationSeconds, 600, 3, 'la pausa no cuenta en la duración');
+    approx(m.distanceKm, 8.3, 0.1, 'el salto durante la pausa no suma distancia');
+    assert.equal(m.gapCount, 0, 'la pausa no se cuenta como túnel');
+}
+
 console.log('trip-metrics: OK');

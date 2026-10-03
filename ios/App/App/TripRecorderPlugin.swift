@@ -15,6 +15,7 @@ private let movingMs: Double = 2
 private let autoStopIdleS: TimeInterval = 20 * 60
 private let afterExitIdleS: TimeInterval = 2 * 60
 private let manualStopIdleS: TimeInterval = 60 * 60
+private let pauseLimitS: TimeInterval = 60 * 60
 private let minAutoDistanceM: Double = 500
 private let keyCurrent = "trips.current"
 private let keyAutoDetect = "trips.autoDetect"
@@ -42,6 +43,10 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
     private var lastLocation: CLLocation?
     private var lastMovingAt = Date()
     private var vehicleExitAt: Date?
+    private(set) var paused = false
+    private var pausedAt: Int64 = 0
+    private var pausedMs: Int64 = 0
+    private var pauses: [[Int64]] = []
 
     override init() {
         super.init()
@@ -195,8 +200,58 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             "speedMs": speedMs,
             "maxSpeedMs": maxSpeedMs,
             "points": pointCount,
-            "auto": isAuto
+            "auto": isAuto,
+            "paused": paused,
+            "pausedAt": pausedAt,
+            "pausedMs": pausedMs
         ]
+    }
+
+    private func nowMs() -> Int64 {
+        return Int64(Date().timeIntervalSince1970 * 1000)
+    }
+
+    private func savePauseState() {
+        guard let id = tripId, var meta = readMeta(id) else {
+            return
+        }
+        meta["pauses"] = pauses
+        meta["pausedAt"] = paused ? pausedAt : 0
+        writeMeta(id, meta)
+    }
+
+    func pause() {
+        guard recording, !paused else {
+            return
+        }
+        paused = true
+        pausedAt = nowMs()
+        speedMs = 0
+        vehicleExitAt = nil
+        savePauseState()
+        publish()
+    }
+
+    func resume() {
+        guard recording, paused else {
+            return
+        }
+        closePause(nowMs())
+        lastLocation = nil
+        lastMovingAt = Date()
+        vehicleExitAt = nil
+        savePauseState()
+        publish()
+    }
+
+    private func closePause(_ now: Int64) {
+        guard paused else {
+            return
+        }
+        pauses.append([pausedAt, now])
+        pausedMs += now - pausedAt
+        paused = false
+        pausedAt = 0
     }
 
     private func publish() {
@@ -235,6 +290,10 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         lastLocation = nil
         lastMovingAt = Date()
         vehicleExitAt = nil
+        paused = false
+        pausedAt = 0
+        pausedMs = 0
+        pauses = []
         recording = true
         manager.allowsBackgroundLocationUpdates = true
         manager.showsBackgroundLocationIndicator = true
@@ -250,6 +309,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         guard recording, let id = tripId else {
             return
         }
+        closePause(nowMs())
         recording = false
         timer?.invalidate()
         timer = nil
@@ -265,6 +325,8 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             meta["endedAt"] = Int64(Date().timeIntervalSince1970 * 1000)
             meta["finished"] = true
             meta["distanceM"] = distanceM
+            meta["pauses"] = pauses
+            meta["pausedAt"] = 0
             writeMeta(id, meta)
         }
         tripId = nil
@@ -276,6 +338,12 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             return
         }
         let now = Date()
+        if paused {
+            if Double(nowMs() - pausedAt) / 1000 > pauseLimitS {
+                stop()
+            }
+            return
+        }
         let idle = now.timeIntervalSince(lastMovingAt)
         if isAuto {
             if idle > autoStopIdleS {
@@ -299,7 +367,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             }
             return
         }
-        guard let id = tripId else {
+        guard let id = tripId, !paused else {
             return
         }
         var lines = ""
@@ -353,6 +421,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         defaults.set(enabled, forKey: keyAutoDetect)
         if enabled {
             startMonitoring()
+            considerAutoStart()
         } else {
             stopMonitoring()
         }
@@ -391,7 +460,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             }
             return
         }
-        if recording && isAuto && activity.confidence != .low && (activity.walking || activity.running || activity.cycling) {
+        if recording && isAuto && !paused && activity.confidence != .low && (activity.walking || activity.running || activity.cycling) {
             if vehicleExitAt == nil {
                 vehicleExitAt = Date()
             }
@@ -430,6 +499,14 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             }
             let started = (meta["startedAt"] as? Int64) ?? Int64((meta["startedAt"] as? Double) ?? 0)
             begin(id: id, startedAt: started, auto: (meta["auto"] as? Bool) ?? false, distance: distance, points: points.count)
+            if let saved = meta["pauses"] as? [[NSNumber]] {
+                pauses = saved.compactMap { pair in pair.count == 2 ? [pair[0].int64Value, pair[1].int64Value] : nil }
+                pausedMs = pauses.reduce(0) { $0 + ($1[1] - $1[0]) }
+            }
+            if let at = (meta["pausedAt"] as? NSNumber)?.int64Value, at > 0 {
+                paused = true
+                pausedAt = at
+            }
         }
         if autoDetectEnabled {
             startMonitoring()
@@ -445,6 +522,8 @@ public class TripRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "status", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "start", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "stop", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "pause", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "resume", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "listTrips", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "readTrip", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "deleteTrip", returnType: CAPPluginReturnPromise),
@@ -493,6 +572,20 @@ public class TripRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
     @objc func stop(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             TripEngine.shared.stop()
+            call.resolve()
+        }
+    }
+
+    @objc func pause(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            TripEngine.shared.pause()
+            call.resolve()
+        }
+    }
+
+    @objc func resume(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            TripEngine.shared.resume()
             call.resolve()
         }
     }
