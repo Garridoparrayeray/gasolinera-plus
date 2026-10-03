@@ -8,7 +8,12 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Descargar y desplegar aunque ya este el snapshot de hoy'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -35,36 +40,55 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Add today's snapshot to gasolinera.sqlite
+      - name: Skip if today's snapshot is already published
+        id: check
         if: github.event_name != 'push'
+        run: |
+          TODAY=$(TZ=Europe/Madrid date +%F)
+          LAST=$(python3 -c "import sqlite3; print(sqlite3.connect('data/gasolinera.sqlite').execute(\"SELECT value FROM meta WHERE key = 'last_snapshot_date'\").fetchone()[0])")
+          echo "Hoy: $TODAY, ultimo snapshot: $LAST"
+          if [ "$LAST" = "$TODAY" ] && [ "${{ inputs.force }}" != "true" ]; then
+            echo "El snapshot de hoy ya esta publicado; no se repite"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Add today's snapshot to gasolinera.sqlite
+        if: github.event_name != 'push' && steps.check.outputs.skip != 'true'
         run: php scripts/build-database.php --mode=daily
 
       - name: Commit updated database and JSON
-        if: github.event_name != 'push'
+        if: github.event_name != 'push' && steps.check.outputs.skip != 'true'
         run: |
           if ! git diff --quiet data/; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add data/gasolinera.sqlite data/stations-lite.json
             git commit -m "chore: snapshot diario de precios y json offline [skip ci]"
+            git pull --rebase origin main
             git push
           else
             echo "Datos inalterados, nothing to commit"
           fi
 
       - name: Download road graph
+        if: steps.check.outputs.skip != 'true'
         run: node tools/graph/fetch-graph.mjs
 
       - name: Install Vercel CLI
+        if: steps.check.outputs.skip != 'true'
         run: npm install --global vercel@latest
 
       - name: Deploy to production
+        if: steps.check.outputs.skip != 'true'
         env:
           VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
         run: vercel deploy --prod --yes --token="${{ secrets.TOKEN_GASOLINERA }}"
 
       - name: Clean up old deployments to save Vercel storage
+        if: steps.check.outputs.skip != 'true'
         env:
           VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}

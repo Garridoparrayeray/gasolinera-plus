@@ -22,7 +22,7 @@ php scripts/build-database.php --mode=backfill --days=30
 
 para que la gráfica de evolución semanal de cada gasolinera tenga datos reales desde el primer día, en vez de nacer vacía y tardar 1-2 semanas en llenarse con el cron diario. `--mode=backfill` nunca toca `current_prices` (esa tabla solo la actualiza `--mode=daily` con el snapshot de hoy) y usa `INSERT OR IGNORE` en `price_history`, así que repetir el backfill sobre días ya cubiertos es seguro y no duplica nada: verificado que ejecutar el mismo backfill dos veces deja el mismo número de filas.
 
-El cron diario (`.github/workflows/rebuild-schedule.yml`, 03:00 UTC) ejecuta solo `--mode=daily`: descarga el snapshot de hoy, actualiza `stations`/`current_prices` con `UPSERT`, y añade una fila más a `price_history` por cada estación y carburante (misma garantía de idempotencia si el workflow se relanza el mismo día).
+El cron diario (`.github/workflows/rebuild-schedule.yml`, 05:00 hora de Madrid con disparador externo y respaldos programados en GitHub; ver `docs/tecnica/02-datos-y-procesos.md`) ejecuta solo `--mode=daily`: descarga el snapshot de hoy, actualiza `stations`/`current_prices` con `UPSERT`, y añade una fila más a `price_history` por cada estación y carburante (misma garantía de idempotencia si el workflow se relanza el mismo día).
 
 ## Retención del histórico
 

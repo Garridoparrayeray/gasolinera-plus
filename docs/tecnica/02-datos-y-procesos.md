@@ -137,11 +137,13 @@ Tras construir, el flujo `road-graph.yml` valida el grafo con rutas de referenci
 
 | Flujo | Cuándo | Qué hace |
 |---|---|---|
-| `rebuild-schedule.yml` | Cada día 03:00, en cada push a `main` y manual | En la ejecución diaria descarga el snapshot, actualiza la base y el lite JSON y los **sube al repositorio** como commit. Siempre descarga el grafo de carreteras y despliega en producción con Vercel CLI; luego borra despliegues antiguos para ahorrar almacenamiento |
-| `price-index.yml` | Cada día 09:30, al cambiar `build-price-index.php` en `feat/**` y manual | Actualiza y publica el índice de precios |
+| `rebuild-schedule.yml` | Cada día a las 05:00 (hora de Madrid) por un disparador externo, con respaldos programados en GitHub a las 03:17, 05:41 y 07:13 UTC; en cada push a `main` y manual | En la ejecución diaria descarga el snapshot, actualiza la base y el lite JSON y los **sube al repositorio** como commit. Si el snapshot de hoy ya está publicado, no repite nada (salvo que se lance a mano con `force`). Despliega en producción con Vercel CLI; luego borra despliegues antiguos para ahorrar almacenamiento |
+| `price-index.yml` | Al terminar bien la actualización diaria, cada día 09:30 UTC como respaldo, al cambiar `build-price-index.php` en `feat/**` y manual | Actualiza y publica el índice de precios |
 | `road-graph.yml` | Día 2 de cada mes 04:00 | Reconstruye y publica el grafo tras validarlo |
 | `offline-maps.yml` | Día 3 de cada mes 05:00 | Extrae y publica los mapas por región |
 | `tests.yml` | En cada push | Comprobaciones estáticas, pruebas de API, paridad JS/PHP y baterías de interfaz |
 | `build-apps.yml` | Push a `feat/**` y manual | Compila el APK de Android (firmado si hay clave, y depuración) y la app de iOS para simulador; publica el APK de prueba como release `android-debug` |
+
+**Disparo diario.** GitHub no garantiza la hora de los `schedule`: en este repositorio arrancan entre 5 y 6,5 horas tarde y algún día no arrancan. Por eso la ejecución de las 05:00 la lanza un servicio externo (por ejemplo cron-job.org, zona horaria `Europe/Madrid`) con una petición `POST https://api.github.com/repos/Garridoparrayeray/gasolinera-plus/actions/workflows/rebuild-schedule.yml/dispatches`, cuerpo `{"ref":"main"}` y cabeceras `Authorization: Bearer <token>`, `Accept: application/vnd.github+json`. El token es un *fine-grained token* limitado a este repositorio con permiso **Actions: Read and write**. GitHub responde `204` si la acepta.
 
 **Aviso de diseño:** el proceso diario hace `git commit` de `data/gasolinera.sqlite` (unos 50 MB). El historial de git crece con cada día. Si esto se vuelve un problema, la base debería publicarse como asset de una release en lugar de versionarse.
