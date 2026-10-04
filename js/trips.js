@@ -67,6 +67,7 @@ const GPTrips = (() => {
         android: 'Empareja antes el móvil con el coche en los ajustes de Bluetooth. Necesita la ubicación "Permitir todo el tiempo" y quitar el ahorro de batería para Gasolinera+. Un minuto después de desconectarte, si ya no te mueves, el viaje termina solo. Si lo habías pausado, se reanuda al volver a conectarte.',
         ios: 'Conéctate al Bluetooth del coche o a CarPlay y elígelo aquí. En iPhone se nota al abrir la app o cuando la detección automática la despierta, así que conviene tenerla activada. Necesita la ubicación "Siempre". El viaje termina un minuto después de desconectarte.',
     };
+    const BT_NO_PERMISSION = 'Falta el permiso «Dispositivos cercanos» para ver los Bluetooth. Actívalo en Ajustes del móvil → Aplicaciones → Gasolinera+ → Permisos y vuelve aquí.';
     const BT_EMPTY = {
         android: 'No hay dispositivos Bluetooth emparejados. Empareja tu coche en los ajustes de Bluetooth del móvil y vuelve aquí.',
         ios: 'No hay ningún coche conectado. Conéctate al Bluetooth del coche o a CarPlay y vuelve a abrir esta opción.',
@@ -593,29 +594,61 @@ const GPTrips = (() => {
         await fillBluetoothDevices(saved, bluetooth.name);
     }
 
+    // Si falta el permiso de dispositivos cercanos, se pide y se reintenta; si sigue sin lista, se explica por qué.
+    async function readBluetoothDevices(plugin) {
+        let result = null;
+        let problem = '';
+        try {
+            result = await plugin.bluetoothDevices();
+        } catch (error) {
+            if (error && error.code === 'permissions') {
+                const perms = await plugin.requestBluetooth();
+                if (perms.bluetooth) {
+                    try {
+                        result = await plugin.bluetoothDevices();
+                    } catch (retryError) {
+                        result = null;
+                    }
+                }
+                if (!result) {
+                    problem = BT_NO_PERMISSION;
+                }
+            }
+        }
+        if (!result) {
+            return { devices: [], problem };
+        }
+        if (result.available === false) {
+            problem = 'Este móvil no tiene Bluetooth.';
+        } else if (result.enabled === false) {
+            problem = 'El Bluetooth del móvil está apagado. Enciéndelo, conéctate al coche y vuelve a abrir esta opción.';
+        }
+        return { devices: result.devices || [], problem };
+    }
+
     async function fillBluetoothDevices(savedAddress, savedLabel) {
         let saved = savedAddress;
         let savedName = savedLabel;
         const plugin = recorder();
-        let devices = [];
-        try {
-            devices = (await plugin.bluetoothDevices()).devices;
-        } catch (error) {
-            devices = [];
-        }
+        const result = await readBluetoothDevices(plugin);
+        const devices = result.devices;
         el.btDevice.innerHTML = '';
         const empty = document.createElement('option');
         empty.value = '';
         empty.textContent = 'Elige tu coche';
         el.btDevice.appendChild(empty);
-        // Los dispositivos que se anuncian como coche (manos libres o audio de coche) van primero.
-        devices.sort((a, b) => Number(Boolean(b.car)) - Number(Boolean(a.car)));
+        // Primero los conectados ahora y los que se anuncian como coche (manos libres o audio de coche).
+        const rank = (device) => Number(Boolean(device.connected)) * 2 + Number(Boolean(device.car));
+        devices.sort((a, b) => rank(b) - rank(a));
         for (const device of devices) {
             const option = document.createElement('option');
             option.value = device.address;
             let label = device.name || device.address;
             if (device.car) {
                 label += ' (coche)';
+            }
+            if (device.connected) {
+                label += ' · conectado';
             }
             option.textContent = label;
             el.btDevice.appendChild(option);
@@ -636,7 +669,9 @@ const GPTrips = (() => {
         if (saved) {
             el.btDevice.value = saved;
         }
-        if (devices.length === 0 && !saved) {
+        if (result.problem && !saved) {
+            note(result.problem);
+        } else if (devices.length === 0 && !saved) {
             note(BT_EMPTY[GPNative.platform()]);
         }
     }
@@ -672,7 +707,7 @@ const GPTrips = (() => {
         }
         el.btPicker.dataset.open = '1';
         await refreshStatus();
-        if (!perms.unrestrictedBattery) {
+        if (!perms.unrestrictedBattery && el.btDevice.options.length > 1) {
             note('Elige tu coche. Para que arranque con la app cerrada, quita también el ahorro de batería para Gasolinera+.');
         }
     }
