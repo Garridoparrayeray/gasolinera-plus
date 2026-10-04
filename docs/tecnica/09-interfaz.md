@@ -122,7 +122,7 @@ Al tocar el mapa se elige el destino en ese punto. Los filtros de carburante y d
 | `trip-auto` | Casilla | Detección automática de viajes | `setAuto` |
 | `trip-bt`, `trip-bt-cars`, `trip-bt-device`, `trip-bt-add`, `trip-bt-help` | Casilla, lista de coches con «Quitar», selector con «Añadir» y ayuda (app de Android e iPhone) | Empezar al conectar el Bluetooth de un coche (o CarPlay en iPhone). Se pueden tener varios. La ayuda cambia según la plataforma | `setBluetooth`, `addBluetoothCar`, `removeBluetoothCar` |
 | `trip-permissions-fix` | Botón «Dar permisos» | Abre los ajustes de la app | `openAppSettings` |
-| `trip-battery` | Botón | Abre los ajustes de ahorro de batería | `openBatterySettings` |
+| `trip-battery` | Botón | Abre los ajustes de ahorro de batería. El aviso es un recordatorio fijo (`BATTERY_HINT`) cuando se usa la detección automática, el Bluetooth o se está grabando: no se lee el estado, porque Android solo informa del ajuste estándar y muchos móviles tienen el suyo | `openBatterySettings` |
 | `recap-month` / `-year` / `-all` | Botones | Periodo del resumen | `setRecapPeriod` |
 | `recap-image`, `recap-pdf` | Botones | Guardar el resumen como imagen o PDF | `exportRecap` |
 | `recap-share` | Botón | Compartir la imagen del resumen | `exportRecap(..., true)` |

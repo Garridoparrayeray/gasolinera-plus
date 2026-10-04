@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.0.5
+
+### Cambios
+- Aviso de ahorro de batería: la app solo puede leer el ajuste estándar de Android, no el que tienen algunos móviles por su cuenta, así que decía «Con ahorro de batería» aunque ya lo hubieras quitado. Ahora no afirma nada del estado: es un recordatorio fijo («desactiva el ahorro de batería para Gasolinera+ para que los viajes se graben con la app cerrada») con un botón que abre los ajustes de batería. Sale en Coche cuando usas la detección automática, el Bluetooth o estás grabando, y en Info → Permisos.
+
 ## 1.0.4
 
 ### Cambios

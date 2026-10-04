@@ -69,6 +69,7 @@ const GPTrips = (() => {
         android: 'Empareja antes el móvil con el coche en los ajustes de Bluetooth. Necesita la ubicación "Permitir todo el tiempo" y quitar el ahorro de batería para Gasolinera+. Puedes añadir más de un coche y quitarlos cuando quieras. Un minuto después de desconectarte, si ya no te mueves, el viaje termina solo. Si lo habías pausado, se reanuda al volver a conectarte.',
         ios: 'Conéctate al Bluetooth del coche o a CarPlay y añádelo aquí; puedes tener varios y quitarlos cuando quieras. En iPhone se nota al abrir la app o cuando la detección automática la despierta, así que conviene tenerla activada. Necesita la ubicación "Siempre". El viaje termina un minuto después de desconectarte.',
     };
+    const BATTERY_HINT = 'Para que los viajes se graben con la app cerrada, desactiva el ahorro de batería para Gasolinera+ en los ajustes del móvil.';
     const BT_NO_PERMISSION = 'Falta el permiso «Dispositivos cercanos» para ver los Bluetooth. Actívalo en Ajustes del móvil → Aplicaciones → Gasolinera+ → Permisos y vuelve aquí.';
     const BT_EMPTY = {
         android: 'No hay dispositivos Bluetooth emparejados. Empareja tu coche en los ajustes de Bluetooth del móvil y vuelve aquí.',
@@ -374,12 +375,15 @@ const GPTrips = (() => {
         if (!perms.notifications) {
             problems.push('Sin permiso de notificaciones no verás el aviso mientras se graba.');
         }
-        if ((status.autoDetect || status.recording) && !perms.unrestrictedBattery) {
-            problems.push('Algunos móviles cortan el GPS en segundo plano para ahorrar batería: quita el ahorro de batería para Gasolinera+.');
+        // Android solo informa del ajuste estándar y muchos móviles tienen el suyo: no se afirma nada del estado.
+        const bluetooth = status.bluetooth || {};
+        const needsBattery = status.autoDetect || status.recording || (bluetooth.devices || []).length > 0;
+        if (needsBattery) {
+            problems.push(BATTERY_HINT);
         }
         el.permissions.hidden = problems.length === 0;
         el.permissionsText.textContent = problems.join(' ');
-        el.battery.hidden = perms.unrestrictedBattery;
+        el.battery.hidden = !needsBattery;
     }
 
     async function start() {
@@ -719,8 +723,8 @@ const GPTrips = (() => {
         }
         el.btPicker.dataset.open = '1';
         await refreshStatus();
-        if (!perms.unrestrictedBattery && el.btDevice.options.length > 1) {
-            note('Elige tu coche y pulsa Añadir. Para que arranque con la app cerrada, quita también el ahorro de batería para Gasolinera+.');
+        if (el.btDevice.options.length > 1) {
+            note('Elige tu coche y pulsa Añadir. Para que arranque con la app cerrada, desactiva también el ahorro de batería para Gasolinera+ en los ajustes del móvil.');
         }
     }
 
