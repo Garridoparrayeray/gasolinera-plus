@@ -503,9 +503,12 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `stopWeb` | — | Termina la grabación web y guarda el viaje si hay al menos 2 puntos. |
 | `recoverWebTrip` | — | Recupera un viaje web que quedó a medias al cerrar el navegador. |
 | `renderBluetooth` | `status` | Muestra u oculta el bloque de Bluetooth (app de Android e iPhone), su ayuda y su selector. |
-| `fillBluetoothDevices` | `saved`, `savedName` | Rellena el selector con los dispositivos disponibles y añade y marca el guardado aunque no esté conectado. |
+| `renderBluetoothCars` | `cars` | Pinta la lista de coches elegidos, cada uno con su botón «Quitar». |
+| `readBluetoothDevices` | `plugin` | Lee los dispositivos; si falta el permiso lo pide y reintenta, y devuelve el motivo si no hay lista. |
+| `fillBluetoothDevices` | `cars` | Rellena el selector con los dispositivos que aún no son coche, conectados y coches primero. |
 | `setBluetooth` | `enabled` | Activa o desactiva el arranque por Bluetooth: pide permisos, explica lo necesario y muestra el selector. |
-| `chooseBluetoothDevice` | — | Guarda el dispositivo elegido como coche. |
+| `addBluetoothCar` | — | Añade el dispositivo elegido a la lista de coches. |
+| `removeBluetoothCar` | `car` | Quita un coche de la lista. |
 | `setAuto` | `enabled` | Activa o desactiva la detección automática pidiendo los permisos necesarios. |
 | `speedColor` | `kmh` | Color HSL de un tramo del recorrido según su velocidad. |
 | `renderList` | — | Lista de viajes guardados con fecha, distancia, duración y coche. |
@@ -903,7 +906,8 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `setAutoDetect` | `PluginCall call` | Método `setAutoDetect`. |
 | `requestBluetooth` | `PluginCall call` | Método `requestBluetooth`. |
 | `bluetoothDevices` | `PluginCall call` | Método `bluetoothDevices`. |
-| `setBluetoothDevice` | `PluginCall call` | Método `setBluetoothDevice`. |
+| `addBluetoothDevice` | `PluginCall call` | Método `addBluetoothDevice`. |
+| `removeBluetoothDevice` | `PluginCall call` | Método `removeBluetoothDevice`. |
 | `requestForeground` | `PluginCall call` | Método `requestForeground`. |
 | `requestActivity` | `PluginCall call` | Método `requestActivity`. |
 | `requestBackground` | `PluginCall call` | Método `requestBackground`. |
@@ -938,9 +942,10 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `currentTripId` | `Context context` | Identificador del viaje en curso o nulo. |
 | `isAutoDetectEnabled` | `Context context` | Indica si la detección automática está activa. |
 | `setAutoDetectEnabled` | `Context context, boolean enabled` | Guarda ese estado. |
-| `bluetoothAddress` | `Context context` | Dirección del Bluetooth del coche elegido. |
-| `bluetoothName` | `Context context` | Nombre del Bluetooth del coche elegido. |
-| `setBluetoothDevice` | `Context context, String address, String name` | Guarda o borra el Bluetooth del coche. |
+| `bluetoothCars` | `Context context` | Coches con Bluetooth elegidos. |
+| `isCarBluetooth` | `Context context, String address` | Indica si el dispositivo es uno de los coches elegidos. |
+| `addBluetoothCar` | `Context context, String address, String name` | Añade un coche. |
+| `removeBluetoothCar` | `Context context, String address` | Quita un coche. |
 | `listFinished` | `Context context` | Metadatos de los viajes terminados pendientes de importar. |
 | `readPoints` | `Context context, String id` | Puntos de un viaje. |
 | `delete` | `Context context, String id` | Borra los ficheros de un viaje. |

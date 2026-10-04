@@ -13,17 +13,13 @@ import androidx.core.content.ContextCompat;
 public class BluetoothReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        String saved = TripStore.bluetoothAddress(context);
-        if (saved == null) {
-            return;
-        }
         BluetoothDevice device;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
         } else {
             device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
         }
-        if (device == null || !saved.equalsIgnoreCase(device.getAddress())) {
+        if (device == null || !TripStore.isCarBluetooth(context, device.getAddress())) {
             return;
         }
         String action = intent.getAction();

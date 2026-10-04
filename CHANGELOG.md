@@ -3,8 +3,8 @@
 ## 1.0.3
 
 ### Cambios
-- Bluetooth del coche: la lista pone primero los dispositivos que se anuncian como coche (manos libres o audio de coche) con la marca «(coche)» y, si hay uno solo, lo elige y lo guarda sin que tengas que hacer nada.
-- Bluetooth del coche: la lista incluye también los dispositivos conectados ahora (audio, manos libres y BLE) con la marca «· conectado» y los pone primero. Si falta el permiso de dispositivos cercanos lo pide y reintenta, y si el Bluetooth está apagado o no hay permiso lo dice en vez de dejar la lista vacía.
+- Bluetooth del coche: ves todos tus dispositivos Bluetooth (los conectados ahora y los que parecen un coche salen primero) y eliges tú cuál es el coche con «Añadir». Puedes tener varios coches y quitar cada uno con «Quitar». Ya no elige nada por su cuenta.
+- Si falta el permiso de dispositivos cercanos lo pide y reintenta, y si el Bluetooth está apagado o no hay permiso lo dice en vez de dejar la lista vacía.
 - El viaje empezado por Bluetooth termina un minuto después de desconectarte, en cuanto ya no te mueves (antes esperaba dos). Si el Bluetooth se corta con el coche en marcha o vuelves a conectarte, el viaje sigue.
 - El texto de ayuda explica cuándo termina el viaje.
 

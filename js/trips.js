@@ -17,6 +17,8 @@ const GPTrips = (() => {
         bt: $('trip-bt'),
         btPicker: $('trip-bt-picker'),
         btDevice: $('trip-bt-device'),
+        btAdd: $('trip-bt-add'),
+        btCars: $('trip-bt-cars'),
         btHelp: $('trip-bt-help'),
         permissions: $('trip-permissions'),
         permissionsText: $('trip-permissions-text'),
@@ -64,8 +66,8 @@ const GPTrips = (() => {
 
     const WEB_TRIP_KEY = 'webTripInProgress';
     const BT_HELP = {
-        android: 'Empareja antes el móvil con el coche en los ajustes de Bluetooth. Necesita la ubicación "Permitir todo el tiempo" y quitar el ahorro de batería para Gasolinera+. Un minuto después de desconectarte, si ya no te mueves, el viaje termina solo. Si lo habías pausado, se reanuda al volver a conectarte.',
-        ios: 'Conéctate al Bluetooth del coche o a CarPlay y elígelo aquí. En iPhone se nota al abrir la app o cuando la detección automática la despierta, así que conviene tenerla activada. Necesita la ubicación "Siempre". El viaje termina un minuto después de desconectarte.',
+        android: 'Empareja antes el móvil con el coche en los ajustes de Bluetooth. Necesita la ubicación "Permitir todo el tiempo" y quitar el ahorro de batería para Gasolinera+. Puedes añadir más de un coche y quitarlos cuando quieras. Un minuto después de desconectarte, si ya no te mueves, el viaje termina solo. Si lo habías pausado, se reanuda al volver a conectarte.',
+        ios: 'Conéctate al Bluetooth del coche o a CarPlay y añádelo aquí; puedes tener varios y quitarlos cuando quieras. En iPhone se nota al abrir la app o cuando la detección automática la despierta, así que conviene tenerla activada. Necesita la ubicación "Siempre". El viaje termina un minuto después de desconectarte.',
     };
     const BT_NO_PERMISSION = 'Falta el permiso «Dispositivos cercanos» para ver los Bluetooth. Actívalo en Ajustes del móvil → Aplicaciones → Gasolinera+ → Permisos y vuelve aquí.';
     const BT_EMPTY = {
@@ -585,13 +587,33 @@ const GPTrips = (() => {
         }
         el.btHelp.textContent = BT_HELP[platform];
         const bluetooth = status.bluetooth || {};
-        const saved = bluetooth.address;
-        el.bt.checked = Boolean(saved) || el.btPicker.dataset.open === '1';
+        const cars = bluetooth.devices || [];
+        el.bt.checked = cars.length > 0 || el.btPicker.dataset.open === '1';
         el.btPicker.hidden = !el.bt.checked;
         if (!el.bt.checked) {
             return;
         }
-        await fillBluetoothDevices(saved, bluetooth.name);
+        renderBluetoothCars(cars);
+        await fillBluetoothDevices(cars);
+    }
+
+    // Los coches elegidos, cada uno con su botón para quitarlo.
+    function renderBluetoothCars(cars) {
+        el.btCars.innerHTML = '';
+        for (const car of cars) {
+            const li = document.createElement('li');
+            const name = document.createElement('span');
+            name.textContent = car.name || car.address;
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'pill';
+            remove.textContent = 'Quitar';
+            remove.setAttribute('aria-label', 'Quitar ' + name.textContent);
+            remove.addEventListener('click', () => removeBluetoothCar(car).catch((error) => note(error.message)));
+            li.append(name, remove);
+            el.btCars.appendChild(li);
+        }
+        el.btCars.hidden = cars.length === 0;
     }
 
     // Si falta el permiso de dispositivos cercanos, se pide y se reintenta; si sigue sin lista, se explica por qué.
@@ -626,20 +648,18 @@ const GPTrips = (() => {
         return { devices: result.devices || [], problem };
     }
 
-    async function fillBluetoothDevices(savedAddress, savedLabel) {
-        let saved = savedAddress;
-        let savedName = savedLabel;
-        const plugin = recorder();
-        const result = await readBluetoothDevices(plugin);
-        const devices = result.devices;
+    // Los dispositivos que aún no son tu coche: primero los conectados ahora y los que se anuncian como coche.
+    async function fillBluetoothDevices(cars) {
+        const result = await readBluetoothDevices(recorder());
+        const chosen = new Set(cars.map((car) => car.address));
+        const devices = result.devices.filter((device) => !chosen.has(device.address));
+        const rank = (device) => Number(Boolean(device.connected)) * 2 + Number(Boolean(device.car));
+        devices.sort((a, b) => rank(b) - rank(a));
         el.btDevice.innerHTML = '';
         const empty = document.createElement('option');
         empty.value = '';
-        empty.textContent = 'Elige tu coche';
+        empty.textContent = 'Elige un dispositivo';
         el.btDevice.appendChild(empty);
-        // Primero los conectados ahora y los que se anuncian como coche (manos libres o audio de coche).
-        const rank = (device) => Number(Boolean(device.connected)) * 2 + Number(Boolean(device.car));
-        devices.sort((a, b) => rank(b) - rank(a));
         for (const device of devices) {
             const option = document.createElement('option');
             option.value = device.address;
@@ -653,25 +673,10 @@ const GPTrips = (() => {
             option.textContent = label;
             el.btDevice.appendChild(option);
         }
-        const cars = devices.filter((device) => device.car);
-        if (!saved && cars.length === 1) {
-            saved = cars[0].address;
-            savedName = cars[0].name || cars[0].address;
-            await recorder().setBluetoothDevice({ address: saved, name: savedName });
-            GP.showToast('Coche detectado: ' + savedName);
-        }
-        if (saved && !devices.some((device) => device.address === saved)) {
-            const option = document.createElement('option');
-            option.value = saved;
-            option.textContent = savedName || 'Tu coche';
-            el.btDevice.appendChild(option);
-        }
-        if (saved) {
-            el.btDevice.value = saved;
-        }
-        if (result.problem && !saved) {
+        el.btAdd.disabled = devices.length === 0;
+        if (result.problem) {
             note(result.problem);
-        } else if (devices.length === 0 && !saved) {
+        } else if (devices.length === 0 && cars.length === 0) {
             note(BT_EMPTY[GPNative.platform()]);
         }
     }
@@ -684,8 +689,15 @@ const GPTrips = (() => {
             return;
         }
         if (!enabled) {
+            const cars = (await plugin.status()).bluetooth.devices || [];
+            if (cars.length > 0 && !window.confirm('¿Dejar de empezar los viajes con el Bluetooth y quitar tus coches de la lista?')) {
+                el.bt.checked = true;
+                return;
+            }
             el.btPicker.dataset.open = '0';
-            await plugin.setBluetoothDevice({ address: '', name: '' });
+            for (const car of cars) {
+                await plugin.removeBluetoothDevice({ address: car.address });
+            }
             await refreshStatus();
             return;
         }
@@ -708,21 +720,26 @@ const GPTrips = (() => {
         el.btPicker.dataset.open = '1';
         await refreshStatus();
         if (!perms.unrestrictedBattery && el.btDevice.options.length > 1) {
-            note('Elige tu coche. Para que arranque con la app cerrada, quita también el ahorro de batería para Gasolinera+.');
+            note('Elige tu coche y pulsa Añadir. Para que arranque con la app cerrada, quita también el ahorro de batería para Gasolinera+.');
         }
     }
 
-    async function chooseBluetoothDevice() {
-        const plugin = recorder();
+    async function addBluetoothCar() {
         const address = el.btDevice.value;
-        let name = '';
-        if (address !== '') {
-            name = el.btDevice.options[el.btDevice.selectedIndex].text;
+        if (address === '') {
+            note('Elige primero un dispositivo de la lista.');
+            return;
         }
-        await plugin.setBluetoothDevice({ address, name });
-        if (address !== '') {
-            GP.showToast('Los viajes empezarán al conectarte a ' + name);
-        }
+        const name = el.btDevice.options[el.btDevice.selectedIndex].text.replace(/ \(coche\)| · conectado/g, '');
+        await recorder().addBluetoothDevice({ address, name });
+        GP.showToast('Los viajes empezarán al conectarte a ' + name);
+        await refreshStatus();
+    }
+
+    async function removeBluetoothCar(car) {
+        await recorder().removeBluetoothDevice({ address: car.address });
+        GP.showToast('Has quitado ' + (car.name || car.address));
+        await refreshStatus();
     }
 
     async function setAuto(enabled) {
@@ -1027,7 +1044,7 @@ const GPTrips = (() => {
     el.chip.addEventListener('click', () => minimizeDrive(false));
     el.auto.addEventListener('change', () => setAuto(el.auto.checked).catch((error) => note(error.message)));
     el.bt.addEventListener('change', () => setBluetooth(el.bt.checked).catch((error) => note(error.message)));
-    el.btDevice.addEventListener('change', () => chooseBluetoothDevice().catch((error) => note(error.message)));
+    el.btAdd.addEventListener('click', () => addBluetoothCar().catch((error) => note(error.message)));
     el.permissionsFix.addEventListener('click', () => {
         const plugin = recorder();
         if (plugin) {

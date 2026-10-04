@@ -125,8 +125,7 @@ public class TripRecorderPlugin extends Plugin {
         out.put("recording", recording);
         out.put("autoDetect", TripStore.isAutoDetectEnabled(getContext()));
         JSObject bluetooth = new JSObject();
-        bluetooth.put("address", TripStore.bluetoothAddress(getContext()));
-        bluetooth.put("name", TripStore.bluetoothName(getContext()));
+        bluetooth.put("devices", TripStore.bluetoothCars(getContext()));
         out.put("bluetooth", bluetooth);
         out.put("permissions", permissionsJson());
         out.put("sdk", Build.VERSION.SDK_INT);
@@ -349,8 +348,14 @@ public class TripRecorderPlugin extends Plugin {
     }
 
     @PluginMethod
-    public void setBluetoothDevice(PluginCall call) {
-        TripStore.setBluetoothDevice(getContext(), call.getString("address"), call.getString("name"));
+    public void addBluetoothDevice(PluginCall call) {
+        TripStore.addBluetoothCar(getContext(), call.getString("address"), call.getString("name"));
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void removeBluetoothDevice(PluginCall call) {
+        TripStore.removeBluetoothCar(getContext(), call.getString("address"));
         call.resolve();
     }
 

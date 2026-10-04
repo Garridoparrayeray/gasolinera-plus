@@ -608,7 +608,11 @@ function headlineDelta(array $headline, string $fuel): string
                     <div id="trip-bt-wrap" hidden>
                         <label class="garage-check"><input type="checkbox" id="trip-bt"> Empezar al conectarme al Bluetooth de mi coche</label>
                         <div id="trip-bt-picker" hidden>
-                            <label>Bluetooth de tu coche <select id="trip-bt-device"></select></label>
+                            <ul id="trip-bt-cars" class="trip-bt-cars" hidden></ul>
+                            <div class="trip-bt-add">
+                                <label>Añadir un dispositivo <select id="trip-bt-device"></select></label>
+                                <button id="trip-bt-add" type="button" class="pill">Añadir</button>
+                            </div>
                             <p class="garage-note" id="trip-bt-help"></p>
                         </div>
                     </div>
