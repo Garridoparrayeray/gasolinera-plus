@@ -67,9 +67,14 @@ public class ActivityTransitionReceiver extends BroadcastReceiver {
     }
 
     static void onExitVehicle(Context context) {
+        onExitVehicle(context, false);
+    }
+
+    // Con el Bluetooth del coche la salida es segura y el viaje termina en un minuto.
+    static void onExitVehicle(Context context, boolean quick) {
         if (TripStore.currentTripId(context) == null) {
             return;
         }
-        TripService.sendAction(context, TripService.ACTION_VEHICLE_EXIT);
+        TripService.sendAction(context, TripService.ACTION_VEHICLE_EXIT, quick);
     }
 }

@@ -42,6 +42,7 @@ public class TripService extends Service {
     public static final String ACTION_RESUME = "app.vercel.gasolineraplus.trips.RESUME";
     public static final String ACTION_VEHICLE_ENTER = "app.vercel.gasolineraplus.trips.VEHICLE_ENTER";
     public static final String EXTRA_AUTO = "auto";
+    public static final String EXTRA_QUICK_EXIT = "quickExit";
     public static final String EXTRA_VEHICLE_ID = "vehicleId";
 
     private static final String CHANNEL_ID = "trips";
@@ -50,6 +51,7 @@ public class TripService extends Service {
     private static final float MOVING_MS = 2f;
     private static final long AUTO_STOP_IDLE_MS = 20 * 60 * 1000L;
     private static final long AFTER_EXIT_IDLE_MS = 2 * 60 * 1000L;
+    private static final long BLUETOOTH_EXIT_IDLE_MS = 60 * 1000L;
     private static final long MANUAL_STOP_IDLE_MS = 60 * 60 * 1000L;
     private static final long PAUSE_LIMIT_MS = 60 * 60 * 1000L;
     private static final double MIN_AUTO_DISTANCE_M = 500;
@@ -97,6 +99,7 @@ public class TripService extends Service {
     private long startedAt;
     private long lastMovingAt;
     private long vehicleExitAt;
+    private long exitGraceMs = AFTER_EXIT_IDLE_MS;
     private Location lastGood;
     private double distanceM;
     private float speedMs;
@@ -127,8 +130,13 @@ public class TripService extends Service {
     }
 
     public static void sendAction(Context context, String action) {
+        sendAction(context, action, false);
+    }
+
+    public static void sendAction(Context context, String action, boolean quickExit) {
         Intent intent = new Intent(context, TripService.class);
         intent.setAction(action);
+        intent.putExtra(EXTRA_QUICK_EXIT, quickExit);
         context.startService(intent);
     }
 
@@ -152,6 +160,10 @@ public class TripService extends Service {
                 stopSelf();
             } else if (!paused) {
                 vehicleExitAt = System.currentTimeMillis();
+                exitGraceMs = AFTER_EXIT_IDLE_MS;
+                if (intent != null && intent.getBooleanExtra(EXTRA_QUICK_EXIT, false)) {
+                    exitGraceMs = BLUETOOTH_EXIT_IDLE_MS;
+                }
             }
             return START_NOT_STICKY;
         }
@@ -336,7 +348,7 @@ public class TripService extends Service {
         long idle = now - lastMovingAt;
         if (auto && idle > AUTO_STOP_IDLE_MS) {
             stopRecording(false);
-        } else if (vehicleExitAt > 0 && now - vehicleExitAt > AFTER_EXIT_IDLE_MS && idle > AFTER_EXIT_IDLE_MS) {
+        } else if (vehicleExitAt > 0 && now - vehicleExitAt > exitGraceMs && idle > exitGraceMs) {
             stopRecording(false);
         } else if (!auto && idle > MANUAL_STOP_IDLE_MS) {
             stopRecording(false);

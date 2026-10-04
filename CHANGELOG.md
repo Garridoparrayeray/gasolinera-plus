@@ -1,5 +1,12 @@
 # Cambios
 
+## 1.0.3
+
+### Cambios
+- Bluetooth del coche: la lista pone primero los dispositivos que se anuncian como coche (manos libres o audio de coche) con la marca «(coche)» y, si hay uno solo, lo elige y lo guarda sin que tengas que hacer nada.
+- El viaje empezado por Bluetooth termina un minuto después de desconectarte, en cuanto ya no te mueves (antes esperaba dos). Si el Bluetooth se corta con el coche en marcha o vuelves a conectarte, el viaje sigue.
+- El texto de ayuda explica cuándo termina el viaje.
+
 ## 1.0.2
 
 ### Novedades

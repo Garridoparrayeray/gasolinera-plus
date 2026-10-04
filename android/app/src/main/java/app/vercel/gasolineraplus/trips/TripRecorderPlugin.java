@@ -3,6 +3,7 @@ package app.vercel.gasolineraplus.trips;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
@@ -246,12 +247,24 @@ public class TripRecorderPlugin extends Plugin {
                 JSObject item = new JSObject();
                 item.put("name", device.getName());
                 item.put("address", device.getAddress());
+                item.put("car", isCar(device));
                 devices.put(item);
             }
         }
         JSObject out = new JSObject();
         out.put("devices", devices);
         call.resolve(out);
+    }
+
+    // Los manos libres y equipos de audio de coche se anuncian con su clase Bluetooth.
+    @SuppressLint("MissingPermission")
+    private static boolean isCar(BluetoothDevice device) {
+        BluetoothClass type = device.getBluetoothClass();
+        if (type == null) {
+            return false;
+        }
+        int kind = type.getDeviceClass();
+        return kind == BluetoothClass.Device.AUDIO_VIDEO_CAR_AUDIO || kind == BluetoothClass.Device.AUDIO_VIDEO_HANDSFREE;
     }
 
     @PluginMethod

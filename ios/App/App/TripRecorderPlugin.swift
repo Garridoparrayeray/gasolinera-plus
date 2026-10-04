@@ -15,6 +15,7 @@ private let maxAccuracyM: Double = 25
 private let movingMs: Double = 2
 private let autoStopIdleS: TimeInterval = 20 * 60
 private let afterExitIdleS: TimeInterval = 2 * 60
+private let carExitIdleS: TimeInterval = 60
 private let manualStopIdleS: TimeInterval = 60 * 60
 private let pauseLimitS: TimeInterval = 60 * 60
 private let minAutoDistanceM: Double = 500
@@ -48,6 +49,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
     private var lastLocation: CLLocation?
     private var lastMovingAt = Date()
     private var vehicleExitAt: Date?
+    private var exitGraceS: TimeInterval = afterExitIdleS
     private(set) var paused = false
     private var pausedAt: Int64 = 0
     private var pausedMs: Int64 = 0
@@ -359,7 +361,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
                 stop()
                 return
             }
-            if let exit = vehicleExitAt, now.timeIntervalSince(max(exit, lastMovingAt)) > afterExitIdleS {
+            if let exit = vehicleExitAt, now.timeIntervalSince(max(exit, lastMovingAt)) > exitGraceS {
                 stop()
             }
             return
@@ -475,6 +477,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         if recording && isAuto && !paused && activity.confidence != .low && (activity.walking || activity.running || activity.cycling) {
             if vehicleExitAt == nil {
                 vehicleExitAt = Date()
+                exitGraceS = afterExitIdleS
             }
         }
     }
@@ -544,10 +547,10 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         return defaults.string(forKey: keyCarAudioName) ?? ""
     }
 
-    func carOutputs() -> [[String: String]] {
+    func carOutputs() -> [[String: Any]] {
         return AVAudioSession.sharedInstance().currentRoute.outputs
             .filter { carPortTypes.contains($0.portType) }
-            .map { ["address": $0.uid, "name": $0.portName] }
+            .map { ["address": $0.uid, "name": $0.portName, "car": $0.portType == .carAudio] }
     }
 
     func setCarAudio(id: String, name: String) {
@@ -570,7 +573,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         guard let id = carAudioId else {
             return
         }
-        let connected = carOutputs().contains { $0["address"] == id }
+        let connected = carOutputs().contains { ($0["address"] as? String) == id }
         if connected {
             let justConnected = !carWasConnected
             carWasConnected = true
@@ -585,8 +588,9 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             }
             return
         }
-        if carWasConnected && recording && isAuto && !paused && vehicleExitAt == nil {
+        if carWasConnected && recording && !paused && vehicleExitAt == nil {
             vehicleExitAt = Date()
+            exitGraceS = carExitIdleS
         }
         carWasConnected = false
     }

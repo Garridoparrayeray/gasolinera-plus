@@ -64,8 +64,8 @@ const GPTrips = (() => {
 
     const WEB_TRIP_KEY = 'webTripInProgress';
     const BT_HELP = {
-        android: 'Empareja antes el móvil con el coche en los ajustes de Bluetooth. Necesita la ubicación "Permitir todo el tiempo" y quitar el ahorro de batería para Gasolinera+. El viaje termina al desconectarte y, si lo habías pausado, se reanuda al volver a conectarte.',
-        ios: 'Conéctate al Bluetooth del coche o a CarPlay y elígelo aquí. En iPhone se nota al abrir la app o cuando la detección automática la despierta, así que conviene tenerla activada. Necesita la ubicación "Siempre".',
+        android: 'Empareja antes el móvil con el coche en los ajustes de Bluetooth. Necesita la ubicación "Permitir todo el tiempo" y quitar el ahorro de batería para Gasolinera+. Un minuto después de desconectarte, si ya no te mueves, el viaje termina solo. Si lo habías pausado, se reanuda al volver a conectarte.',
+        ios: 'Conéctate al Bluetooth del coche o a CarPlay y elígelo aquí. En iPhone se nota al abrir la app o cuando la detección automática la despierta, así que conviene tenerla activada. Necesita la ubicación "Siempre". El viaje termina un minuto después de desconectarte.',
     };
     const BT_EMPTY = {
         android: 'No hay dispositivos Bluetooth emparejados. Empareja tu coche en los ajustes de Bluetooth del móvil y vuelve aquí.',
@@ -593,7 +593,9 @@ const GPTrips = (() => {
         await fillBluetoothDevices(saved, bluetooth.name);
     }
 
-    async function fillBluetoothDevices(saved, savedName) {
+    async function fillBluetoothDevices(savedAddress, savedLabel) {
+        let saved = savedAddress;
+        let savedName = savedLabel;
         const plugin = recorder();
         let devices = [];
         try {
@@ -606,11 +608,24 @@ const GPTrips = (() => {
         empty.value = '';
         empty.textContent = 'Elige tu coche';
         el.btDevice.appendChild(empty);
+        // Los dispositivos que se anuncian como coche (manos libres o audio de coche) van primero.
+        devices.sort((a, b) => Number(Boolean(b.car)) - Number(Boolean(a.car)));
         for (const device of devices) {
             const option = document.createElement('option');
             option.value = device.address;
-            option.textContent = device.name || device.address;
+            let label = device.name || device.address;
+            if (device.car) {
+                label += ' (coche)';
+            }
+            option.textContent = label;
             el.btDevice.appendChild(option);
+        }
+        const cars = devices.filter((device) => device.car);
+        if (!saved && cars.length === 1) {
+            saved = cars[0].address;
+            savedName = cars[0].name || cars[0].address;
+            await recorder().setBluetoothDevice({ address: saved, name: savedName });
+            GP.showToast('Coche detectado: ' + savedName);
         }
         if (saved && !devices.some((device) => device.address === saved)) {
             const option = document.createElement('option');

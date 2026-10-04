@@ -30,7 +30,7 @@ public class BluetoothReceiver extends BroadcastReceiver {
         if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
             onCarConnected(context);
         } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-            ActivityTransitionReceiver.onExitVehicle(context);
+            ActivityTransitionReceiver.onExitVehicle(context, true);
         }
     }
 
