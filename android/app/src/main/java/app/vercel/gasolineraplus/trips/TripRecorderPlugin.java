@@ -49,10 +49,17 @@ import java.util.concurrent.atomic.AtomicInteger;
         }
 )
 public class TripRecorderPlugin extends Plugin {
+    private static final long REREGISTER_MUTE_MS = 30 * 1000L;
 
     @Override
     public void load() {
         TripService.setListener((snapshot) -> notifyListeners("tripUpdate", snapshotJson(snapshot)));
+        // Se vuelve a registrar por si Android olvidó el registro (por ejemplo, al forzar el cierre).
+        Context context = getContext();
+        if (TripStore.isAutoDetectEnabled(context) && AutoDetect.hasPermissions(context)) {
+            AutoDetect.mute(context, REREGISTER_MUTE_MS);
+            AutoDetect.enable(context);
+        }
     }
 
     @Override

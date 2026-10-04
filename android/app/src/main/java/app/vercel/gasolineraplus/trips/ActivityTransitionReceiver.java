@@ -15,11 +15,11 @@ public class ActivityTransitionReceiver extends BroadcastReceiver {
     public static final String ACTION = "app.vercel.gasolineraplus.trips.TRANSITION";
     public static final String ACTION_SAMPLE = "app.vercel.gasolineraplus.trips.SAMPLE";
     private static final int MIN_CONFIDENCE = 75;
-    private static final long MAX_SAMPLE_AGE_MS = 2 * 60 * 1000L;
+    private static final long MAX_SAMPLE_AGE_MS = 3 * 60 * 1000L;
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (!TripStore.isAutoDetectEnabled(context)) {
+        if (!TripStore.isAutoDetectEnabled(context) || AutoDetect.isMuted(context)) {
             return;
         }
         if (ActivityRecognitionResult.hasResult(intent)) {
@@ -49,7 +49,7 @@ public class ActivityTransitionReceiver extends BroadcastReceiver {
         if (result == null) {
             return;
         }
-        // Al registrarse, Google entrega enseguida la última actividad que conocía: si es vieja no vale.
+        // Una lectura vieja (Google entrega la última que conocía) no vale.
         if (SystemClock.elapsedRealtime() - result.getElapsedRealtimeMillis() > MAX_SAMPLE_AGE_MS) {
             return;
         }
