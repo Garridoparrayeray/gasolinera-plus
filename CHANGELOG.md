@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.0.4
+
+### Cambios
+- Arreglo: al abrir la app podía empezar un viaje solo. Al abrirla se volvía a registrar la detección automática y Google devolvía al instante la última actividad que recordaba, aunque fuera vieja, y se tomaba como «acabas de subir al coche». Ahora se ignora lo que llegue en los 30 segundos siguientes a abrir la app y las lecturas de más de 3 minutos. La detección se sigue recuperando sola al abrir la app si Android la había olvidado.
+- Si la detección automática arranca un viaje y en 3 minutos no te has movido, se descarta sin guardarlo ni dejar el aviso de grabación (en Android y en iPhone).
+
 ## 1.0.3
 
 ### Cambios

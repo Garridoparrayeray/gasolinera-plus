@@ -21,6 +21,7 @@ import java.util.List;
 
 public final class AutoDetect {
     private static final long SAMPLE_INTERVAL_MS = 60 * 1000L;
+    private static final String KEY_MUTE_UNTIL = "detect_mute_until";
 
     private AutoDetect() {
     }
@@ -43,6 +44,16 @@ public final class AutoDetect {
             flags |= PendingIntent.FLAG_MUTABLE;
         }
         return PendingIntent.getBroadcast(context, 1, intent, flags);
+    }
+
+    // Al registrarse, Google entrega enseguida la última actividad que conocía. Tras volver a
+    // registrar al abrir la app se ignora lo que llegue durante unos segundos.
+    static void mute(Context context, long millis) {
+        TripStore.prefs(context).edit().putLong(KEY_MUTE_UNTIL, System.currentTimeMillis() + millis).apply();
+    }
+
+    static boolean isMuted(Context context) {
+        return System.currentTimeMillis() < TripStore.prefs(context).getLong(KEY_MUTE_UNTIL, 0);
     }
 
     public static boolean hasPermissions(Context context) {

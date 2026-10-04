@@ -19,6 +19,7 @@ private let carExitIdleS: TimeInterval = 60
 private let manualStopIdleS: TimeInterval = 60 * 60
 private let pauseLimitS: TimeInterval = 60 * 60
 private let minAutoDistanceM: Double = 500
+private let speculativeNoMoveS: TimeInterval = 3 * 60
 private let keyCurrent = "trips.current"
 private let keyAutoDetect = "trips.autoDetect"
 private let keyCarAudioList = "trips.carAudio.list"
@@ -47,6 +48,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
     private var maxSpeedMs: Double = 0
     private var pointCount = 0
     private var isAuto = false
+    private var speculative = false
     private var lastLocation: CLLocation?
     private var lastMovingAt = Date()
     private var vehicleExitAt: Date?
@@ -270,7 +272,9 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         onUpdate?(snapshot())
     }
 
-    func start(auto: Bool, vehicleId: String?) -> Bool {
+    // Un viaje especulativo lo arranca la detección de actividad, que a veces se equivoca:
+    // si en tres minutos no te has movido, se descarta.
+    func start(auto: Bool, vehicleId: String?, speculative: Bool = false) -> Bool {
         if recording {
             return true
         }
@@ -288,6 +292,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         FileManager.default.createFile(atPath: pointsURL(id).path, contents: nil)
         defaults.set(id, forKey: keyCurrent)
         begin(id: id, startedAt: now, auto: auto, distance: 0, points: 0)
+        self.speculative = speculative
         return true
     }
 
@@ -354,6 +359,10 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             if Double(nowMs() - pausedAt) / 1000 > pauseLimitS {
                 stop()
             }
+            return
+        }
+        if speculative && distanceM == 0 && Double(nowMs() - startedAt) / 1000 > speculativeNoMoveS {
+            stop(discard: true)
             return
         }
         let idle = now.timeIntervalSince(lastMovingAt)
@@ -471,7 +480,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
         if activity.automotive && activity.confidence != .low {
             vehicleExitAt = nil
             if !recording && autoDetectEnabled {
-                _ = start(auto: true, vehicleId: nil)
+                _ = start(auto: true, vehicleId: nil, speculative: true)
             }
             return
         }
@@ -493,7 +502,7 @@ final class TripEngine: NSObject, CLLocationManagerDelegate {
             }
             let driving = (activities ?? []).contains { $0.automotive && $0.confidence != .low }
             if driving {
-                _ = self.start(auto: true, vehicleId: nil)
+                _ = self.start(auto: true, vehicleId: nil, speculative: true)
             }
         }
     }
