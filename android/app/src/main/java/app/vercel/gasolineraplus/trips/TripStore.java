@@ -26,6 +26,7 @@ public final class TripStore {
     private static final String PREFS = "trip_recorder";
     private static final String KEY_CURRENT = "current_trip";
     private static final String KEY_AUTO_DETECT = "auto_detect";
+    private static final String KEY_BT_CARS = "bt_cars";
     private static final String KEY_BT_ADDRESS = "bt_address";
     private static final String KEY_BT_NAME = "bt_name";
 
@@ -64,22 +65,71 @@ public final class TripStore {
         prefs(context).edit().putBoolean(KEY_AUTO_DETECT, enabled).apply();
     }
 
-    public static String bluetoothAddress(Context context) {
-        return prefs(context).getString(KEY_BT_ADDRESS, null);
-    }
-
-    public static String bluetoothName(Context context) {
-        return prefs(context).getString(KEY_BT_NAME, null);
-    }
-
-    public static void setBluetoothDevice(Context context, String address, String name) {
-        SharedPreferences.Editor editor = prefs(context).edit();
-        if (address == null || address.isEmpty()) {
-            editor.remove(KEY_BT_ADDRESS).remove(KEY_BT_NAME);
-        } else {
-            editor.putString(KEY_BT_ADDRESS, address).putString(KEY_BT_NAME, name);
+    // Coches con Bluetooth elegidos por el usuario: [{address, name}].
+    public static JSONArray bluetoothCars(Context context) {
+        SharedPreferences preferences = prefs(context);
+        String raw = preferences.getString(KEY_BT_CARS, null);
+        if (raw == null) {
+            // Viene de la versión con un solo coche.
+            JSONArray cars = new JSONArray();
+            String address = preferences.getString(KEY_BT_ADDRESS, null);
+            if (address != null && !address.isEmpty()) {
+                try {
+                    cars.put(new JSONObject().put("address", address).put("name", preferences.getString(KEY_BT_NAME, "")));
+                } catch (JSONException error) {
+                    return new JSONArray();
+                }
+            }
+            return cars;
         }
-        editor.apply();
+        try {
+            return new JSONArray(raw);
+        } catch (JSONException error) {
+            return new JSONArray();
+        }
+    }
+
+    public static boolean isCarBluetooth(Context context, String address) {
+        if (address == null) {
+            return false;
+        }
+        JSONArray cars = bluetoothCars(context);
+        for (int i = 0; i < cars.length(); i++) {
+            JSONObject car = cars.optJSONObject(i);
+            if (car != null && address.equalsIgnoreCase(car.optString("address"))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void addBluetoothCar(Context context, String address, String name) {
+        if (address == null || address.isEmpty() || isCarBluetooth(context, address)) {
+            return;
+        }
+        JSONArray cars = bluetoothCars(context);
+        try {
+            cars.put(new JSONObject().put("address", address).put("name", name == null ? "" : name));
+        } catch (JSONException error) {
+            return;
+        }
+        saveBluetoothCars(context, cars);
+    }
+
+    public static void removeBluetoothCar(Context context, String address) {
+        JSONArray cars = bluetoothCars(context);
+        JSONArray kept = new JSONArray();
+        for (int i = 0; i < cars.length(); i++) {
+            JSONObject car = cars.optJSONObject(i);
+            if (car != null && !car.optString("address").equalsIgnoreCase(address)) {
+                kept.put(car);
+            }
+        }
+        saveBluetoothCars(context, kept);
+    }
+
+    private static void saveBluetoothCars(Context context, JSONArray cars) {
+        prefs(context).edit().putString(KEY_BT_CARS, cars.toString()).remove(KEY_BT_ADDRESS).remove(KEY_BT_NAME).apply();
     }
 
     static synchronized String begin(Context context, boolean auto, String vehicleId) throws IOException, JSONException {

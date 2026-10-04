@@ -120,7 +120,7 @@ Al tocar el mapa se elige el destino en ese punto. Los filtros de carburante y d
 | `garage-compare-day` / `-week` / `-month` | Botones | Comparación con la media por repostaje, por semana o por mes | `renderComparison` |
 | `trip-start`, `trip-stop` | Botones | Empezar y terminar viaje | `start`, `stop` |
 | `trip-auto` | Casilla | Detección automática de viajes | `setAuto` |
-| `trip-bt`, `trip-bt-device`, `trip-bt-help` | Casilla, selector y ayuda (app de Android e iPhone) | Empezar al conectar el Bluetooth del coche (o CarPlay en iPhone). La ayuda cambia según la plataforma | `setBluetooth`, `chooseBluetoothDevice` |
+| `trip-bt`, `trip-bt-cars`, `trip-bt-device`, `trip-bt-add`, `trip-bt-help` | Casilla, lista de coches con «Quitar», selector con «Añadir» y ayuda (app de Android e iPhone) | Empezar al conectar el Bluetooth de un coche (o CarPlay en iPhone). Se pueden tener varios. La ayuda cambia según la plataforma | `setBluetooth`, `addBluetoothCar`, `removeBluetoothCar` |
 | `trip-permissions-fix` | Botón «Dar permisos» | Abre los ajustes de la app | `openAppSettings` |
 | `trip-battery` | Botón | Abre los ajustes de ahorro de batería | `openBatterySettings` |
 | `recap-month` / `-year` / `-all` | Botones | Periodo del resumen | `setRecapPeriod` |

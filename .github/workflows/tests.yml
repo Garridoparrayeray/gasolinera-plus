@@ -71,6 +71,11 @@ jobs:
           CHROME_PATH: google-chrome
         run: node tests/ui-garage.mjs
 
+      - name: UI Bluetooth
+        env:
+          CHROME_PATH: google-chrome
+        run: node tests/ui-bluetooth.mjs
+
       - name: UI rutas
         env:
           CHROME_PATH: google-chrome

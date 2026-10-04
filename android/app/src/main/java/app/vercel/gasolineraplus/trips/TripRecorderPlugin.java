@@ -3,13 +3,17 @@ package app.vercel.gasolineraplus.trips;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.Settings;
 
@@ -28,7 +32,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @CapacitorPlugin(
         name = "TripRecorder",
@@ -117,8 +125,7 @@ public class TripRecorderPlugin extends Plugin {
         out.put("recording", recording);
         out.put("autoDetect", TripStore.isAutoDetectEnabled(getContext()));
         JSObject bluetooth = new JSObject();
-        bluetooth.put("address", TripStore.bluetoothAddress(getContext()));
-        bluetooth.put("name", TripStore.bluetoothName(getContext()));
+        bluetooth.put("devices", TripStore.bluetoothCars(getContext()));
         out.put("bluetooth", bluetooth);
         out.put("permissions", permissionsJson());
         out.put("sdk", Build.VERSION.SDK_INT);
@@ -228,6 +235,7 @@ public class TripRecorderPlugin extends Plugin {
         requestPermissionForAlias("bluetooth", call, "afterPermissions");
     }
 
+    // Devuelve los emparejados y los que están conectados ahora (audio, manos libres y BLE).
     @SuppressLint("MissingPermission")
     @PluginMethod
     public void bluetoothDevices(PluginCall call) {
@@ -235,28 +243,119 @@ public class TripRecorderPlugin extends Plugin {
             call.reject("Falta el permiso de Bluetooth", "permissions");
             return;
         }
-        JSArray devices = new JSArray();
         BluetoothManager manager = (BluetoothManager) getContext().getSystemService(Context.BLUETOOTH_SERVICE);
         BluetoothAdapter adapter = null;
         if (manager != null) {
             adapter = manager.getAdapter();
         }
-        if (adapter != null) {
-            for (BluetoothDevice device : adapter.getBondedDevices()) {
-                JSObject item = new JSObject();
-                item.put("name", device.getName());
-                item.put("address", device.getAddress());
-                devices.put(item);
+        final JSObject out = new JSObject();
+        if (adapter == null) {
+            out.put("devices", new JSArray());
+            out.put("available", false);
+            call.resolve(out);
+            return;
+        }
+        out.put("available", true);
+        out.put("enabled", adapter.isEnabled());
+        final Map<String, JSObject> found = new LinkedHashMap<>();
+        for (BluetoothDevice device : adapter.getBondedDevices()) {
+            addDevice(found, device, false);
+        }
+        for (BluetoothDevice device : manager.getConnectedDevices(BluetoothProfile.GATT)) {
+            addDevice(found, device, true);
+        }
+        collectConnected(adapter, found, () -> {
+            JSArray devices = new JSArray();
+            synchronized (found) {
+                for (JSObject item : found.values()) {
+                    devices.put(item);
+                }
+            }
+            out.put("devices", devices);
+            call.resolve(out);
+        });
+    }
+
+    // Los perfiles de audio y manos libres se consultan de forma asíncrona; si tardan, se responde con lo que haya.
+    @SuppressLint("MissingPermission")
+    private void collectConnected(BluetoothAdapter adapter, Map<String, JSObject> found, Runnable done) {
+        int[] profiles = { BluetoothProfile.A2DP, BluetoothProfile.HEADSET };
+        AtomicInteger pending = new AtomicInteger(profiles.length);
+        AtomicBoolean finished = new AtomicBoolean(false);
+        Runnable finish = () -> {
+            if (finished.compareAndSet(false, true)) {
+                done.run();
+            }
+        };
+        new Handler(Looper.getMainLooper()).postDelayed(finish, 1500);
+        for (int profile : profiles) {
+            BluetoothProfile.ServiceListener listener = new BluetoothProfile.ServiceListener() {
+                @Override
+                public void onServiceConnected(int type, BluetoothProfile proxy) {
+                    synchronized (found) {
+                        for (BluetoothDevice device : proxy.getConnectedDevices()) {
+                            addDevice(found, device, true);
+                        }
+                    }
+                    adapter.closeProfileProxy(type, proxy);
+                    if (pending.decrementAndGet() == 0) {
+                        finish.run();
+                    }
+                }
+
+                @Override
+                public void onServiceDisconnected(int type) {
+                }
+            };
+            boolean asked = false;
+            try {
+                asked = adapter.getProfileProxy(getContext(), listener, profile);
+            } catch (RuntimeException error) {
+                asked = false;
+            }
+            if (!asked && pending.decrementAndGet() == 0) {
+                finish.run();
             }
         }
-        JSObject out = new JSObject();
-        out.put("devices", devices);
-        call.resolve(out);
+    }
+
+    @SuppressLint("MissingPermission")
+    private static void addDevice(Map<String, JSObject> found, BluetoothDevice device, boolean connected) {
+        String address = device.getAddress();
+        JSObject item = found.get(address);
+        if (item == null) {
+            item = new JSObject();
+            item.put("name", device.getName());
+            item.put("address", address);
+            item.put("car", isCar(device));
+            item.put("connected", false);
+            found.put(address, item);
+        }
+        if (connected) {
+            item.put("connected", true);
+        }
+    }
+
+    // Los manos libres y equipos de audio de coche se anuncian con su clase Bluetooth.
+    @SuppressLint("MissingPermission")
+    private static boolean isCar(BluetoothDevice device) {
+        BluetoothClass type = device.getBluetoothClass();
+        if (type == null) {
+            return false;
+        }
+        int kind = type.getDeviceClass();
+        return kind == BluetoothClass.Device.AUDIO_VIDEO_CAR_AUDIO || kind == BluetoothClass.Device.AUDIO_VIDEO_HANDSFREE;
     }
 
     @PluginMethod
-    public void setBluetoothDevice(PluginCall call) {
-        TripStore.setBluetoothDevice(getContext(), call.getString("address"), call.getString("name"));
+    public void addBluetoothDevice(PluginCall call) {
+        TripStore.addBluetoothCar(getContext(), call.getString("address"), call.getString("name"));
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void removeBluetoothDevice(PluginCall call) {
+        TripStore.removeBluetoothCar(getContext(), call.getString("address"));
         call.resolve();
     }
 
