@@ -53,10 +53,6 @@ public class TripRecorderPlugin extends Plugin {
     @Override
     public void load() {
         TripService.setListener((snapshot) -> notifyListeners("tripUpdate", snapshotJson(snapshot)));
-        Context context = getContext();
-        if (TripStore.isAutoDetectEnabled(context) && AutoDetect.hasPermissions(context)) {
-            AutoDetect.enable(context);
-        }
     }
 
     @Override

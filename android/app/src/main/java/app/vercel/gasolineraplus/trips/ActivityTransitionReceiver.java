@@ -3,6 +3,7 @@ package app.vercel.gasolineraplus.trips;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.SystemClock;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.ActivityTransition;
@@ -14,6 +15,7 @@ public class ActivityTransitionReceiver extends BroadcastReceiver {
     public static final String ACTION = "app.vercel.gasolineraplus.trips.TRANSITION";
     public static final String ACTION_SAMPLE = "app.vercel.gasolineraplus.trips.SAMPLE";
     private static final int MIN_CONFIDENCE = 75;
+    private static final long MAX_SAMPLE_AGE_MS = 2 * 60 * 1000L;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -47,6 +49,10 @@ public class ActivityTransitionReceiver extends BroadcastReceiver {
         if (result == null) {
             return;
         }
+        // Al registrarse, Google entrega enseguida la última actividad que conocía: si es vieja no vale.
+        if (SystemClock.elapsedRealtime() - result.getElapsedRealtimeMillis() > MAX_SAMPLE_AGE_MS) {
+            return;
+        }
         DetectedActivity activity = result.getMostProbableActivity();
         if (activity == null || activity.getConfidence() < MIN_CONFIDENCE) {
             return;
@@ -63,7 +69,7 @@ public class ActivityTransitionReceiver extends BroadcastReceiver {
         if (TripStore.currentTripId(context) != null || !AutoDetect.hasPermissions(context)) {
             return;
         }
-        TripService.start(context, true, null);
+        TripService.start(context, true, null, true);
     }
 
     static void onExitVehicle(Context context) {

@@ -43,6 +43,7 @@ public class TripService extends Service {
     public static final String ACTION_VEHICLE_ENTER = "app.vercel.gasolineraplus.trips.VEHICLE_ENTER";
     public static final String EXTRA_AUTO = "auto";
     public static final String EXTRA_QUICK_EXIT = "quickExit";
+    public static final String EXTRA_SPECULATIVE = "speculative";
     public static final String EXTRA_VEHICLE_ID = "vehicleId";
 
     private static final String CHANNEL_ID = "trips";
@@ -52,6 +53,7 @@ public class TripService extends Service {
     private static final long AUTO_STOP_IDLE_MS = 20 * 60 * 1000L;
     private static final long AFTER_EXIT_IDLE_MS = 2 * 60 * 1000L;
     private static final long BLUETOOTH_EXIT_IDLE_MS = 60 * 1000L;
+    private static final long SPECULATIVE_NO_MOVE_MS = 3 * 60 * 1000L;
     private static final long MANUAL_STOP_IDLE_MS = 60 * 60 * 1000L;
     private static final long PAUSE_LIMIT_MS = 60 * 60 * 1000L;
     private static final double MIN_AUTO_DISTANCE_M = 500;
@@ -100,6 +102,7 @@ public class TripService extends Service {
     private long lastMovingAt;
     private long vehicleExitAt;
     private long exitGraceMs = AFTER_EXIT_IDLE_MS;
+    private boolean speculative;
     private Location lastGood;
     private double distanceM;
     private float speedMs;
@@ -120,9 +123,16 @@ public class TripService extends Service {
     }
 
     public static void start(Context context, boolean auto, String vehicleId) {
+        start(context, auto, vehicleId, false);
+    }
+
+    // Un viaje especulativo lo arranca la detección de actividad, que a veces se equivoca:
+    // si en tres minutos no te has movido, se descarta.
+    public static void start(Context context, boolean auto, String vehicleId, boolean speculative) {
         Intent intent = new Intent(context, TripService.class);
         intent.setAction(ACTION_START);
         intent.putExtra(EXTRA_AUTO, auto);
+        intent.putExtra(EXTRA_SPECULATIVE, speculative);
         if (vehicleId != null) {
             intent.putExtra(EXTRA_VEHICLE_ID, vehicleId);
         }
@@ -204,6 +214,7 @@ public class TripService extends Service {
             return START_NOT_STICKY;
         }
         auto = isAuto;
+        speculative = intent != null && intent.getBooleanExtra(EXTRA_SPECULATIVE, false);
         startedAt = System.currentTimeMillis();
         lastMovingAt = startedAt;
         vehicleExitAt = 0;
@@ -346,7 +357,9 @@ public class TripService extends Service {
         }
         publish(true);
         long idle = now - lastMovingAt;
-        if (auto && idle > AUTO_STOP_IDLE_MS) {
+        if (speculative && distanceM == 0 && now - startedAt > SPECULATIVE_NO_MOVE_MS) {
+            stopRecording(true);
+        } else if (auto && idle > AUTO_STOP_IDLE_MS) {
             stopRecording(false);
         } else if (vehicleExitAt > 0 && now - vehicleExitAt > exitGraceMs && idle > exitGraceMs) {
             stopRecording(false);
