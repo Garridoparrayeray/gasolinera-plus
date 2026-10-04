@@ -8,11 +8,11 @@ await s.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, de
 await s.send('Page.addScriptToEvaluateOnNewDocument', { source: `
     (() => {
         const cars = [];
-        window.__bt = { cars, added: [], removed: [], devices: [], denied: false, extra: {}, asked: false };
+        window.__bt = { cars, added: [], removed: [], devices: [], denied: false, extra: {}, asked: false, autoDetect: false };
         const noop = async () => ({});
         const perms = { location: true, background: true, activity: true, notifications: true, bluetooth: true, unrestrictedBattery: true };
         const recorder = {
-            status: async () => ({ trip: { recording: false }, recording: false, autoDetect: false, permissions: perms, bluetooth: { devices: cars.map((car) => ({ ...car })) } }),
+            status: async () => ({ trip: { recording: false }, recording: false, autoDetect: window.__bt.autoDetect, permissions: perms, bluetooth: { devices: cars.map((car) => ({ ...car })) } }),
             requestForeground: async () => perms,
             requestBluetooth: async () => { window.__bt.denied = false; window.__bt.asked = true; return perms; },
             requestBackground: async () => perms,
@@ -95,4 +95,10 @@ s.where = 'sin dispositivos';
 await openBluetooth([]);
 check('explica que no hay dispositivos', await waitFor("document.getElementById('trip-note').textContent.includes('No hay dispositivos')", 5000), await ev("document.getElementById('trip-note').textContent"));
 
+s.where = 'bateria';
+await go('/?view=garage', 2500);
+await ev("window.__bt.autoDetect = true; window.__bt.cars.length = 0");
+await ev("document.getElementById('trip-bt').click()");
+check('recuerda desactivar el ahorro de bateria y lleva a ajustes', await waitFor("!document.getElementById('trip-permissions').hidden && !document.getElementById('trip-battery').hidden && document.getElementById('trip-permissions-text').textContent.includes('desactiva el ahorro de batería')", 8000), await ev("document.getElementById('trip-permissions-text').textContent"));
+check('no afirma si esta activado o desactivado', !(await ev("document.getElementById('trip-permissions-text').textContent")).includes('Con ahorro de batería'));
 s.finish('BLUETOOTH');

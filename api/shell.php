@@ -620,7 +620,7 @@ function headlineDelta(array $headline, string $fuel): string
                         <p class="garage-note" id="trip-permissions-text"></p>
                         <div class="garage-actions">
                             <button id="trip-permissions-fix" type="button" class="pill">Dar permisos</button>
-                            <button id="trip-battery" type="button" class="pill">Quitar el ahorro de batería</button>
+                            <button id="trip-battery" type="button" class="pill">Abrir ajustes de batería</button>
                         </div>
                     </div>
                     <ul id="trip-list"></ul>

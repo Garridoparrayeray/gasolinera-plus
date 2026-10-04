@@ -17,14 +17,16 @@ const GPPermissions = (() => {
         head.className = 'permission-head';
         const name = document.createElement('strong');
         name.textContent = title;
-        const state = document.createElement('span');
-        state.className = 'permission-state';
-        if (kind) {
-            state.classList.add('permission-state--' + kind);
-        }
-        state.textContent = status;
         head.appendChild(name);
-        head.appendChild(state);
+        if (status) {
+            const state = document.createElement('span');
+            state.className = 'permission-state';
+            if (kind) {
+                state.classList.add('permission-state--' + kind);
+            }
+            state.textContent = status;
+            head.appendChild(state);
+        }
         item.appendChild(head);
         const text = document.createElement('p');
         text.textContent = detail;
@@ -110,13 +112,8 @@ const GPPermissions = (() => {
         }
         rows.push(row('Detección automática de viajes', autoText, 'Necesita la ubicación «todo el tiempo» y la actividad física. Se activa o desactiva en la sección Coche.', [['Ir a Coche', async () => GP.switchView('garage')], ['Abrir ajustes', openSystemSettings]], autoKind));
         if (GPNative.platform() === 'android') {
-            let batteryText = 'Con ahorro de batería';
-            let batteryKind = 'off';
-            if (perms.unrestrictedBattery) {
-                batteryText = 'Sin restricciones';
-                batteryKind = 'on';
-            }
-            rows.push(row('Batería', batteryText, 'Para grabar viajes con la app cerrada, Android no debe limitar a Gasolinera+.', [['Abrir ajustes de batería', async () => plugin.openBatterySettings()]], batteryKind));
+            // Android solo informa del ajuste estándar y muchos móviles tienen el suyo: no se afirma nada del estado.
+            rows.push(row('Batería', '', 'Para que los viajes se graben con la app cerrada, desactiva el ahorro de batería para Gasolinera+ en los ajustes del móvil.', [['Abrir ajustes de batería', async () => plugin.openBatterySettings()]], ''));
         }
         return rows;
     }
