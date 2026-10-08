@@ -1242,11 +1242,7 @@
         if (!priceSlugs.includes(filterFuel)) {
             priceSlugs.push(filterFuel);
         }
-        let sortMark = '';
-        if (el.filterSort.value === 'price') {
-            sortMark = ' ▲';
-        }
-        el.stationsHeadPrimary.textContent = (SHORT_FUEL_NAMES[filterFuel] || fuelLabel(filterFuel)) + sortMark;
+        el.stationsHeadPrimary.textContent = SHORT_FUEL_NAMES[filterFuel] || fuelLabel(filterFuel);
         el.stationsHeadSecondary.textContent = SHORT_FUEL_NAMES[secondaryFuel];
         for (const station of stations) {
             const li = document.createElement('li');
