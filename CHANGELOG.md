@@ -1,5 +1,10 @@
 # Cambios
 
+## Próxima versión
+
+### Cambios
+- Web en el ordenador: la barra superior (logo y precios medios) se ve siempre, en todas las pestañas, y no solo en Buscar. El mapa de Ruta se ajusta a la altura que queda.
+
 ## 1.0.6
 
 ### Cambios

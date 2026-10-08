@@ -1463,6 +1463,8 @@ html.desktop { font-size: 100%; }
 .desktop .sidebar-note { display: block; order: 5; margin: 8px 28px 0; font-size: 13px; line-height: 1.5; color: #B5B1AA; }
 .desktop .sidebar-note a { color: #FF9A4D; }
 
+/* La barra superior (logo y precios medios) se ve en todas las pestañas del ordenador. */
+html.desktop[data-view] #national-stats { display: block !important; }
 .desktop #national-stats { margin: -24px -32px 20px; padding: 0; border: 0; background: none; box-shadow: none; overflow: visible; }
 .desktop #national-stats-toggle,
 .desktop #national-date,
@@ -1591,7 +1593,7 @@ html.desktop:not([data-view="list"]) #stations-progress { display: none; }
 .desktop #view-route > * { grid-column: 1; margin: 0; }
 .desktop #view-route > .offline-block { grid-column: 1 / -1; }
 .desktop #view-route > #route-map-wrap { grid-column: -2 / -1; grid-row: 1 / span 3; }
-.desktop #route-map { height: calc(100vh - 230px); min-height: 520px; border-radius: 8px; }
+.desktop #route-map { height: calc(100vh - 230px - var(--topbar-h) - 20px); min-height: 520px; border-radius: 8px; }
 .desktop #view-route:has(#route-result:not([hidden])) > #route-map-wrap { align-self: stretch; height: 0; min-height: 100%; display: flex; flex-direction: column; gap: 8px; }
 .desktop #view-route:has(#route-result:not([hidden])) #route-map-wrap > .map-guard-wrap { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
 .desktop #view-route:has(#route-result:not([hidden])) #route-map { flex: 1 1 auto; height: auto; min-height: 0; }
