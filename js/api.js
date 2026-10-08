@@ -198,16 +198,8 @@ const OfflineEngine = (() => {
                 matches.push({ station: s, relevance: rel, distanciaKm });
             }
 
-            // Por precio, lo que pertenece al lugar buscado (relevancia 0 a 3) cuenta como un solo grupo.
-            function priceGroup(entry) {
-                if (entry.relevance === 4) {
-                    return 1;
-                }
-                if (entry.relevance === 5) {
-                    return 2;
-                }
-                return 0;
-            }
+            // Por precio, primero lo que cae dentro del radio elegido y después lo de fuera, de más barata a más cara.
+            const outside = (entry) => hasLocation && radiusKm > 0 && entry.distanciaKm > radiusKm;
             matches.sort((a, b) => {
                 if (hasLocation && sort === 'distance') {
                     if (a.relevance !== b.relevance) {
@@ -215,8 +207,8 @@ const OfflineEngine = (() => {
                     }
                     return a.distanciaKm - b.distanciaKm;
                 }
-                if (priceGroup(a) !== priceGroup(b)) {
-                    return priceGroup(a) - priceGroup(b);
+                if (outside(a) !== outside(b)) {
+                    return Number(outside(a)) - Number(outside(b));
                 }
                 return priceOrMax(a.station, fuel) - priceOrMax(b.station, fuel);
             });

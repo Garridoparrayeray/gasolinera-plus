@@ -49,7 +49,7 @@ Además:
 | 5 | Resto |
 | 6 | Gasolinera añadida por proximidad a un lugar (solo servidor) |
 
-El orden final es **relevancia y después distancia** (si se pidió `sort=distance` y hay ubicación) **o precio**. Con `sort=price` la relevancia se agrupa (`priceGroupOf` en PHP, `priceGroup` en `api.js`): lo que pertenece al lugar buscado (relevancia 0 a 3 y las gasolineras de alrededor, relevancia 6) es un solo grupo ordenado por precio; después van las que coinciden solo por el rótulo (4) y, al final, las de dirección (5). Si no, las del propio municipio saldrían todas antes que las de alrededor aunque fueran más caras (`tests/search-order-test.php`).
+El orden final es **relevancia y después distancia** (si se pidió `sort=distance` y hay ubicación) **o precio**. Con `sort=price` la relevancia no cuenta: primero va **todo lo que cae dentro del radio elegido, de más barata a más cara**, y después lo que queda fuera del radio, también por precio (`outside` en `Station::search`, `outside()` en `api.js`). El radio se mide desde el lugar buscado si el texto se geocodificó y, si no, desde la ubicación del usuario; sin radio no hay «fuera». Si no, las del propio municipio saldrían todas antes que las de alrededor aunque fueran más caras (`tests/search-order-test.php`).
 
 ### Filtro por radio (solo si hay ubicación)
 
@@ -57,7 +57,7 @@ Si llegan `lat`, `lon` y `radius`, una coincidencia con relevancia **mayor que 3
 
 ### Mezcla con el lugar (solo servidor)
 
-Si el texto parece un lugar (`looksLikePlaceQuery`: existe algún municipio o localidad que empiece así), el servidor geocodifica el texto con Nominatim y añade las gasolineras a menos de **10 km** del punto que no estuvieran ya, con relevancia 6. El cliente sin conexión no hace esto (no puede geocodificar).
+Si el texto parece un lugar (`looksLikePlaceQuery`: existe algún municipio o localidad que empiece así), el servidor geocodifica el texto con Nominatim y añade las gasolineras que no estuvieran ya a menos del **radio elegido** del punto (10 km si no se manda radio), con relevancia 6. El cliente sin conexión no hace esto (no puede geocodificar).
 
 ### Sin resultados de texto
 
