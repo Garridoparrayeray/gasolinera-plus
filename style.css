@@ -1365,7 +1365,7 @@ html.is-offline #view-stats > *:not(.offline-block) { opacity: 0.4; pointer-even
 
 /* Ordenador: menú lateral, tabla de resultados con mapa y ficha al lado, paneles por sección.
    La clase .desktop la pone el <head> en la web a partir de 1024 px; la app nativa nunca la tiene. */
-:root { --row-line: #E7E4DE; --row-hover: #FBFAF8; --sidebar-w: 248px; }
+:root { --row-line: #E7E4DE; --row-hover: #FBFAF8; --sidebar-w: 248px; --topbar-h: 114px; }
 @media (prefers-color-scheme: dark) { :root { --row-line: #333333; --row-hover: #252525; } }
 
 .desktop-only, .tab-desktop, .field-label, .btn-label, .sidebar-note, .station-card__actions { display: none; }
@@ -1402,7 +1402,7 @@ html.desktop { font-size: 100%; }
     width: var(--sidebar-w);
     box-sizing: border-box;
     margin: 0;
-    padding: 24px 16px;
+    padding: 0 0 24px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -1414,7 +1414,8 @@ html.desktop { font-size: 100%; }
     box-shadow: none;
     background: #111111;
 }
-.desktop .home-link-wrap { order: 0; gap: 12px; margin-bottom: 24px; }
+/* El logo y la banda de precios forman una sola barra superior con la misma altura. El menú empieza justo debajo, sin hueco: el margen negativo cancela el espacio entre elementos del menú. */
+.desktop .home-link-wrap { order: 0; flex: none; box-sizing: border-box; height: var(--topbar-h); gap: 12px; margin: 0 0 -4px; padding: 0 16px; }
 .desktop #app-logomark svg { width: 40px; height: 40px; border-radius: 10px; }
 .desktop .home-link-wrap strong { font-size: 20px; }
 .desktop .home-link-wrap #app-subtitle { display: none; }
@@ -1433,9 +1434,9 @@ html.desktop { font-size: 100%; }
     width: auto;
     height: auto;
     min-height: 44px;
-    padding: 0 12px;
+    padding: 0 28px;
     border: 0;
-    border-radius: 6px;
+    border-radius: 0;
     background: none;
     box-shadow: none;
     color: #D9D6D0;
@@ -1452,19 +1453,21 @@ html.desktop { font-size: 100%; }
 .desktop #view-toggle button:hover,
 .desktop .header-actions .btn-icon:hover { background: #262626; color: #ffffff; }
 .desktop #view-toggle button[aria-selected="true"] { background: #FF7A1A; color: #111111; font-weight: 600; }
+.desktop #view-toggle button:focus-visible,
+.desktop .header-actions .btn-icon:focus-visible { outline: 2px solid #ffffff; outline-offset: -2px; border-radius: 0; }
 .desktop #view-toggle #view-about-btn { order: 4; margin-top: auto; }
 .desktop .header-actions { order: 2; display: flex; flex-direction: column; gap: 4px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #2E2E2E; }
 .desktop #geo-toggle { display: none; }
 .desktop .btn-label { display: inline; }
 .desktop .header-actions .count-badge { position: static; margin-left: auto; min-width: 22px; padding: 2px 7px; border-radius: 999px; background: #2E2E2E; color: #ffffff; font-size: 12px; font-weight: 600; }
-.desktop .sidebar-note { display: block; order: 5; margin: 8px 12px 0; font-size: 13px; line-height: 1.5; color: #B5B1AA; }
+.desktop .sidebar-note { display: block; order: 5; margin: 8px 28px 0; font-size: 13px; line-height: 1.5; color: #B5B1AA; }
 .desktop .sidebar-note a { color: #FF9A4D; }
 
-.desktop #national-stats { margin: 0 0 20px; padding: 0; border: 0; background: none; box-shadow: none; overflow: visible; }
+.desktop #national-stats { margin: -24px -32px 20px; padding: 0; border: 0; background: none; box-shadow: none; overflow: visible; }
 .desktop #national-stats-toggle,
 .desktop #national-date,
 .desktop #national-stats-detail { display: none; }
-.desktop #national-line:not([hidden]) { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 0; margin: 0; padding: 20px 24px; border-radius: 8px; background: #111111; color: #B5B1AA; }
+.desktop #national-line:not([hidden]) { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 0; margin: 0; padding: 16px 32px; box-sizing: border-box; min-height: var(--topbar-h); border-radius: 0; background: #111111; color: #B5B1AA; }
 .national-line__day,
 .national-kpi { display: flex; flex-direction: column; gap: 4px; }
 .national-line__day { padding-right: 28px; }

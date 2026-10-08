@@ -120,8 +120,13 @@ class StationsController
 
         $searchRadius = null;
         $radiusParam = $request->queryInt('radius', 0);
-        if ($userLat !== null && $radiusParam !== null && $radiusParam > 0) {
+        if ($radiusParam !== null && $radiusParam > 0) {
             $searchRadius = (float)min($radiusParam, $config['nearby_max_radius_km']);
+        }
+        // Al buscar un lugar se añaden las gasolineras de alrededor dentro del radio elegido.
+        $placeRadius = 10.0;
+        if ($searchRadius !== null) {
+            $placeRadius = $searchRadius;
         }
 
         $page = $model->search(
@@ -136,7 +141,7 @@ class StationsController
             $offset,
             $limit,
             $place,
-            10.0,
+            $placeRadius,
             $searchRadius
         );
 

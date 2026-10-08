@@ -110,11 +110,17 @@ class Station
             if ($radiusKm !== null && $distanceKm !== null && $relevance > 3 && $distanceKm > $radiusKm) {
                 continue;
             }
+            // El radio se mide desde el lugar buscado y, si no hay, desde la ubicación del usuario.
+            $fromCenterKm = $distanceKm;
+            if ($mergePlace !== null) {
+                $fromCenterKm = self::haversineKm($mergePlace['lat'], $mergePlace['lon'], (float)$row['lat'], (float)$row['lon']);
+            }
             $seenIdeess[$row['ideess']] = true;
             $candidates[] = [
                 'row' => $row,
                 'distanceKm' => $distanceKm,
                 'relevance' => $relevance,
+                'outside' => $radiusKm !== null && $fromCenterKm !== null && $fromCenterKm > $radiusKm,
             ];
         }
         $textMatched = count($rows) > 0;
@@ -142,6 +148,7 @@ class Station
                     'row' => $row,
                     'distanceKm' => $distanceKm,
                     'relevance' => 6,
+                    'outside' => false,
                 ];
             }
         }
@@ -655,10 +662,11 @@ class Station
             }
             $ideessList = array_map(fn($c) => $c['row']['ideess'], $candidates);
             $priceMap = $this->batchSortPrices($ideessList, $sortFuel);
+            // Primero lo que cae dentro del radio elegido, de más barata a más cara; después, lo de fuera del radio.
             usort($candidates, function ($a, $b) use ($priceMap) {
-                $relevanceCmp = $this->relevanceOf($a) <=> $this->relevanceOf($b);
-                if ($relevanceCmp !== 0) {
-                    return $relevanceCmp;
+                $outsideCmp = (int)($a['outside'] ?? false) <=> (int)($b['outside'] ?? false);
+                if ($outsideCmp !== 0) {
+                    return $outsideCmp;
                 }
                 $priceA = $priceMap[$a['row']['ideess']];
                 $priceB = $priceMap[$b['row']['ideess']];

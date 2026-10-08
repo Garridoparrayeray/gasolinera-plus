@@ -55,6 +55,9 @@ jobs:
       - name: API smoke tests
         run: python tests/api-smoke.py
 
+      - name: Search order
+        run: php tests/search-order-test.php
+
       - name: Regenerate offline JSON from the database
         run: php scripts/build-database.php --mode=lite
 

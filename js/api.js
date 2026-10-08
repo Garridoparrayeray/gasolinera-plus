@@ -198,12 +198,17 @@ const OfflineEngine = (() => {
                 matches.push({ station: s, relevance: rel, distanciaKm });
             }
 
+            // Por precio, primero lo que cae dentro del radio elegido y después lo de fuera, de más barata a más cara.
+            const outside = (entry) => hasLocation && radiusKm > 0 && entry.distanciaKm > radiusKm;
             matches.sort((a, b) => {
-                if (a.relevance !== b.relevance) {
-                    return a.relevance - b.relevance;
-                }
                 if (hasLocation && sort === 'distance') {
+                    if (a.relevance !== b.relevance) {
+                        return a.relevance - b.relevance;
+                    }
                     return a.distanciaKm - b.distanciaKm;
+                }
+                if (outside(a) !== outside(b)) {
+                    return Number(outside(a)) - Number(outside(b));
                 }
                 return priceOrMax(a.station, fuel) - priceOrMax(b.station, fuel);
             });
