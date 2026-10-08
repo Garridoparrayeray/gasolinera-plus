@@ -3,6 +3,8 @@
 ## Próxima versión
 
 ### Cambios
+- Las sugerencias del buscador («Getxo», etc.) se ven por encima del mapa y ya no quedan tapadas por él.
+- Se quita la flechita ▲ que aparecía junto al carburante en la cabecera de la tabla al ordenar por precio: no aportaba nada.
 - Web en el ordenador: la barra superior (logo y precios medios) se ve siempre, en todas las pestañas, y no solo en Buscar. El mapa de Ruta se ajusta a la altura que queda.
 
 ## 1.0.6
