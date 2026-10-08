@@ -612,6 +612,24 @@ class Station
         return 0;
     }
 
+    /**
+     * Al ordenar por precio, todo lo que pertenece al lugar buscado (municipio, localidad, código
+     * postal y gasolineras de alrededor dentro del radio) cuenta como un solo grupo: si no, las
+     * del propio municipio saldrían todas primero aunque fueran más caras. Después van las que
+     * solo coinciden por la marca y, al final, las que coinciden por la dirección.
+     */
+    private function priceGroupOf(array $candidate): int
+    {
+        $relevance = $this->relevanceOf($candidate);
+        if ($relevance === 4) {
+            return 1;
+        }
+        if ($relevance === 5) {
+            return 2;
+        }
+        return 0;
+    }
+
     private function isOpenNow(string $horarioRaw): ?bool
     {
         return OpeningHours::isOpenAt($horarioRaw, new \DateTime('now', new \DateTimeZone('Europe/Madrid')));
@@ -656,9 +674,9 @@ class Station
             $ideessList = array_map(fn($c) => $c['row']['ideess'], $candidates);
             $priceMap = $this->batchSortPrices($ideessList, $sortFuel);
             usort($candidates, function ($a, $b) use ($priceMap) {
-                $relevanceCmp = $this->relevanceOf($a) <=> $this->relevanceOf($b);
-                if ($relevanceCmp !== 0) {
-                    return $relevanceCmp;
+                $groupCmp = $this->priceGroupOf($a) <=> $this->priceGroupOf($b);
+                if ($groupCmp !== 0) {
+                    return $groupCmp;
                 }
                 $priceA = $priceMap[$a['row']['ideess']];
                 $priceB = $priceMap[$b['row']['ideess']];

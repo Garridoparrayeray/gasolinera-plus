@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.0.6
+
+### Cambios
+- Buscar un lugar y ordenar por «Más barata» ya ordena todo por precio. Antes las gasolineras del propio municipio salían todas primero, aunque fueran más caras que las de alrededor (por ejemplo, en «Getxo» salían primero tres a 1,888 € y 1,889 €, y después otras a 1,669 €). Ahora las del municipio y las de alrededor, dentro del radio, van mezcladas por precio.
+- Web en el ordenador: la opción seleccionada del menú lateral ocupa todo el ancho y sin redondeo, y la banda de precios medios va de borde a borde, pegada arriba y sin esquinas redondeadas.
+
 ## 1.0.5
 
 ### Cambios

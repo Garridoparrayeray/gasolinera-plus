@@ -49,7 +49,7 @@ Además:
 | 5 | Resto |
 | 6 | Gasolinera añadida por proximidad a un lugar (solo servidor) |
 
-El orden final es **relevancia y después distancia** (si se pidió `sort=distance` y hay ubicación) **o precio**.
+El orden final es **relevancia y después distancia** (si se pidió `sort=distance` y hay ubicación) **o precio**. Con `sort=price` la relevancia se agrupa (`priceGroupOf` en PHP, `priceGroup` en `api.js`): lo que pertenece al lugar buscado (relevancia 0 a 3 y las gasolineras de alrededor, relevancia 6) es un solo grupo ordenado por precio; después van las que coinciden solo por el rótulo (4) y, al final, las de dirección (5). Si no, las del propio municipio saldrían todas antes que las de alrededor aunque fueran más caras (`tests/search-order-test.php`).
 
 ### Filtro por radio (solo si hay ubicación)
 

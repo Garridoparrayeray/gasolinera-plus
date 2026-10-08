@@ -198,12 +198,25 @@ const OfflineEngine = (() => {
                 matches.push({ station: s, relevance: rel, distanciaKm });
             }
 
-            matches.sort((a, b) => {
-                if (a.relevance !== b.relevance) {
-                    return a.relevance - b.relevance;
+            // Por precio, lo que pertenece al lugar buscado (relevancia 0 a 3) cuenta como un solo grupo.
+            function priceGroup(entry) {
+                if (entry.relevance === 4) {
+                    return 1;
                 }
+                if (entry.relevance === 5) {
+                    return 2;
+                }
+                return 0;
+            }
+            matches.sort((a, b) => {
                 if (hasLocation && sort === 'distance') {
+                    if (a.relevance !== b.relevance) {
+                        return a.relevance - b.relevance;
+                    }
                     return a.distanciaKm - b.distanciaKm;
+                }
+                if (priceGroup(a) !== priceGroup(b)) {
+                    return priceGroup(a) - priceGroup(b);
                 }
                 return priceOrMax(a.station, fuel) - priceOrMax(b.station, fuel);
             });
