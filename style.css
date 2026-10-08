@@ -1365,7 +1365,7 @@ html.is-offline #view-stats > *:not(.offline-block) { opacity: 0.4; pointer-even
 
 /* Ordenador: menú lateral, tabla de resultados con mapa y ficha al lado, paneles por sección.
    La clase .desktop la pone el <head> en la web a partir de 1024 px; la app nativa nunca la tiene. */
-:root { --row-line: #E7E4DE; --row-hover: #FBFAF8; --sidebar-w: 248px; }
+:root { --row-line: #E7E4DE; --row-hover: #FBFAF8; --sidebar-w: 248px; --topbar-h: 114px; }
 @media (prefers-color-scheme: dark) { :root { --row-line: #333333; --row-hover: #252525; } }
 
 .desktop-only, .tab-desktop, .field-label, .btn-label, .sidebar-note, .station-card__actions { display: none; }
@@ -1402,7 +1402,7 @@ html.desktop { font-size: 100%; }
     width: var(--sidebar-w);
     box-sizing: border-box;
     margin: 0;
-    padding: 24px 0;
+    padding: 0 0 24px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -1414,7 +1414,8 @@ html.desktop { font-size: 100%; }
     box-shadow: none;
     background: #111111;
 }
-.desktop .home-link-wrap { order: 0; gap: 12px; margin: 0 0 24px; padding: 0 16px; }
+/* El logo y la banda de precios forman una sola barra superior con la misma altura; el menú empieza debajo. */
+.desktop .home-link-wrap { order: 0; flex: none; box-sizing: border-box; height: var(--topbar-h); gap: 12px; margin: 0 0 16px; padding: 0 16px; }
 .desktop #app-logomark svg { width: 40px; height: 40px; border-radius: 10px; }
 .desktop .home-link-wrap strong { font-size: 20px; }
 .desktop .home-link-wrap #app-subtitle { display: none; }
@@ -1466,7 +1467,7 @@ html.desktop { font-size: 100%; }
 .desktop #national-stats-toggle,
 .desktop #national-date,
 .desktop #national-stats-detail { display: none; }
-.desktop #national-line:not([hidden]) { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 0; margin: 0; padding: 20px 32px; border-radius: 0; background: #111111; color: #B5B1AA; }
+.desktop #national-line:not([hidden]) { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 0; margin: 0; padding: 16px 32px; box-sizing: border-box; min-height: var(--topbar-h); border-radius: 0; background: #111111; color: #B5B1AA; }
 .national-line__day,
 .national-kpi { display: flex; flex-direction: column; gap: 4px; }
 .national-line__day { padding-right: 28px; }
