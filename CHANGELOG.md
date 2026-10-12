@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.0.8
+
+### Cambios
+- La imagen y el PDF del resumen ya no salen apretados: cada dato tiene su espacio y la imagen se alarga lo necesario, de modo que la última línea («Velocidad máxima») ya no se pisa con «Hecho con Gasolinera+».
+
 ## 1.0.7
 
 ### Cambios

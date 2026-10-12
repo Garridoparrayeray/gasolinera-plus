@@ -1,6 +1,9 @@
 const GPRecap = (() => {
     const WIDTH = 1080;
-    const HEIGHT = 1920;
+    const MIN_HEIGHT = 1920;
+    const ROWS_TOP = 770;
+    const ROW_STEP = 132;
+    const FOOTER_SPACE = 190;
     const ORANGE = '#FF7A1A';
     const MONTH_NAMES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
@@ -205,12 +208,14 @@ const GPRecap = (() => {
     }
 
     function draw(stats) {
+        const rows = rowsOf(stats);
+        const height = Math.max(MIN_HEIGHT, ROWS_TOP + rows.length * ROW_STEP + FOOTER_SPACE);
         const canvas = document.createElement('canvas');
         canvas.width = WIDTH;
-        canvas.height = HEIGHT;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#111111';
-        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+        ctx.fillRect(0, 0, WIDTH, height);
         ctx.fillStyle = ORANGE;
         ctx.fillRect(0, 0, WIDTH, 24);
         ctx.textBaseline = 'alphabetic';
@@ -242,28 +247,27 @@ const GPRecap = (() => {
         }
         ctx.fillText(`en ${stats.count} ${noun}`, 72, 722);
 
-        const rows = rowsOf(stats);
-        const step = Math.min(128, Math.floor(1090 / rows.length));
-        const labelSize = Math.round(step * 0.27);
-        const valueSize = Math.round(step * 0.36);
-        let y = 770;
+        const step = ROW_STEP;
+        const labelSize = 34;
+        const valueSize = 46;
+        let y = ROWS_TOP;
         for (const [label, value] of rows) {
             ctx.fillStyle = '#2A2A2A';
             ctx.fillRect(72, y, WIDTH - 144, 3);
             ctx.fillStyle = '#BDB8AE';
             ctx.font = `600 ${labelSize}px 'Inter', sans-serif`;
-            ctx.fillText(label, 72, y + Math.round(step * 0.45));
+            ctx.fillText(label, 72, y + 48);
             ctx.fillStyle = '#FFFFFF';
             ctx.font = `800 ${valueSize}px 'Bricolage Grotesque', 'Inter', sans-serif`;
-            ctx.fillText(fitText(ctx, value, WIDTH - 144), 72, y + Math.round(step * 0.88));
+            ctx.fillText(fitText(ctx, value, WIDTH - 144), 72, y + 106);
             y += step;
         }
 
         ctx.fillStyle = ORANGE;
-        ctx.fillRect(0, HEIGHT - 24, WIDTH, 24);
+        ctx.fillRect(0, height - 24, WIDTH, 24);
         ctx.fillStyle = '#BDB8AE';
         ctx.font = "600 34px 'Inter', sans-serif";
-        ctx.fillText('Hecho con Gasolinera+', 72, HEIGHT - 70);
+        ctx.fillText('Hecho con Gasolinera+', 72, height - 78);
         return canvas;
     }
 
