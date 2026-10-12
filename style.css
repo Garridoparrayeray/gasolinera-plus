@@ -538,6 +538,7 @@ dialog::backdrop { background: rgba(34, 29, 18, 0.5); }
     background: none;
     border: none;
     font-family: inherit;
+    color: var(--text);
     cursor: pointer;
     padding: 0;
 }
@@ -925,10 +926,10 @@ body { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
     vertical-align: middle;
 }
 
-#trip-dialog { max-width: 560px; }
-#trip-dialog h3 { margin: 0 0 2px; font-family: var(--font-display); padding-right: 40px; }
+#trip-dialog { max-width: 560px; max-height: 92vh; max-height: 92dvh; overflow-y: auto; }
+#trip-dialog h3 { position: sticky; top: -20px; z-index: 2; margin: -20px -20px 2px; padding: 20px 72px 6px 20px; font-family: var(--font-display); background: var(--surface); }
 #trip-dialog h4 { margin: 16px 0 6px; font-size: 0.9rem; }
-#trip-dialog-close { position: absolute; top: 14px; right: 14px; }
+#trip-dialog-close { position: sticky; top: -6px; z-index: 3; float: right; margin: -6px -6px 0 8px; background: var(--surface); }
 #trip-map { height: 240px; border-radius: 6px; border: 1px solid var(--border); margin: 10px 0 6px; }
 #trip-legend { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 12px; }
 #trip-legend-gradient { width: 80px; height: 8px; border-radius: 999px; background: linear-gradient(90deg, hsl(220, 75%, 45%), hsl(110, 75%, 45%), hsl(0, 75%, 45%)); }
