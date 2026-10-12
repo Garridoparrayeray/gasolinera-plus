@@ -1331,10 +1331,14 @@ const GPGarage = (() => {
             return;
         }
         showError(el.recapNote, '');
-        if (kind === 'pdf') {
-            await GPRecap.exportPdf(stats, share);
-        } else {
-            await GPRecap.exportImage(stats, share);
+        try {
+            if (kind === 'pdf') {
+                await GPRecap.exportPdf(stats, share);
+            } else {
+                await GPRecap.exportImage(stats, share);
+            }
+        } catch (error) {
+            showError(el.recapNote, 'No se ha podido crear el archivo. Inténtalo otra vez.');
         }
     }
 

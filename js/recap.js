@@ -322,7 +322,36 @@ const GPRecap = (() => {
         return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
     }
 
+    function blobBase64(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result).split(',')[1]);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    async function deliverNative(blob, name) {
+        const Filesystem = GPNative.plugin('Filesystem');
+        const Share = GPNative.plugin('Share');
+        if (!Filesystem || !Share) {
+            return false;
+        }
+        try {
+            const written = await Filesystem.writeFile({ path: name, data: await blobBase64(blob), directory: 'CACHE' });
+            await Share.share({ title: 'Mi resumen de Gasolinera+', files: [written.uri], dialogTitle: 'Guardar o compartir el resumen' });
+        } catch (error) {
+            if (!(error && /cancel/i.test(String(error.message || error)))) {
+                throw error;
+            }
+        }
+        return true;
+    }
+
     async function deliver(blob, name, share) {
+        if (isNative() && await deliverNative(blob, name)) {
+            return;
+        }
         const file = new File([blob], name, { type: blob.type });
         if ((share || isNative()) && navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
