@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.0.10
+
+### Cambios
+- Coche → «Lo que pagas frente a la media»: los botones «Por semana» y «Por mes» no hacían nada y solo se veía «Por repostaje». Ahora cambian el gráfico y los ahorros a semanas y a meses (la app usa el histórico que descarga en el móvil).
+
 ## 1.0.9
 
 ### Cambios
