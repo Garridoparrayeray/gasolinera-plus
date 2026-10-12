@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.0.9
+
+### Cambios
+- Gasolineras favoritas en modo oscuro: los nombres salían en negro sobre fondo oscuro y no se leían; ahora salen en blanco.
+- Ficha de un viaje: cuando es más larga que la pantalla, el título y la X de cerrar se quedan fijos arriba al bajar, en vez de cortarse.
+
 ## 1.0.8
 
 ### Cambios
