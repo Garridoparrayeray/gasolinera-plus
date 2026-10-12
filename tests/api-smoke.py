@@ -114,8 +114,16 @@ check(any(p['label'].lower().startswith('bilb') for p in places), 'suggest-place
 get('/api/stations/bbox?north=43.3', expect=422)
 box = (get('/api/stations/bbox?north=43.30&south=43.22&east=-2.88&west=-2.98&fuel=gasoleo_a') or {}).get('stations', [])
 check(len(box) > 0 and all(s['precio'] is not None for s in box), 'bbox: sin estaciones o sin precio')
-stale = (get('/api/stations/bbox?north=38.73&south=38.70&east=-5.53&west=-5.56') or {}).get('stations', [])
-check(all(s['ideess'] != '13403' for s in stale), 'bbox: incluye estaciones obsoletas (13403)')
+obsolete = DB.execute(
+    "SELECT ideess, lat, lon FROM stations WHERE lat IS NOT NULL AND lon IS NOT NULL "
+    "AND last_seen_date < date((SELECT MAX(last_seen_date) FROM stations), ?) ORDER BY ideess LIMIT 1",
+    (f'-{STALE_DAYS} days',),
+).fetchone()
+if obsolete:
+    stale = (get(f'/api/stations/bbox?north={obsolete[1] + 0.005}&south={obsolete[1] - 0.005}&east={obsolete[2] + 0.005}&west={obsolete[2] - 0.005}') or {}).get('stations', [])
+    check(all(s['ideess'] != obsolete[0] for s in stale), f'bbox: incluye estaciones obsoletas ({obsolete[0]})')
+else:
+    skips.append('bbox: no hay estaciones obsoletas en los datos')
 spain = get('/api/stations/bbox?north=44&south=36&east=4&west=-10') or {}
 check(len(spain.get('stations', [])) <= 5000, f"bbox: sin limite de filas ({len(spain.get('stations', []))})")
 
