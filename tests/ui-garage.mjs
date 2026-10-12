@@ -133,6 +133,15 @@ await ev("document.querySelector('[data-history-days=\"90\"]').click()");
 check('filtra por periodo', await waitFor("parseInt(document.getElementById('history-summary').textContent, 10) >= 15 && document.querySelectorAll('#history-list li').length === 15 + (parseInt(document.getElementById('history-summary').textContent, 10) - 15)", 4000), await ev("document.getElementById('history-summary').textContent"));
 await ev("document.getElementById('history-close').click()");
 
+s.where = 'comparacion';
+await ev("document.getElementById('garage-compare-week').click()");
+check('Por semana se marca al pulsarlo', await waitFor("document.getElementById('garage-compare-week').getAttribute('aria-pressed') === 'true' && document.getElementById('garage-compare-day').getAttribute('aria-pressed') === 'false'", 4000));
+check('Por semana avisa de que usa el historico de la app', await waitFor("document.getElementById('garage-savings').textContent.includes('histórico')", 4000), await ev("document.getElementById('garage-savings').textContent"));
+await ev("document.getElementById('garage-compare-month').click()");
+check('Por mes se marca al pulsarlo', await waitFor("document.getElementById('garage-compare-month').getAttribute('aria-pressed') === 'true'", 4000));
+await ev("document.getElementById('garage-compare-day').click()");
+check('Por repostaje vuelve a mostrar el grafico', await waitFor("document.getElementById('garage-compare-day').getAttribute('aria-pressed') === 'true' && document.getElementById('garage-savings').textContent.indexOf('histórico') === -1", 4000));
+
 if (process.env.SHOT) {
     const shot = await s.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true });
     const { writeFileSync } = await import('node:fs');

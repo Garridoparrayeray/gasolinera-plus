@@ -1342,6 +1342,15 @@ const GPGarage = (() => {
         }
     }
 
+    function setCompareMode(mode) {
+        state.compareMode = mode;
+        updateCompareButtons();
+        const vehicle = activeVehicle();
+        if (vehicle) {
+            renderCharts(vehicle);
+        }
+    }
+
     function setRecapPeriod(period) {
         state.recapPeriod = period;
         el.recapMonth.setAttribute('aria-pressed', String(period === 'month'));
@@ -1655,6 +1664,9 @@ const GPGarage = (() => {
         state.priceTouched = false;
         updateDayPrice();
     });
+    el.compareDay.addEventListener('click', () => setCompareMode('day'));
+    el.compareWeek.addEventListener('click', () => setCompareMode('week'));
+    el.compareMonth.addEventListener('click', () => setCompareMode('month'));
     el.recapMonth.addEventListener('click', () => setRecapPeriod('month'));
     el.recapYear.addEventListener('click', () => setRecapPeriod('year'));
     el.recapAll.addEventListener('click', () => setRecapPeriod('all'));
