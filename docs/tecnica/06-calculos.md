@@ -188,7 +188,8 @@ Positivo = ahorro. Si es negativo, el texto dice «Vas unos X € por encima de 
 Filtra los repostajes del coche por periodo (mes actual, año actual o todos, en fecha de Madrid) y calcula:
 
 - Gasto total y número de repostajes; litros; precio medio = `Σ total / Σ litros`.
-- Kilómetros recorridos = km del último − km del primero (con ≥ 2 repostajes). Consumo medio y coste por km desde `GPFuel.summary` sobre esos repostajes, si hay tramos medidos.
+- Kilómetros recorridos = cuentakilómetros actual − cuentakilómetros al empezar el periodo (`odometerAtStart`). Ese valor se reparte en línea recta, según los días, entre el repostaje anterior al periodo y el primero del periodo; si no hay anterior, se parte del primero. Con un solo repostaje también sale. Si los viajes grabados del periodo suman más, se enseña esa cifra (cada una es un mínimo).
+- Consumo medio y coste por km: depósitos completos que se cierran dentro del periodo (`GPFuel.intervals` sobre todos los repostajes del coche), aunque el depósito anterior se llenara el mes pasado.
 - Repostaje más barato (por precio unitario) y su gasolinera.
 - Gasolinera más repetida, con el número de veces y su precio medio (`Σ total / Σ litros` de esa gasolinera). Los repostajes sin gasolinera cuentan en los totales pero no aquí.
 - Frente a la media de España = `Σ (nationalAvg − precio) × litros` de los repostajes que la tienen guardada.
