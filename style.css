@@ -1736,3 +1736,8 @@ html.desktop:not([data-view="list"]) #stations-progress { display: none; }
 .desktop #compare-table th,
 .desktop #compare-table td { padding: 12px; }
 .desktop #compare-table td.is-best { background: var(--primary-tint); color: var(--primary-dark); font-weight: 800; }
+
+.pill.is-busy { opacity: 0.85; cursor: progress; }
+.pill.is-busy::before { content: ''; display: inline-block; width: 14px; height: 14px; margin-right: 8px; border: 3px solid currentColor; border-top-color: transparent; border-radius: 50% !important; animation: gp-spin 0.8s linear infinite; vertical-align: -2px; }
+.pill:disabled { cursor: progress; }
+@media (prefers-reduced-motion: reduce) { .pill.is-busy::before { animation: none; } }

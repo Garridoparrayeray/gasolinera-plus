@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.0.13
+
+### Cambios
+- Resumen: al pulsar «Guardar imagen», «Guardar PDF» o «Compartir imagen», el botón pasa a «Generando…» con un círculo girando mientras se prepara el archivo, y los otros dos botones se bloquean. Así se ve que está trabajando y no se pulsa varias veces.
+
 ## 1.0.12
 
 ### Cambios

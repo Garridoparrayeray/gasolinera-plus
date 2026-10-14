@@ -388,13 +388,22 @@ const GPRecap = (() => {
         setTimeout(() => URL.revokeObjectURL(url), 10000);
     }
 
-    async function exportImage(stats, share) {
-        await deliver(await canvasBlob(draw(stats), 'image/png'), 'resumen-gasolinera.png', share);
+    // beforeDeliver se llama cuando el archivo ya está hecho y antes de guardarlo o compartirlo.
+    async function exportImage(stats, share, beforeDeliver) {
+        const blob = await canvasBlob(draw(stats), 'image/png');
+        if (beforeDeliver) {
+            await beforeDeliver();
+        }
+        await deliver(blob, 'resumen-gasolinera.png', share);
     }
 
-    async function exportPdf(stats, share) {
+    async function exportPdf(stats, share, beforeDeliver) {
         const canvas = draw(stats);
-        await deliver(pdfFromJpeg(canvas.toDataURL('image/jpeg', 0.92), canvas.width, canvas.height), 'resumen-gasolinera.pdf', share);
+        const blob = pdfFromJpeg(canvas.toDataURL('image/jpeg', 0.92), canvas.width, canvas.height);
+        if (beforeDeliver) {
+            await beforeDeliver();
+        }
+        await deliver(blob, 'resumen-gasolinera.pdf', share);
     }
 
     return { compute, draw, exportImage, exportPdf };

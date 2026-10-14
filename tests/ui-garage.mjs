@@ -142,6 +142,12 @@ await ev(`(async () => {
 })()`);
 check('un viaje guardado sin coste lo recupera al abrir la lista', await waitFor("Array.from(document.querySelectorAll('#trip-list li')).some((li) => li.textContent.includes('10,0 km') && li.textContent.includes('€'))", 4000), await ev("document.getElementById('trip-list').textContent.slice(0, 200)"));
 
+s.where = 'resumen';
+await ev("document.getElementById('recap-all').click()");
+await ev("document.getElementById('recap-image').click()");
+check('al generar el resumen el boton muestra Generando', await waitFor("document.getElementById('recap-image').textContent.includes('Generando') && document.getElementById('recap-pdf').disabled === true", 1500), await ev("document.getElementById('recap-image').textContent"));
+check('al acabar el boton vuelve a su texto y se puede pulsar otra vez', await waitFor("document.getElementById('recap-image').textContent === 'Guardar imagen' && document.getElementById('recap-pdf').disabled === false", 6000), await ev("document.getElementById('recap-image').textContent"));
+
 s.where = 'comparacion';
 await ev("document.getElementById('garage-compare-week').click()");
 check('Por semana se marca al pulsarlo', await waitFor("document.getElementById('garage-compare-week').getAttribute('aria-pressed') === 'true' && document.getElementById('garage-compare-day').getAttribute('aria-pressed') === 'false'", 4000));
