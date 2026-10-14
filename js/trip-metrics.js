@@ -138,6 +138,15 @@ const GPTripMetrics = (() => {
         return (distanceKm * options.consumption * relative) / 100;
     }
 
+    function fuelAndCost(distanceKm, speedFactor, options) {
+        const fuelUsed = estimateFuel(distanceKm, speedFactor, options);
+        let cost = null;
+        if (fuelUsed !== null && options.pricePerUnit > 0) {
+            cost = fuelUsed * options.pricePerUnit;
+        }
+        return { fuelUsed, cost };
+    }
+
     function crossesPause(pauses, from, to) {
         return pauses.some(([start, end]) => start < to && end > from);
     }
@@ -228,11 +237,7 @@ const GPTripMetrics = (() => {
             percentAbove120 = (above120 / moving) * 100;
         }
         const speedFactor = weightedSpeedFactor(bandMeters, meters);
-        const fuelUsed = estimateFuel(distanceKm, speedFactor, options);
-        let cost = null;
-        if (fuelUsed !== null && options.pricePerUnit > 0) {
-            cost = fuelUsed * options.pricePerUnit;
-        }
+        const { fuelUsed, cost } = fuelAndCost(distanceKm, speedFactor, options);
         return {
             startedAt: good[0].t,
             endedAt: good[good.length - 1].t,
@@ -289,5 +294,5 @@ const GPTripMetrics = (() => {
         return out;
     }
 
-    return { compute, thin, distance };
+    return { compute, thin, distance, fuelAndCost };
 })();

@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.0.11
+
+### Cambios
+- Viajes: algunos viajes salían sin el coste en € (y sin el consumo estimado). Pasaba cuando el viaje grabado con la app cerrada se guardaba antes de que el garaje estuviera cargado, y no se sabía ni el consumo ni el precio del último repostaje. Ahora se carga el garaje antes de calcular, y los viajes que ya se quedaron sin coste lo recuperan al abrir la lista de viajes.
+
 ## 1.0.10
 
 ### Cambios

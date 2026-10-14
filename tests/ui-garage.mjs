@@ -133,6 +133,15 @@ await ev("document.querySelector('[data-history-days=\"90\"]').click()");
 check('filtra por periodo', await waitFor("parseInt(document.getElementById('history-summary').textContent, 10) >= 15 && document.querySelectorAll('#history-list li').length === 15 + (parseInt(document.getElementById('history-summary').textContent, 10) - 15)", 4000), await ev("document.getElementById('history-summary').textContent"));
 await ev("document.getElementById('history-close').click()");
 
+s.where = 'coste de viaje';
+await ev(`(async () => {
+    const vehicle = GPGarage.activeVehicle();
+    const date = new Date().toISOString();
+    await GarageStore.trips.save({ id: 'trip-sin-coste', vehicleId: vehicle.id, auto: true, startedAt: date, endedAt: date, createdAt: date, track: [], metrics: { startedAt: Date.now() - 600000, endedAt: Date.now(), durationSeconds: 600, distanceKm: 10, avgSpeedKmh: 60, maxSpeedKmh: 90, speedFactor: 1, fuelUsed: null, cost: null, speedBands: [] } });
+    await GPTrips.renderList();
+})()`);
+check('un viaje guardado sin coste lo recupera al abrir la lista', await waitFor("Array.from(document.querySelectorAll('#trip-list li')).some((li) => li.textContent.includes('10,0 km') && li.textContent.includes('€'))", 4000), await ev("document.getElementById('trip-list').textContent.slice(0, 200)"));
+
 s.where = 'comparacion';
 await ev("document.getElementById('garage-compare-week').click()");
 check('Por semana se marca al pulsarlo', await waitFor("document.getElementById('garage-compare-week').getAttribute('aria-pressed') === 'true' && document.getElementById('garage-compare-day').getAttribute('aria-pressed') === 'false'", 4000));
