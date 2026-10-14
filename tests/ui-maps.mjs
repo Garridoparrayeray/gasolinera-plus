@@ -2,7 +2,7 @@ import { launch } from './cdp.mjs';
 
 const s = await launch(Number(process.env.CDP_PORT || 9381));
 const { ev, go, check, waitFor } = s;
-s.ignoreHttp = /zone-comparison|api\.github\.com|github\.com/;
+s.ignoreHttp = /zone-comparison|api\.github\.com|github\.com|price-index-seed|__fake_maps__/;
 
 await s.send('Emulation.setUserAgentOverride', { userAgent: 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36 GasolineraPlus/2' });
 await s.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
@@ -41,7 +41,7 @@ await s.send('Page.addScriptToEvaluateOnNewDocument', { source: `
         window.Capacitor = {
             isNativePlatform: () => true,
             getPlatform: () => 'android',
-            convertFileSrc: (uri) => uri,
+            convertFileSrc: (uri) => '/__fake_maps__/' + uri,
             Plugins: { Filesystem: filesystem, TripRecorder: new Proxy({ addListener: async () => ({ remove() {} }), listTrips: async () => ({ trips: [] }) }, { get: (t, k) => t[k] || noop }) },
         };
     })();
