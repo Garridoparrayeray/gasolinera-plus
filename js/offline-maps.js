@@ -147,9 +147,20 @@ const GPMaps = (() => {
         }
     }
 
+    // En Android downloadFile no crea las carpetas que faltan aunque se pida «recursive»,
+    // así que la carpeta se crea antes de descargar.
+    async function ensureFolder() {
+        try {
+            await filesystem().mkdir({ path: FOLDER, directory: directory(), recursive: true });
+        } catch (e) {
+            return;
+        }
+    }
+
     async function loadIndex() {
         const Filesystem = filesystem();
         const path = FOLDER + '/index.json';
+        await ensureFolder();
         try {
             await Filesystem.downloadFile({ url: RELEASE + 'index.json', path, directory: directory(), recursive: true });
         } catch (e) {
@@ -181,6 +192,7 @@ const GPMaps = (() => {
                 onProgress(event.bytes, event.contentLength || entry.bytes);
             }
         });
+        await ensureFolder();
         try {
             await Filesystem.downloadFile({
                 url: RELEASE + entry.file,

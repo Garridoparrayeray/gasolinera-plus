@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.1.0
+
+### Cambios
+- Mapas sin conexión: en Android salía «No se pudo cargar la lista de mapas» y no se podía descargar ninguno. La descarga no crea la carpeta donde guarda el fichero y fallaba la primera vez; ahora la app crea la carpeta antes de descargar. Se ha comprobado con una prueba que imita ese comportamiento de Android.
+- Comparación por semanas y por meses (Coche): tenía el mismo fallo al descargar el histórico de precios si la carpeta no existía; arreglado igual.
+
 ## 1.0.15
 
 ### Cambios
