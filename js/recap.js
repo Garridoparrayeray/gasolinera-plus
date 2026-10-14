@@ -137,6 +137,11 @@ const GPRecap = (() => {
             stats.tripKm += trip.metrics.distanceKm || 0;
             stats.tripMaxKmh = Math.max(stats.tripMaxKmh, trip.metrics.maxSpeedKmh || 0);
         }
+        // Los repostajes solo dan los km desde el primero anotado y los viajes solo los grabados:
+        // cada cifra es un mínimo, así que el dato único es el mayor de los dos.
+        if (stats.tripKm > 0 && (stats.km === null || stats.tripKm > stats.km)) {
+            stats.km = stats.tripKm;
+        }
         return stats;
     }
 

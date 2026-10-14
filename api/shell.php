@@ -1190,6 +1190,18 @@ function headlineDelta(array $headline, string $fuel): string
         <p id="favorites-empty">Añade gasolineras desde su ficha para tenerlas siempre a mano aquí.</p>
         <ul id="favorites-list"></ul>
         <label id="alerts-toggle-wrap"><input type="checkbox" id="alerts-toggle"> Avisarme cuando bajen de precio</label>
+        <div id="alerts-options" hidden>
+            <label id="alerts-threshold-wrap">Avisar si cambia al menos
+                <select id="alerts-threshold" aria-label="Variación mínima del precio para avisar">
+                    <option value="0.01">1 céntimo</option>
+                    <option value="0.02">2 céntimos</option>
+                    <option value="0.03" selected>3 céntimos</option>
+                    <option value="0.05">5 céntimos</option>
+                    <option value="0.10">10 céntimos</option>
+                </select>
+            </label>
+            <label id="alerts-rises-wrap"><input type="checkbox" id="alerts-rises"> Avisarme también cuando suban</label>
+        </div>
         <p id="alerts-note" hidden></p>
         <p class="drawer-note desktop-only">Los avisos cuando bajan de precio están en la app del móvil.</p>
     </dialog>
