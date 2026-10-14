@@ -161,4 +161,19 @@ const approx = (actual, expected, digits = 2) => assert.equal(+actual.toFixed(di
 assert.equal(GPFuel.madridDate('2026-09-30T23:30:00Z'), '2026-10-01');
 assert.equal(GPFuel.madridMonth('2026-12-31T23:30:00Z'), '2027-01');
 
+{
+    const homologated7 = { ...car, homologated: 7, tankCapacity: 50, odometer: 10434 };
+    const first = refuel('2026-10-03T10:00:00Z', 10000, 50.8, 1.789);
+    approx(GPFuel.fullTankRangeKm(homologated7, [first]), 714.29, 1);
+    assert.equal(GPFuel.looksLikeMissedRefuel(homologated7, [first], 434), false, '434 km con un depósito de unos 714 km no es un repostaje saltado');
+    assert.equal(GPFuel.looksLikeMissedRefuel(homologated7, [first], 1000), true, '1.000 km sí parece que falta un repostaje');
+    const second = refuel('2026-10-12T10:00:00Z', 10434, 50.8, 1.669, { missedBefore: true });
+    assert.equal(GPFuel.falseMissedFlags(homologated7, [first, second]).length, 1, 'la marca puesta a 434 km se quita');
+    const far = refuel('2026-10-12T10:00:00Z', 11200, 50.8, 1.669, { missedBefore: true });
+    assert.equal(GPFuel.falseMissedFlags({ ...homologated7, odometer: 11200 }, [first, far]).length, 0, 'la marca a 1.200 km se queda');
+    const cleaned = GPFuel.summary(homologated7, [first, { ...second, missedBefore: false }]);
+    assert.equal(cleaned.consumptionSource, 'real', 'sin la marca, con dos llenos sale el consumo medido');
+    approx(cleaned.avgConsumption, 11.71, 2);
+}
+
 console.log('fuel-math: OK');

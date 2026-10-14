@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.1.1
+
+### Cambios
+- Consumo medio: con dos repostajes completos a veces no salía la media. Al anotar el segundo, la app comparaba los km recorridos con la autonomía que quedaba en el depósito y no con la de un depósito entero; si pasabas de ese margen (por ejemplo 434 km con un coche de 7 L/100 km), marcaba «falta algún repostaje por anotar» y no contaba el tramo. Ahora compara con lo que da un depósito entero (el del consumo medido o, si aún no hay, el homologado).
+- Las marcas de «falta algún repostaje» que se pusieron mal se quitan solas al abrir Coche, y la media se calcula en cuanto se quitan. Si de verdad faltaba un repostaje (muchos más km de los que da un depósito), la marca se queda.
+
 ## 1.1.0
 
 ### Cambios
