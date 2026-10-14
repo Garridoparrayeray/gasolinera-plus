@@ -133,6 +133,18 @@ await ev("document.querySelector('[data-history-days=\"90\"]').click()");
 check('filtra por periodo', await waitFor("parseInt(document.getElementById('history-summary').textContent, 10) >= 15 && document.querySelectorAll('#history-list li').length === 15 + (parseInt(document.getElementById('history-summary').textContent, 10) - 15)", 4000), await ev("document.getElementById('history-summary').textContent"));
 await ev("document.getElementById('history-close').click()");
 
+s.where = 'marca de repostaje saltado';
+await ev(`(async () => {
+    const vehicle = GPGarage.activeVehicle();
+    const base = Date.now() - 400 * 86400000;
+    const a = new Date(base).toISOString();
+    const b = new Date(base + 9 * 86400000).toISOString();
+    await GarageStore.refuels.save({ id: 'saltado-a', vehicleId: vehicle.id, createdAt: a, date: a, odometer: 50000, liters: 40, pricePerUnit: 1.5, total: 60, full: true, missedBefore: false, updatedAt: a });
+    await GarageStore.refuels.save({ id: 'saltado-b', vehicleId: vehicle.id, createdAt: b, date: b, odometer: 50434, liters: 40, pricePerUnit: 1.5, total: 60, full: true, missedBefore: true, updatedAt: b });
+    await GPGarage.refresh();
+})()`);
+check('una marca de repostaje saltado puesta a 434 km se quita al cargar', await ev("(async () => { const all = await GarageStore.refuels.forVehicle(GPGarage.activeVehicle().id); return all.find((r) => r.id === 'saltado-b').missedBefore === false; })()"), 'la marca sigue puesta');
+
 s.where = 'coste de viaje';
 await ev(`(async () => {
     const vehicle = GPGarage.activeVehicle();

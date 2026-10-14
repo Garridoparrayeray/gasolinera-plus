@@ -180,6 +180,25 @@ const GPGarage = (() => {
         }
     }
 
+    // Antes se marcaba «falta un repostaje» al comparar con la autonomía que quedaba en el depósito, y eso
+    // dejaba tramos sin consumo. Esas marcas se quitan; la comprobación nueva las vuelve a poner si hacen falta.
+    async function clearFalseMissedFlags() {
+        const vehicle = state.vehicles.find((item) => item.id === state.activeId);
+        if (!vehicle) {
+            return;
+        }
+        for (const refuel of GPFuel.falseMissedFlags(vehicle, state.refuels)) {
+            const fixed = { ...refuel, missedBefore: false, updatedAt: new Date().toISOString() };
+            await GarageStore.refuels.save(fixed);
+            state.refuels = state.refuels.map((item) => {
+                if (item.id === fixed.id) {
+                    return fixed;
+                }
+                return item;
+            });
+        }
+    }
+
     async function load() {
         const vehicles = await GarageStore.vehicles.list();
         state.vehicles = vehicles.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
@@ -194,6 +213,7 @@ const GPGarage = (() => {
         state.refuels = [];
         if (activeId) {
             state.refuels = await GarageStore.refuels.forVehicle(activeId);
+            await clearFalseMissedFlags();
         }
         state.loaded = true;
     }
@@ -1166,14 +1186,11 @@ const GPGarage = (() => {
             return;
         }
         const km = Number(el.refuelOdometer.value) - previous.odometer;
-        let autonomy = GPFuel.summary(vehicle, state.refuels).autonomyKm;
-        if (!(autonomy > 0)) {
-            autonomy = (vehicle.tankCapacity / (vehicle.homologated || 7)) * 100;
-        }
-        if (km > autonomy * 1.25) {
+        if (GPFuel.looksLikeMissedRefuel(vehicle, state.refuels, km)) {
+            const range = GPFuel.fullTankRangeKm(vehicle, state.refuels);
             el.refuelMissed.checked = true;
             el.refuelMissedRow.hidden = false;
-            el.refuelMissedText.textContent = `Han pasado ${number(km, 0)} km desde tu último repostaje y un depósito da unos ${number(autonomy, 0)} km. Parece que falta alguno por anotar: no contaré ese tramo en el consumo.`;
+            el.refuelMissedText.textContent = `Han pasado ${number(km, 0)} km desde tu último repostaje y un depósito da unos ${number(range, 0)} km. Parece que falta alguno por anotar: no contaré ese tramo en el consumo.`;
         }
     }
 

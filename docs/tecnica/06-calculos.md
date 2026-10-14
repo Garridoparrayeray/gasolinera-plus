@@ -134,7 +134,7 @@ Avisos (`kmWarning`, no bloquean; piden confirmar en una pantalla «Revisa los k
 
 ### Repostaje saltado (`updateMissedHint`)
 
-En la comprobación final se compara `km desde el repostaje anterior` con la **autonomía** (autonomía estimada del garaje o, si no hay, `capacidad / (homologado o 7) × 100`). Si `km > autonomía × 1,25`, se marca automáticamente «falta algún repostaje» (con cifras), lo que corta el tramo del consumo. En caso contrario la casilla no se muestra y queda sin marcar. Al editar un repostaje ya guardado la casilla siempre se ve.
+En la comprobación final se compara `km desde el repostaje anterior` con lo que da **un depósito entero** (`GPFuel.fullTankRangeKm`: `capacidad / consumo × 100`, con el consumo medido o, si aún no hay, `homologado` o 7). Si `km > rango × 1,25`, se marca automáticamente «falta algún repostaje» (con cifras), lo que corta el tramo del consumo. Antes se comparaba con la autonomía que quedaba en el depósito, y marcaba tramos normales; `GPFuel.falseMissedFlags` detecta esas marcas y `clearFalseMissedFlags` (garage.js) las quita al cargar. En caso contrario la casilla no se muestra y queda sin marcar. Al editar un repostaje ya guardado la casilla siempre se ve.
 
 ## Comparación con la media
 

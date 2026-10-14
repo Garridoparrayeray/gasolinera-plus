@@ -205,5 +205,49 @@ const GPFuel = (() => {
         };
     }
 
-    return { intervals, summary, monthlySpend, savings, savingsBy, madridDate, madridMonth };
+    // Lo que da un depósito entero, con el consumo medido o, si aún no hay, el homologado.
+    function fullTankRangeKm(vehicle, refuels) {
+        let consumption = summary(vehicle, refuels).avgConsumption;
+        if (!(consumption > 0)) {
+            consumption = vehicle.homologated || 7;
+        }
+        if (!(vehicle.tankCapacity > 0)) {
+            return null;
+        }
+        return (vehicle.tankCapacity / consumption) * 100;
+    }
+
+    // Se avisa de un repostaje saltado cuando los km desde el anterior superan en un cuarto lo que da un depósito.
+    function looksLikeMissedRefuel(vehicle, refuels, km) {
+        const range = fullTankRangeKm(vehicle, refuels);
+        if (range === null) {
+            return false;
+        }
+        return km > range * 1.25;
+    }
+
+    // Marcas de «falta un repostaje» que no se justifican con los km: sirven para limpiar las que se pusieron
+    // comparando con la autonomía que quedaba en el depósito y no con la de un depósito entero.
+    function falseMissedFlags(vehicle, refuels) {
+        const list = sorted(refuels);
+        const wrong = [];
+        for (const refuel of list) {
+            if (!refuel.missedBefore) {
+                continue;
+            }
+            const previous = list
+                .filter((other) => other.date < refuel.date)
+                .sort((a, b) => b.odometer - a.odometer)[0];
+            if (!previous) {
+                wrong.push(refuel);
+                continue;
+            }
+            if (!looksLikeMissedRefuel(vehicle, refuels, refuel.odometer - previous.odometer)) {
+                wrong.push(refuel);
+            }
+        }
+        return wrong;
+    }
+
+    return { intervals, summary, monthlySpend, savings, savingsBy, madridDate, madridMonth, fullTankRangeKm, looksLikeMissedRefuel, falseMissedFlags };
 })();
