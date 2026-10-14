@@ -272,6 +272,7 @@ const GPTrips = (() => {
             vehicleId = active.id;
         }
         const pauses = cleanPauses(info.pauses);
+        await GPGarage.reload();
         const metrics = GPTripMetrics.compute(points, { ...vehicleOptions(await referenceFactorFor(vehicleId)), pauses });
         if (info.auto && metrics.distanceKm < 0.5) {
             return null;
@@ -833,12 +834,34 @@ const GPTrips = (() => {
         return li;
     }
 
+    // Un viaje guardado cuando el garaje aún no estaba cargado se queda sin consumo ni coste.
+    async function fillMissingCosts(trips) {
+        const active = GPGarage.activeVehicle();
+        if (!active) {
+            return;
+        }
+        for (const trip of trips) {
+            const m = trip.metrics;
+            if (!m || m.cost !== null || !(m.distanceKm > 0) || !(m.speedFactor > 0) || (trip.vehicleId && trip.vehicleId !== active.id)) {
+                continue;
+            }
+            const result = GPTripMetrics.fuelAndCost(m.distanceKm, m.speedFactor, vehicleOptions(await referenceFactorFor(active.id)));
+            if (result.cost === null) {
+                continue;
+            }
+            m.fuelUsed = result.fuelUsed;
+            m.cost = result.cost;
+            await GarageStore.trips.save(trip);
+        }
+    }
+
     async function renderList() {
         const [trips, total, names] = await Promise.all([
             GarageStore.trips.between(FIRST_ISO, LAST_ISO, 0, RECENT_LIMIT),
             GarageStore.trips.countBetween(FIRST_ISO, LAST_ISO),
             vehicleNames(),
         ]);
+        await fillMissingCosts(trips);
         el.empty.hidden = trips.length > 0;
         el.list.innerHTML = '';
         for (const trip of trips) {

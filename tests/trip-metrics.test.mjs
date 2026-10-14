@@ -145,4 +145,14 @@ const approx = (actual, expected, tolerance, message) => assert.ok(Math.abs(actu
     assert.equal(m.gapCount, 0, 'la pausa no se cuenta como túnel');
 }
 
+{
+    const full = GPTripMetrics.fuelAndCost(100, 1, { consumption: 6, pricePerUnit: 1.5 });
+    approx(full.fuelUsed, 6, 0.001, 'consumo estimado de un viaje');
+    approx(full.cost, 9, 0.001, 'coste estimado de un viaje');
+    const noPrice = GPTripMetrics.fuelAndCost(100, 1, { consumption: 6 });
+    assert.equal(noPrice.cost, null, 'sin precio no hay coste');
+    const noConsumption = GPTripMetrics.fuelAndCost(100, 1, {});
+    assert.equal(noConsumption.fuelUsed, null, 'sin consumo no hay consumo estimado');
+}
+
 console.log('trip-metrics: OK');
