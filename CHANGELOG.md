@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.0.12
+
+### Cambios
+- Resumen (imagen y PDF): los «Kilómetros recorridos» solo contaban hasta el último repostaje del periodo y no sumaban lo conducido después. Ahora van desde el último repostaje anterior al periodo (o el primero del periodo, si no hay anterior) hasta el cuentakilómetros actual, que incluye los viajes grabados. Y ya salen con un solo repostaje.
+
 ## 1.0.11
 
 ### Cambios

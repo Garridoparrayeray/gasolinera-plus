@@ -87,8 +87,19 @@ const GPRecap = (() => {
         stats.km = null;
         stats.consumption = null;
         stats.costPerKm = null;
+        if (list.length >= 1) {
+            const mine = refuels.filter((r) => r.vehicleId === vehicle.id);
+            const before = mine
+                .filter((r) => GPFuel.madridDate(r.date) < GPFuel.madridDate(list[0].date) && !GPFuel.madridDate(r.date).startsWith(prefix))
+                .sort((a, b) => b.odometer - a.odometer)[0];
+            let start = list[0].odometer;
+            if (before) {
+                start = before.odometer;
+            }
+            const current = GPFuel.summary(vehicle, mine).odometer;
+            stats.km = Math.max(0, current - start);
+        }
         if (list.length >= 2) {
-            stats.km = list[list.length - 1].odometer - list[0].odometer;
             const summary = GPFuel.summary(vehicle, list);
             if (summary.trackedKm > 0) {
                 stats.consumption = summary.avgConsumption;
