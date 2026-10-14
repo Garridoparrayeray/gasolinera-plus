@@ -127,6 +127,7 @@ const GPGarage = (() => {
     };
 
     const MAX_PERIODS = 12;
+    const RECAP_MIN_BUSY_MS = 900;
     const REFERENCE_TIMEOUT_MS = 5000;
     const ZONE_RADIUS_KM = 10;
     const COMPARE_NOUN = { day: 'repostajes', week: 'semanas', month: 'meses' };
@@ -1318,7 +1319,25 @@ const GPGarage = (() => {
         GP.showToast('Toca una gasolinera en el mapa, abre su ficha y pulsa Repostar aquí.');
     }
 
-    async function exportRecap(kind, share) {
+    function setRecapBusy(button, busy) {
+        for (const item of [el.recapImage, el.recapPdf, el.recapShare]) {
+            item.disabled = busy;
+        }
+        button.classList.toggle('is-busy', busy);
+        button.setAttribute('aria-busy', String(busy));
+        if (busy) {
+            button.dataset.label = button.textContent;
+            button.textContent = 'Generando…';
+        } else if (button.dataset.label) {
+            button.textContent = button.dataset.label;
+        }
+    }
+
+    function nextPaint() {
+        return new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
+    }
+
+    async function exportRecap(kind, share, button) {
         const vehicle = activeVehicle();
         if (!vehicle) {
             showError(el.recapNote, 'Primero añade tu coche.');
@@ -1331,14 +1350,29 @@ const GPGarage = (() => {
             return;
         }
         showError(el.recapNote, '');
+        const startedAt = Date.now();
+        setRecapBusy(button, true);
+        await nextPaint();
+        // Aunque se genere enseguida, el aviso se queda un momento para que se vea.
+        const finish = async () => {
+            const wait = RECAP_MIN_BUSY_MS - (Date.now() - startedAt);
+            if (wait > 0) {
+                await new Promise((resolve) => setTimeout(resolve, wait));
+            }
+            setRecapBusy(button, false);
+        };
         try {
             if (kind === 'pdf') {
-                await GPRecap.exportPdf(stats, share);
+                await GPRecap.exportPdf(stats, share, finish);
             } else {
-                await GPRecap.exportImage(stats, share);
+                await GPRecap.exportImage(stats, share, finish);
             }
         } catch (error) {
             showError(el.recapNote, 'No se ha podido crear el archivo. Inténtalo otra vez.');
+        } finally {
+            if (button.classList.contains('is-busy')) {
+                setRecapBusy(button, false);
+            }
         }
     }
 
@@ -1670,9 +1704,9 @@ const GPGarage = (() => {
     el.recapMonth.addEventListener('click', () => setRecapPeriod('month'));
     el.recapYear.addEventListener('click', () => setRecapPeriod('year'));
     el.recapAll.addEventListener('click', () => setRecapPeriod('all'));
-    el.recapImage.addEventListener('click', () => exportRecap('image'));
-    el.recapPdf.addEventListener('click', () => exportRecap('pdf'));
-    el.recapShare.addEventListener('click', () => exportRecap('image', true));
+    el.recapImage.addEventListener('click', () => exportRecap('image', false, el.recapImage));
+    el.recapPdf.addEventListener('click', () => exportRecap('pdf', false, el.recapPdf));
+    el.recapShare.addEventListener('click', () => exportRecap('image', true, el.recapShare));
     el.stationSearch.addEventListener('input', onStationInput);
     el.stationSearch.addEventListener('focus', onStationInput);
     el.stationClear.addEventListener('click', clearRefuelStation);
