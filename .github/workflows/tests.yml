@@ -84,6 +84,18 @@ jobs:
           CHROME_PATH: google-chrome
         run: node tests/ui-route.mjs
 
+      - name: UI mapas sin conexion (como en la app)
+        env:
+          CHROME_PATH: google-chrome
+          BASE_URL: http://localhost:8022
+        run: |
+          GP_NATIVE=1 PHP_CLI_SERVER_WORKERS=4 php -S localhost:8022 dev-router.php > "$RUNNER_TEMP/php-native.log" 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fs -o /dev/null http://localhost:8022/; then break; fi
+            sleep 1
+          done
+          node tests/ui-maps.mjs
+
       - name: Server log (on failure)
         if: failure()
         run: cat "$RUNNER_TEMP/php-server.log" || true

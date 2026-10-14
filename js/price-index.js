@@ -37,6 +37,11 @@ const GPPriceIndex = (() => {
     }
 
     async function download(name) {
+        try {
+            await filesystem().mkdir({ path: FOLDER, directory: 'DATA', recursive: true });
+        } catch (e) {
+            // Si la carpeta ya existe, no pasa nada; downloadFile no la crea en Android.
+        }
         await filesystem().downloadFile({ url: RELEASE + name, path: `${FOLDER}/${name}`, directory: 'DATA', recursive: true });
     }
 

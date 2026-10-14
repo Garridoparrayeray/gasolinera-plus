@@ -96,7 +96,7 @@ Al abrir la sección Coche o volver a primer plano la app, y cada vez que llega 
 
 ## Mapas sin conexión (`GPMaps`)
 
-- Se descargan de la release `offline-maps` a `Filesystem` (directorio de datos), con progreso, y se comprueba que el dispositivo puede leer rangos de bytes (`canReadRanges`: cabecera «PMTiles» con una petición `Range`), imprescindible para PMTiles.
+- Se descargan de la release `offline-maps` a `Filesystem` (directorio de datos), con progreso (antes de cada descarga se crea la carpeta con `mkdir`, porque en Android `downloadFile` no crea carpetas aunque se pida `recursive`), y se comprueba que el dispositivo puede leer rangos de bytes (`canReadRanges`: cabecera «PMTiles» con una petición `Range`), imprescindible para PMTiles.
 - La capa base sigue siendo OpenStreetMap; encima se añaden las regiones instaladas con `protomapsL.leafletLayer` (zoom 12–15). Las regiones instaladas se recuerdan en `localStorage` (`gp_offline_maps`) y se validan al abrir la pantalla Coche (`verifyInstalled`).
 - Si hay una versión más nueva del mapa, el botón pasa a «Actualizar» y se borra el fichero antiguo al terminar.
 - Al abrir la app con Wi-Fi y sin ningún mapa instalado se ofrece descargar el de tu zona una vez (`firstRunHint`).
