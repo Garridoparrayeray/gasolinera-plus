@@ -18,9 +18,21 @@ function refuel(date, odometer) {
 }
 
 {
-    const refuels = [refuel(previous + '-15T10:00:00Z', 10000), refuel(thisMonth + '-01T10:00:00Z', 10500), refuel(thisMonth + '-02T10:00:00Z', 10900)];
+    const refuels = [refuel(previous + '-15T10:00:00Z', 10000), refuel(thisMonth + '-10T10:00:00Z', 10500), refuel(thisMonth + '-12T10:00:00Z', 10900)];
+    const startMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
+    const prevMs = Date.parse(previous + '-15T10:00:00Z');
+    const firstMs = Date.parse(thisMonth + '-10T10:00:00Z');
+    const atStart = 10000 + 500 * ((startMs - prevMs) / (firstMs - prevMs));
     const stats = GPRecap.compute({ ...car, odometer: 11300 }, refuels, 'month', []);
-    assert.equal(stats.km, 1300, 'los km del mes cuentan desde el último repostaje anterior hasta el cuentakilómetros actual');
+    assert.ok(Math.abs(stats.km - (11300 - atStart)) < 0.5, 'los km del mes salen del cuentakilómetros actual menos el que había al empezar el mes (repartido entre el repostaje anterior y el primero)');
+    assert.ok(stats.km > 800 && stats.km < 1300, 'incluye lo conducido antes del primer repostaje del mes');
+}
+
+{
+    const refuels = [refuel(previous + '-20T10:00:00Z', 10000), refuel(thisMonth + '-01T09:00:00Z', 10500)];
+    const stats = GPRecap.compute({ ...car, odometer: 10500 }, refuels, 'month', []);
+    assert.ok(stats.km > 0 && stats.km < 100, 'con un repostaje a primeros de mes solo cuenta lo hecho ese mes');
+    assert.ok(Math.abs(stats.consumption - 8) < 0.001, 'el consumo usa el depósito anterior aunque se llenara el mes pasado: 40 L en 500 km');
 }
 
 {

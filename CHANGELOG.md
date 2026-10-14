@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.0.15
+
+### Cambios
+- Resumen: los «Kilómetros recorridos» del mes son ahora los kilómetros hechos de verdad ese mes. Se parte del cuentakilómetros al empezar el mes, calculado entre el último repostaje del mes anterior y el primero del mes (según los días), y se llega al cuentakilómetros actual. Así ya no importa que repostes a primeros de mes o que solo repostes una vez, y cuentan los km que llevas desde el último repostaje.
+- Resumen: el consumo medio y el coste por km usan los depósitos completos que se cierran dentro del periodo, aunque el depósito anterior se llenara el mes pasado. Se recalculan con cada repostaje, como en la pestaña Coche.
+
 ## 1.0.14
 
 ### Cambios

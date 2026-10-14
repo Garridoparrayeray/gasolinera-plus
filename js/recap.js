@@ -33,6 +33,28 @@ const GPRecap = (() => {
         return 'desde el principio';
     }
 
+    // Cuentakilómetros al empezar el periodo: se reparte en línea recta entre el repostaje anterior
+    // y el primero del periodo, según los días. Sin repostaje anterior se parte del primero.
+    function odometerAtStart(mine, first, prefix) {
+        if (prefix === '') {
+            return first.odometer;
+        }
+        let startMonth = 0;
+        if (prefix.length > 4) {
+            startMonth = Number(prefix.slice(5, 7)) - 1;
+        }
+        const startMs = Date.UTC(Number(prefix.slice(0, 4)), startMonth, 1);
+        const firstMs = Date.parse(first.date);
+        const before = mine
+            .filter((r) => Date.parse(r.date) < startMs)
+            .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))[0];
+        if (!before || firstMs <= startMs || firstMs === Date.parse(before.date)) {
+            return first.odometer;
+        }
+        const share = (startMs - Date.parse(before.date)) / (firstMs - Date.parse(before.date));
+        return before.odometer + (first.odometer - before.odometer) * share;
+    }
+
     function compute(vehicle, refuels, period, trips = []) {
         const prefix = periodPrefix(period);
         const list = refuels
@@ -89,21 +111,23 @@ const GPRecap = (() => {
         stats.costPerKm = null;
         if (list.length >= 1) {
             const mine = refuels.filter((r) => r.vehicleId === vehicle.id);
-            const before = mine
-                .filter((r) => GPFuel.madridDate(r.date) < GPFuel.madridDate(list[0].date) && !GPFuel.madridDate(r.date).startsWith(prefix))
-                .sort((a, b) => b.odometer - a.odometer)[0];
-            let start = list[0].odometer;
-            if (before) {
-                start = before.odometer;
-            }
             const current = GPFuel.summary(vehicle, mine).odometer;
-            stats.km = Math.max(0, current - start);
-        }
-        if (list.length >= 2) {
-            const summary = GPFuel.summary(vehicle, list);
-            if (summary.trackedKm > 0) {
-                stats.consumption = summary.avgConsumption;
-                stats.costPerKm = summary.costPerKm;
+            stats.km = Math.max(0, current - odometerAtStart(mine, list[0], prefix));
+
+            // El consumo sale de los depósitos completos que se cierran dentro del periodo,
+            // aunque el depósito anterior se llenara el mes pasado.
+            const closed = GPFuel.intervals(mine).filter((i) => !i.suspicious && GPFuel.madridDate(i.to).startsWith(prefix));
+            let km = 0;
+            let liters = 0;
+            let cost = 0;
+            for (const interval of closed) {
+                km += interval.km;
+                liters += interval.liters;
+                cost += interval.cost;
+            }
+            if (km > 0) {
+                stats.consumption = (liters / km) * 100;
+                stats.costPerKm = cost / km;
             }
         }
         stats.cheapest = cheapest;
