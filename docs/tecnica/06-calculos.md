@@ -222,7 +222,7 @@ Para guardar el trazado sin ocupar mucho, se conserva un punto si: es el primero
 
 ## Avisos de precio (`checkPrices`)
 
-Para cada favorita se consulta la ficha y se comparan sus precios con los guardados la última vez. Hay aviso si algún carburante **baja al menos 0,002 €** (`MIN_DROP`). El texto lista hasta 3 carburantes: «Gasóleo A: 1,459 → 1,449». El mismo algoritmo existe en `alerts-store.js` (primer plano) y en `runners/alerts.js` (segundo plano, cada 720 minutos).
+Para cada favorita se consulta la ficha y se comparan sus precios con los guardados la última vez. Hay aviso si algún carburante **baja al menos el mínimo elegido** (1, 2, 3, 5 o 10 céntimos; por defecto 0,03 €, guardado como `alertThreshold`) y, si se marca `alertRises`, también si **sube** otro tanto. El precio de referencia solo se actualiza cuando el cambio llega al mínimo, de modo que varias variaciones pequeñas seguidas acaban avisando cuando suman lo bastante (`AlertsStore.compare`). El texto lista hasta 3 carburantes: «Gasóleo A: 1,459 → 1,449». El mismo algoritmo existe en `alerts-store.js` (primer plano) y en `runners/alerts.js` (segundo plano, cada 720 minutos).
 
 ## Tendencias
 

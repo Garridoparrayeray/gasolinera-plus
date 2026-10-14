@@ -2555,11 +2555,56 @@
             showAlertsNote(alertsWarning);
             return alertsWarning;
         }
-        showAlertsNote('Te avisaremos una vez al día, como mucho, si baja el precio de tus favoritas.');
+        showAlertsNote(alertsSummary());
         return '';
     }
 
-    alertsToggle.addEventListener('change', () => changeAlerts(alertsToggle.checked));
+    const alertsOptions = document.getElementById('alerts-options');
+    const alertsThreshold = document.getElementById('alerts-threshold');
+    const alertsRises = document.getElementById('alerts-rises');
+
+    function alertsSummary() {
+        const cents = Math.round(Number(alertsThreshold.value) * 100);
+        let unit = 'céntimos';
+        if (cents === 1) {
+            unit = 'céntimo';
+        }
+        let what = 'baje';
+        if (alertsRises.checked) {
+            what = 'cambie';
+        }
+        return `Te avisaremos, como mucho una vez al día, cuando el precio de tus favoritas ${what} ${cents} ${unit} o más.`;
+    }
+
+    async function loadAlertOptions() {
+        const settings = await AlertsStore.getSettings();
+        const wanted = settings.threshold.toFixed(2);
+        if ([...alertsThreshold.options].some((option) => option.value === wanted)) {
+            alertsThreshold.value = wanted;
+        }
+        alertsRises.checked = settings.rises;
+    }
+
+    async function saveAlertOptions() {
+        await AlertsStore.set('alertThreshold', Number(alertsThreshold.value));
+        await AlertsStore.set('alertRises', alertsRises.checked);
+        if (GPNative.isNative()) {
+            await GPBackground.syncAlerts(state.favoritesList, null);
+        }
+        showAlertsNote(alertsSummary());
+    }
+
+    function showAlertOptions() {
+        alertsOptions.hidden = !alertsToggle.checked;
+    }
+
+    alertsToggle.addEventListener('change', async () => {
+        await changeAlerts(alertsToggle.checked);
+        showAlertOptions();
+    });
+    alertsThreshold.addEventListener('change', () => saveAlertOptions().catch(() => {}));
+    alertsRises.addEventListener('change', () => saveAlertOptions().catch(() => {}));
+    loadAlertOptions().catch(() => {});
 
     AlertsStore.set('favorites', state.favoritesList).catch(() => {});
     AlertsStore.get('enabled').then((enabled) => {
@@ -2568,6 +2613,7 @@
             permitted = true;
         }
         alertsToggle.checked = enabled === true && permitted;
+        showAlertOptions();
         if (alertsToggle.checked) {
             checkAndNotifyDrops().catch(() => {});
         }

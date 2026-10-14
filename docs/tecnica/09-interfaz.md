@@ -82,6 +82,7 @@ Además muestra los precios de todos los carburantes con su tendencia (▲ ▼ =
 |---|---|
 | `favorites-close` | Cierra el panel |
 | `alerts-toggle` | Activa o desactiva los avisos de bajada de precio de las favoritas |
+| `alerts-threshold`, `alerts-rises` | Variación mínima para avisar (1, 2, 3, 5 o 10 céntimos) y si se avisa también de las subidas |
 | Filas (dinámicas) | Botón para abrir la ficha y botón para quitar de favoritas |
 
 ### Comparador (`compare-panel`)

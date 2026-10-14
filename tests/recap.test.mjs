@@ -35,4 +35,15 @@ function refuel(date, odometer) {
     assert.equal(stats.km, 300, 'con un solo repostaje también salen los km recorridos desde él');
 }
 
+{
+    const refuels = [refuel(thisMonth + '-03T10:00:00Z', 10500), refuel(thisMonth + '-12T10:00:00Z', 10934)];
+    const startedAt = thisMonth + '-05T10:00:00Z';
+    const trips = [{ vehicleId: 'c1', startedAt, metrics: { distanceKm: 500, maxSpeedKmh: 120 } }, { vehicleId: 'c1', startedAt, metrics: { distanceKm: 282, maxSpeedKmh: 90 } }];
+    const stats = GPRecap.compute({ ...car, odometer: 10934 }, refuels, 'month', trips);
+    assert.equal(stats.tripKm, 782);
+    assert.equal(stats.km, 782, 'si los viajes grabados suman más que los repostajes, los km del resumen coinciden con los viajes');
+    const small = GPRecap.compute({ ...car, odometer: 10934 }, refuels, 'month', [{ vehicleId: 'c1', startedAt, metrics: { distanceKm: 100, maxSpeedKmh: 90 } }]);
+    assert.equal(small.km, 434, 'si los viajes suman menos, se mantienen los km del cuentakilómetros');
+}
+
 console.log('recap: OK');

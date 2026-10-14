@@ -16,6 +16,9 @@ const GPBackground = (() => {
         if (enabled !== null) {
             details.enabled = enabled;
         }
+        const settings = await AlertsStore.getSettings();
+        details.threshold = settings.threshold;
+        details.rises = settings.rises;
         await plugin.dispatchEvent({ label: LABEL, event: 'syncFavorites', details });
     }
 

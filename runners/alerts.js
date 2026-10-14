@@ -1,5 +1,5 @@
 const SITE_URL = 'https://gasolineraplus.vercel.app';
-const MIN_DROP = 0.002;
+const DEFAULT_THRESHOLD = 0.03;
 const KG_FUELS = ['gnc', 'gnl', 'hidrogeno', 'biogas_natural_comprimido', 'biogas_natural_licuado'];
 const LABELS = {
     gasoleo_a: 'Gasóleo A',
@@ -49,6 +49,11 @@ async function checkPrices() {
     }
     const favorites = readJson('favorites', []);
     const last = readJson('lastPrices', {});
+    let threshold = Number(readJson('threshold', DEFAULT_THRESHOLD));
+    if (!(threshold > 0 && threshold <= 1)) {
+        threshold = DEFAULT_THRESHOLD;
+    }
+    const notifyRises = readJson('rises', false) === true;
     const next = {};
     const notifications = [];
 
@@ -71,21 +76,37 @@ async function checkPrices() {
         }
         const previous = last[favorite.ideess] || {};
         const prices = {};
-        const lines = [];
+        const drops = [];
+        const rises = [];
         const slugs = Object.keys(station.combustibles);
         for (let j = 0; j < slugs.length; j++) {
             const slug = slugs[j];
             const price = station.combustibles[slug].precio;
             prices[slug] = price;
-            if (typeof previous[slug] === 'number' && previous[slug] - price >= MIN_DROP && lines.length < 3) {
-                lines.push(labelFor(slug) + ': ' + priceText(previous[slug], slug) + ' → ' + priceText(price, slug));
+            if (typeof previous[slug] !== 'number') {
+                continue;
+            }
+            const diff = price - previous[slug];
+            if (Math.abs(diff) + 1e-9 < threshold) {
+                prices[slug] = previous[slug];
+            } else if (diff < 0) {
+                drops.push(labelFor(slug) + ': ' + priceText(previous[slug], slug) + ' → ' + priceText(price, slug));
+            } else if (notifyRises) {
+                rises.push(labelFor(slug) + ': ' + priceText(previous[slug], slug) + ' → ' + priceText(price, slug));
             }
         }
         next[favorite.ideess] = prices;
+        const lines = drops.concat(rises).slice(0, 3);
         if (lines.length > 0) {
+            let title = favorite.rotulo + ' ha cambiado de precio';
+            if (rises.length === 0) {
+                title = favorite.rotulo + ' ha bajado de precio';
+            } else if (drops.length === 0) {
+                title = favorite.rotulo + ' ha subido de precio';
+            }
             notifications.push({
                 id: 1000 + (i % 900),
-                title: favorite.rotulo + ' ha bajado de precio',
+                title: title,
                 body: lines.join('\n'),
                 scheduleAt: new Date(Date.now() + 1000),
             });
@@ -106,6 +127,12 @@ addEventListener('syncFavorites', (resolve, reject, args) => {
         }
         if (args && typeof args.enabled === 'boolean') {
             writeJson('enabled', args.enabled);
+        }
+        if (args && typeof args.threshold === 'number') {
+            writeJson('threshold', args.threshold);
+        }
+        if (args && typeof args.rises === 'boolean') {
+            writeJson('rises', args.rises);
         }
         resolve();
     } catch (e) {

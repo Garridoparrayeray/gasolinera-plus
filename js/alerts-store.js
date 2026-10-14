@@ -1,7 +1,7 @@
 const AlertsStore = (() => {
     const DB_NAME = 'gasolinera-alerts';
     const STORE = 'kv';
-    const MIN_DROP = 0.002;
+    const DEFAULT_THRESHOLD = 0.03;
 
     const FUEL_LABELS = {
         gasoleo_a: 'Gasóleo A',
@@ -53,12 +53,22 @@ const AlertsStore = (() => {
         return text;
     }
 
+    function changeLine(fuel) {
+        return labelFor(fuel.slug) + ': ' + priceText(fuel.from, fuel.slug) + ' → ' + priceText(fuel.to, fuel.slug);
+    }
+
     function notificationFor(drop) {
-        const lines = drop.fuelDrops.slice(0, 3).map((fuel) =>
-            labelFor(fuel.slug) + ': ' + priceText(fuel.from, fuel.slug) + ' → ' + priceText(fuel.to, fuel.slug)
-        );
+        const fuelDrops = drop.fuelDrops || [];
+        const fuelRises = drop.fuelRises || [];
+        let title = drop.favorite.rotulo + ' ha cambiado de precio';
+        if (fuelRises.length === 0) {
+            title = drop.favorite.rotulo + ' ha bajado de precio';
+        } else if (fuelDrops.length === 0) {
+            title = drop.favorite.rotulo + ' ha subido de precio';
+        }
+        const lines = [...fuelDrops, ...fuelRises].slice(0, 3).map(changeLine);
         return {
-            title: drop.favorite.rotulo + ' ha bajado de precio',
+            title,
             options: {
                 body: lines.join('\n'),
                 icon: '/icons/icon-192.png',
@@ -104,11 +114,45 @@ const AlertsStore = (() => {
         });
     }
 
+    async function getSettings() {
+        const threshold = Number(await get('alertThreshold'));
+        let valid = DEFAULT_THRESHOLD;
+        if (threshold > 0 && threshold <= 1) {
+            valid = threshold;
+        }
+        return { threshold: valid, rises: (await get('alertRises')) === true };
+    }
+
+    // El precio de referencia solo se cambia cuando el cambio llega al mínimo elegido. Así una
+    // subida o bajada lenta, de uno o dos céntimos cada día, acaba avisando cuando suma lo bastante.
+    function compare(previousPrices, stationFuels, settings) {
+        const prices = {};
+        const fuelDrops = [];
+        const fuelRises = [];
+        for (const [slug, info] of Object.entries(stationFuels)) {
+            const previous = previousPrices[slug];
+            prices[slug] = info.precio;
+            if (typeof previous !== 'number') {
+                continue;
+            }
+            const diff = info.precio - previous;
+            if (Math.abs(diff) + 1e-9 < settings.threshold) {
+                prices[slug] = previous;
+            } else if (diff < 0) {
+                fuelDrops.push({ slug, from: previous, to: info.precio });
+            } else if (settings.rises) {
+                fuelRises.push({ slug, from: previous, to: info.precio });
+            }
+        }
+        return { prices, fuelDrops, fuelRises };
+    }
+
     async function checkPrices(apiBase) {
         let base = '';
         if (apiBase) {
             base = apiBase;
         }
+        const settings = await getSettings();
         const favorites = (await get('favorites')) || [];
         const last = (await get('lastPrices')) || {};
         const next = {};
@@ -129,19 +173,10 @@ const AlertsStore = (() => {
                 continue;
             }
 
-            const previousPrices = last[favorite.ideess] || {};
-            const prices = {};
-            const fuelDrops = [];
-            for (const [slug, info] of Object.entries(station.combustibles || {})) {
-                prices[slug] = info.precio;
-                const previous = previousPrices[slug];
-                if (typeof previous === 'number' && previous - info.precio >= MIN_DROP) {
-                    fuelDrops.push({ slug, from: previous, to: info.precio });
-                }
-            }
-            next[favorite.ideess] = prices;
-            if (fuelDrops.length > 0) {
-                drops.push({ favorite, fuelDrops });
+            const result = compare(last[favorite.ideess] || {}, station.combustibles || {}, settings);
+            next[favorite.ideess] = result.prices;
+            if (result.fuelDrops.length > 0 || result.fuelRises.length > 0) {
+                drops.push({ favorite, fuelDrops: result.fuelDrops, fuelRises: result.fuelRises });
             }
         }
 
@@ -149,5 +184,5 @@ const AlertsStore = (() => {
         return drops;
     }
 
-    return { FUEL_LABELS, labelFor, unitFor, priceText, notificationFor, get, set, checkPrices };
+    return { FUEL_LABELS, DEFAULT_THRESHOLD, labelFor, unitFor, priceText, notificationFor, get, set, getSettings, compare, checkPrices };
 })();

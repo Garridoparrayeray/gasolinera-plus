@@ -1,5 +1,12 @@
 # Cambios
 
+## 1.0.14
+
+### Cambios
+- Resumen: los «Kilómetros recorridos» ya no se contradicen con «Viajes grabados». Los repostajes solo dan los km desde el primero anotado y los viajes solo los que la app ha grabado, así que cada cifra es un mínimo; ahora el resumen enseña el mayor de los dos.
+- Historial de viajes y repostajes: las fechas «Desde» y «Hasta» ya no se salen por la derecha en móviles estrechos, la ventana queda centrada y los botones de periodo (30 días, 3 meses, 1 año, Todo) tienen el mismo ancho.
+- Avisos de precio de las favoritas: antes avisaban con cualquier bajada de 0,2 céntimos, y por eso saltaban tanto. Ahora se elige la variación mínima (1, 2, 3, 5 o 10 céntimos; por defecto 3) y se puede marcar «Avisarme también cuando suban». El precio de referencia solo cambia cuando se llega al mínimo, así que varias variaciones pequeñas seguidas acaban avisando cuando suman lo bastante.
+
 ## 1.0.13
 
 ### Cambios
