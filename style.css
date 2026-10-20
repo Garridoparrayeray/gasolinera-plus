@@ -1748,3 +1748,18 @@ html.desktop:not([data-view="list"]) #stations-progress { display: none; }
 .pill.is-busy::before { content: ''; display: inline-block; width: 14px; height: 14px; margin-right: 8px; border: 3px solid currentColor; border-top-color: transparent; border-radius: 50% !important; animation: gp-spin 0.8s linear infinite; vertical-align: -2px; }
 .pill:disabled { cursor: progress; }
 @media (prefers-reduced-motion: reduce) { .pill.is-busy::before { animation: none; } }
+
+html *, html *::before, html *::after { border-radius: 0 !important; }
+#stats-group-toggle .pill[aria-pressed="true"],
+.desktop #stats-group-toggle .pill[aria-pressed="true"] { border-color: var(--accent-bg); background: var(--accent-bg); color: var(--accent-ink); }
+#stats-group-toggle { gap: 0; }
+#stats-group-toggle .pill + .pill { border-left: 0; }
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 30px;
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 10px 6px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23999' stroke-width='1.6'/%3E%3C/svg%3E");
+}
