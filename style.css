@@ -1159,7 +1159,7 @@ html:not(.desktop) #map { height: 40vh; height: 40dvh; min-height: 260px; border
 
 html:not(.desktop) *, html:not(.desktop) *::before, html:not(.desktop) *::after { border-radius: 0 !important; }
 .garage-segment { display: flex; flex-wrap: wrap; gap: 0; margin-bottom: 12px; }
-.garage-segment .pill { flex: 1 1 0; padding: 12px 8px; border: 1px solid var(--text); font-weight: 700; text-align: center; }
+.garage-segment .pill { flex: 1 1 0; padding: 12px 8px; border: 1px solid var(--text); font-weight: 700; text-align: center;border-radius: 0; }
 .garage-segment .pill + .pill { border-left: 0; }
 .garage-segment .pill[aria-pressed="true"] { background: var(--accent-bg); border-color: var(--text); color: var(--accent-ink); }
 #garage-compare-list { list-style: none; margin: 12px 0 0; padding: 0; }
