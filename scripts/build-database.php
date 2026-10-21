@@ -7,39 +7,13 @@ ini_set('memory_limit', '1024M');
 require __DIR__ . '/../api/Core/Http.php';
 require __DIR__ . '/../api/Services/OpeningHours.php';
 require __DIR__ . '/../api/Models/Search.php';
+require __DIR__ . '/sources.php';
 
 use Core\Http;
 
 const SOURCE_CURRENT = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/';
 const SOURCE_HIST_PREFIX = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestresHist/';
-const DEFAULT_OUTPUT = __DIR__ . '/../data/gasolinera.sqlite';
 const PRICE_HISTORY_RETENTION_DAYS = 10;
-
-const FUEL_FIELD_MAP = [
-    'Precio Gasoleo A' => 'gasoleo_a',
-    'Precio Gasolina 95 E5' => 'gasolina_95_e5',
-    'Precio Gasoleo Premium' => 'gasoleo_premium',
-    'Precio Gasolina 98 E5' => 'gasolina_98_e5',
-    'Precio Adblue' => 'adblue',
-    'Precio Gases licuados del petróleo' => 'glp',
-    'Precio Gasoleo B' => 'gasoleo_b',
-    'Precio Gasolina 95 E5 Premium' => 'gasolina_95_e5_premium',
-    'Precio Gasolina 95 E10' => 'gasolina_95_e10',
-    'Precio Gasolina 95 E25' => 'gasolina_95_e25',
-    'Precio Gasolina 95 E85' => 'gasolina_95_e85',
-    'Precio Gasolina 98 E10' => 'gasolina_98_e10',
-    'Precio Gas Natural Comprimido' => 'gnc',
-    'Precio Gas Natural Licuado' => 'gnl',
-    'Precio Hidrogeno' => 'hidrogeno',
-    'Precio Biodiesel' => 'biodiesel',
-    'Precio Bioetanol' => 'bioetanol',
-    'Precio Diésel Renovable' => 'diesel_renovable',
-    'Precio Gasolina Renovable' => 'gasolina_renovable',
-    'Precio Amoniaco' => 'amoniaco',
-    'Precio Metanol' => 'metanol',
-    'Precio Biogas Natural Comprimido' => 'biogas_natural_comprimido',
-    'Precio Biogas Natural Licuado' => 'biogas_natural_licuado',
-];
 
 function fieldStr(array $row, string $key): string
 {
@@ -58,13 +32,20 @@ function main(array $argv): void
         exit(1);
     }
 
+    $countries = countriesConfig();
+    $country = $opts['country'];
+    if (!isset($countries[$country])) {
+        fwrite(STDERR, "Error: --country debe ser uno de: " . implode(', ', array_keys($countries)) . "\n");
+        exit(1);
+    }
     $output = $opts['output'];
     if ($output === null) {
-        $output = DEFAULT_OUTPUT;
+        $output = __DIR__ . '/../' . $countries[$country]['db'];
     }
+    $liteName = basename($countries[$country]['lite']);
 
     if ($mode === 'lite') {
-        generateLiteJson($output);
+        generateLiteJson($output, $liteName);
         return;
     }
 
@@ -75,13 +56,17 @@ function main(array $argv): void
     ensureSchema($pdo);
 
     if ($mode === 'daily') {
-        runDaily($pdo, $opts['source']);
+        runDaily($pdo, $opts['source'], $country, (int)$countries[$country]['minStations']);
         $pdo = null;
-        generateLiteJson($output);
+        generateLiteJson($output, $liteName);
     } else {
         $days = $opts['days'];
         if ($days === null || $days < 1) {
             fwrite(STDERR, "Error: --mode=backfill requiere --days=N (N >= 1)\n");
+            exit(1);
+        }
+        if ($country !== 'es') {
+            fwrite(STDERR, "Error: el histórico solo existe para España\n");
             exit(1);
         }
         runBackfill($pdo, $days);
@@ -93,7 +78,7 @@ function main(array $argv): void
 
 function parseArgs(array $argv): array
 {
-    $opts = ['mode' => 'daily', 'source' => null, 'output' => null, 'days' => null];
+    $opts = ['mode' => 'daily', 'source' => null, 'output' => null, 'days' => null, 'country' => 'es'];
     foreach ($argv as $arg) {
         if (str_starts_with($arg, '--mode=')) {
             $opts['mode'] = substr($arg, 7);
@@ -101,6 +86,8 @@ function parseArgs(array $argv): array
             $opts['source'] = substr($arg, 9);
         } elseif (str_starts_with($arg, '--output=')) {
             $opts['output'] = substr($arg, 9);
+        } elseif (str_starts_with($arg, '--country=')) {
+            $opts['country'] = substr($arg, 10);
         } elseif (str_starts_with($arg, '--days=')) {
             $opts['days'] = (int)substr($arg, 7);
         }
@@ -231,6 +218,13 @@ function fetchSnapshot(string $url): array
 
 function loadFuelPrices(array $row): array
 {
+    if (isset($row['prices'])) {
+        return $row['prices'];
+    }
+    static $fieldMap = null;
+    if ($fieldMap === null) {
+        $fieldMap = fuelSourceMap('es');
+    }
     $prices = [];
     foreach ($row as $field => $value) {
         if (!str_starts_with($field, 'Precio ')) {
@@ -240,11 +234,11 @@ function loadFuelPrices(array $row): array
         if ($price === null) {
             continue;
         }
-        if (!isset(FUEL_FIELD_MAP[$field])) {
-            fwrite(STDERR, "Aviso: campo de carburante no mapeado en FUEL_FIELD_MAP: \"$field\" (ignorado)\n");
+        if (!isset($fieldMap[$field])) {
+            fwrite(STDERR, "Aviso: campo de carburante no mapeado en config/fuels.json: \"$field\" (ignorado)\n");
             continue;
         }
-        $prices[FUEL_FIELD_MAP[$field]] = $price;
+        $prices[$fieldMap[$field]] = $price;
     }
     return $prices;
 }
@@ -254,17 +248,35 @@ function detectIs24h(string $horario): bool
     return \Services\OpeningHours::isAlwaysOpen($horario);
 }
 
-function runDaily(\PDO $pdo, ?string $source): void
+function fetchCountrySnapshot(?string $source, string $country): array
 {
+    if ($source !== null && is_file($source) && $country !== 'es') {
+        return json_decode((string)file_get_contents($source), true);
+    }
+    if ($country === 'pt') {
+        return fetchPortugal();
+    }
+    if ($country === 'fr') {
+        return fetchFrance();
+    }
     $url = $source;
     if ($url === null) {
         $url = SOURCE_CURRENT;
     }
+    return fetchLocalOrRemote($url);
+}
 
-    echo "Descargando snapshot actual...\n";
-    $snapshot = fetchLocalOrRemote($url);
+function runDaily(\PDO $pdo, ?string $source, string $country, int $minStations): void
+{
+    echo "Descargando snapshot actual ($country)...\n";
+    $snapshot = fetchCountrySnapshot($source, $country);
     $fechaIso = feedDateToIso($snapshot['fecha']);
-    echo "Fecha del snapshot: $fechaIso (" . count($snapshot['estaciones']) . " estaciones)\n";
+    $total = count($snapshot['estaciones']);
+    echo "Fecha del snapshot: $fechaIso ($total estaciones)\n";
+    if ($total < $minStations) {
+        fwrite(STDERR, "Error: solo $total estaciones (mínimo $minStations). No se toca la base de datos.\n");
+        exit(1);
+    }
 
     applySnapshot($pdo, $snapshot['estaciones'], $fechaIso, true);
 
@@ -531,7 +543,7 @@ function trendCodes(array $today, array $previous): array
     return $codes;
 }
 
-function generateLiteJson(string $dbPath): void
+function generateLiteJson(string $dbPath, string $liteName): void
 {
     echo "Generando JSON offline con todos los datos de hoy...\n";
     $pdo = new PDO('sqlite:' . $dbPath);
@@ -586,7 +598,7 @@ function generateLiteJson(string $dbPath): void
         'stations' => $stations,
     ];
 
-    $outputPath = dirname($dbPath) . '/stations-lite.json';
+    $outputPath = dirname($dbPath) . '/' . $liteName;
     file_put_contents($outputPath, json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     $mb = round(filesize($outputPath) / 1024 / 1024, 2);
     echo "JSON offline guardado: $outputPath ($mb MB sin comprimir, " . count($stations) . " estaciones)\n";
