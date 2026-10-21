@@ -17,14 +17,24 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 concurrency:
   group: production-deploy
   cancel-in-progress: false
 
 jobs:
-  rebuild-and-deploy:
+  data:
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        country: [es, pt, fr]
+    env:
+      C: ${{ matrix.country }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -36,59 +46,148 @@ jobs:
           php-version: '8.3'
           extensions: sqlite3, pdo_sqlite, curl, mbstring
 
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '22'
+      - name: Download yesterday's database
+        run: |
+          DB=$(python3 -c "import json; print(json.load(open('config/countries.json'))['$C']['db'])")
+          LITE=$(python3 -c "import json; print(json.load(open('config/countries.json'))['$C']['lite'])")
+          echo "DB=$DB" >> "$GITHUB_ENV"
+          echo "LITE=$LITE" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/prev"
+          if gh release download "data-$C" -p "gasolinera-$C.sqlite.gz" -D "$RUNNER_TEMP/prev"; then
+            gunzip -c "$RUNNER_TEMP/prev/gasolinera-$C.sqlite.gz" > "$DB"
+            echo "Base de ayer descargada de la release data-$C"
+          elif [ -f "$DB" ]; then
+            echo "::notice::No hay release data-$C todavía; se parte de la base del repositorio"
+          else
+            echo "::notice::No hay base previa de $C; se crea desde cero"
+          fi
 
       - name: Skip if today's snapshot is already published
         id: check
-        if: github.event_name != 'push'
         run: |
           TODAY=$(TZ=Europe/Madrid date +%F)
-          LAST=$(python3 -c "import sqlite3; print(sqlite3.connect('data/gasolinera.sqlite').execute(\"SELECT value FROM meta WHERE key = 'last_snapshot_date'\").fetchone()[0])")
-          echo "Hoy: $TODAY, ultimo snapshot: $LAST"
+          LAST=""
+          if [ -f "$DB" ]; then
+            LAST=$(python3 -c "import sqlite3; r = sqlite3.connect('$DB').execute(\"SELECT value FROM meta WHERE key = 'last_snapshot_date'\").fetchone(); print((r or [''])[0])")
+          fi
+          echo "$C · hoy: $TODAY, último snapshot: $LAST"
           if [ "$LAST" = "$TODAY" ] && [ "${{ inputs.force }}" != "true" ]; then
-            echo "El snapshot de hoy ya esta publicado; no se repite"
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Add today's snapshot to gasolinera.sqlite
-        if: github.event_name != 'push' && steps.check.outputs.skip != 'true'
-        run: php scripts/build-database.php --mode=daily
+      - name: Import and check today's prices
+        if: steps.check.outputs.skip != 'true'
+        run: php scripts/build-database.php --mode=daily --country="$C"
 
-      - name: Commit updated database and JSON
-        if: github.event_name != 'push' && steps.check.outputs.skip != 'true'
+      - name: Publish to the release
+        if: steps.check.outputs.skip != 'true'
         run: |
-          if ! git diff --quiet data/; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add data/gasolinera.sqlite data/stations-lite.json
-            git commit -m "chore: snapshot diario de precios y json offline [skip ci]"
-            git pull --rebase origin main
-            git push
+          if ! gh release view "data-$C" > /dev/null 2>&1; then
+            gh release create "data-$C" --target "$GITHUB_SHA" --latest=false \
+              --title "Precios del día ($C)" \
+              --notes "Base de datos diaria de precios de carburantes de Gasolinera+ para '$C'. La genera el workflow Rebuild schedule data; el despliegue y la app usan siempre la última que pasó las comprobaciones."
+          fi
+          if [ -f "$RUNNER_TEMP/prev/gasolinera-$C.sqlite.gz" ]; then
+            cp "$RUNNER_TEMP/prev/gasolinera-$C.sqlite.gz" "$RUNNER_TEMP/gasolinera-$C-anterior.sqlite.gz"
+            gh release upload "data-$C" "$RUNNER_TEMP/gasolinera-$C-anterior.sqlite.gz" --clobber
+          fi
+          gzip -9 -c "$DB" > "$RUNNER_TEMP/gasolinera-$C.sqlite.gz"
+          gh release upload "data-$C" "$RUNNER_TEMP/gasolinera-$C.sqlite.gz" "$LITE" --clobber
+          echo "published" > "$RUNNER_TEMP/published.txt"
+
+      - name: Mark as published
+        if: steps.check.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: published-${{ matrix.country }}
+          path: ${{ runner.temp }}/published.txt
+          retention-days: 1
+
+  deploy:
+    needs: data
+    if: always()
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Decide whether to deploy
+        id: check
+        run: |
+          PUBLISHED=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" --jq '[.artifacts[] | select(.name | startswith("published-"))] | length')
+          echo "Países con datos nuevos: $PUBLISHED"
+          if [ "${{ github.event_name }}" = "push" ] || [ "${{ inputs.force }}" = "true" ] || [ "$PUBLISHED" != "0" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
           else
-            echo "Datos inalterados, nothing to commit"
+            echo "Nada nuevo que desplegar"
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - uses: actions/checkout@v7
+        if: steps.check.outputs.deploy == 'true'
+        with:
+          submodules: false
+
+      - uses: actions/setup-node@v7
+        if: steps.check.outputs.deploy == 'true'
+        with:
+          node-version: '22'
+
+      - name: Download the latest good data of each country
+        if: steps.check.outputs.deploy == 'true'
+        run: |
+          for C in es pt fr; do
+            DB=$(python3 -c "import json; print(json.load(open('config/countries.json'))['$C']['db'])")
+            LITE=$(python3 -c "import json; print(json.load(open('config/countries.json'))['$C']['lite'])")
+            mkdir -p "$RUNNER_TEMP/$C"
+            if gh release download "data-$C" -p "gasolinera-$C.sqlite.gz" -p "$(basename "$LITE")" -D "$RUNNER_TEMP/$C"; then
+              gunzip -c "$RUNNER_TEMP/$C/gasolinera-$C.sqlite.gz" > "$DB"
+              cp "$RUNNER_TEMP/$C/$(basename "$LITE")" "$LITE"
+              echo "$C: datos de la release"
+            elif [ -f "$DB" ]; then
+              echo "::warning::$C: no hay release; se despliega la base del repositorio"
+            else
+              echo "::warning::$C: sin datos todavía; la app lo mostrará como próximamente"
+            fi
+          done
+
+      - name: Warn about old data
+        if: steps.check.outputs.deploy == 'true'
+        run: |
+          python3 - <<'EOF'
+          import json, datetime, os
+          today = datetime.date.today()
+          for code, country in json.load(open('config/countries.json')).items():
+              path = country['lite']
+              if not os.path.exists(path):
+                  continue
+              date = json.load(open(path)).get('snapshotDate', '')
+              if not date:
+                  continue
+              age = (today - datetime.date.fromisoformat(date)).days
+              print(f'{code}: datos del {date} ({age} días)')
+              if age >= 2:
+                  print(f'::warning::{code}: los precios llevan {age} días sin actualizarse')
+          EOF
+
       - name: Download road graph
-        if: steps.check.outputs.skip != 'true'
+        if: steps.check.outputs.deploy == 'true'
         run: node tools/graph/fetch-graph.mjs
 
       - name: Install Vercel CLI
-        if: steps.check.outputs.skip != 'true'
+        if: steps.check.outputs.deploy == 'true'
         run: npm install --global vercel@latest
 
       - name: Deploy to production
-        if: steps.check.outputs.skip != 'true'
+        if: steps.check.outputs.deploy == 'true'
         env:
           VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
         run: vercel deploy --prod --yes --token="${{ secrets.TOKEN_GASOLINERA }}"
 
       - name: Clean up old deployments to save Vercel storage
-        if: steps.check.outputs.skip != 'true'
+        if: steps.check.outputs.deploy == 'true'
         env:
           VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
