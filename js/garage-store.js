@@ -227,6 +227,13 @@ const GarageStore = (() => {
         return vehicle;
     }
 
+    function refuelCountry(value) {
+        if (value === 'pt' || value === 'fr') {
+            return value;
+        }
+        return 'es';
+    }
+
     function sanitizeRefuel(row) {
         const odometer = finite(row.odometer);
         const liters = finite(row.liters);
@@ -255,6 +262,7 @@ const GarageStore = (() => {
             stationName,
             stationLat: finite(row.stationLat),
             stationLon: finite(row.stationLon),
+            pais: refuelCountry(row.pais),
             nationalAvg: finite(row.nationalAvg),
             zoneAvg: finite(row.zoneAvg),
             zoneRadiusKm: finite(row.zoneRadiusKm),

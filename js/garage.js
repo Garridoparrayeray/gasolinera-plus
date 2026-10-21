@@ -385,15 +385,26 @@ const GPGarage = (() => {
         state.charts[key] = new Chart(canvas, config);
     }
 
-    async function nationalByDate(fuel, from) {
-        const key = `${fuel}|${from}`;
+    function refuelCountry(refuel) {
+        if (refuel.pais === 'pt' || refuel.pais === 'fr') {
+            return refuel.pais;
+        }
+        return 'es';
+    }
+
+    function countryLabel(code) {
+        return GPCountry.countryName(code);
+    }
+
+    async function nationalByDate(fuel, from, country = 'es') {
+        const key = `${country}|${fuel}|${from}`;
         if (state.nationalCache[key]) {
             return state.nationalCache[key];
         }
         const to = GPFuel.madridDate(new Date().toISOString());
         const byDate = {};
         try {
-            const data = await Api.nationalStats(fuel, from, to);
+            const data = await Api.nationalStats(fuel, from, to, 'day', country);
             for (const point of data.serie) {
                 byDate[point.fecha] = point.media;
             }
@@ -471,8 +482,10 @@ const GPGarage = (() => {
         return typeof refuel.stationLat === 'number' && typeof refuel.stationLon === 'number';
     }
 
-    async function refuelReferences(vehicle, refuel, nationalMap) {
+    async function refuelReferences(vehicle, refuel, nationalMaps) {
         const date = GPFuel.madridDate(refuel.date);
+        const country = refuelCountry(refuel);
+        const nationalMap = nationalMaps[country] || {};
         const refs = { national: null, zone: null };
         if (typeof refuel.nationalAvg === 'number') {
             refs.national = refuel.nationalAvg;
@@ -481,7 +494,7 @@ const GPGarage = (() => {
             refs.zone = refuel.zoneAvg;
         }
         const needsZone = refs.zone === null && hasCoords(refuel);
-        if ((refs.national === null || needsZone) && GPPriceIndex.available()) {
+        if (country === 'es' && (refs.national === null || needsZone) && GPPriceIndex.available()) {
             const ref = await GPPriceIndex.dayReference({ fuel: vehicle.fuel, date, lat: refuel.stationLat, lon: refuel.stationLon });
             if (ref && refs.national === null && ref.national) {
                 refs.national = ref.national.avg;
@@ -497,14 +510,19 @@ const GPGarage = (() => {
     }
 
     async function dayRows(vehicle, sortedRefuels) {
-        let nationalMap = {};
-        if (!GPPriceIndex.available()) {
-            nationalMap = await nationalByDate(vehicle.fuel, GPFuel.madridDate(sortedRefuels[0].date));
+        const nationalMaps = {};
+        for (const refuel of sortedRefuels) {
+            const country = refuelCountry(refuel);
+            const needsMap = country !== 'es' || !GPPriceIndex.available();
+            if (needsMap && !nationalMaps[country] && typeof refuel.nationalAvg !== 'number') {
+                const first = sortedRefuels.find((item) => refuelCountry(item) === country);
+                nationalMaps[country] = await nationalByDate(vehicle.fuel, GPFuel.madridDate(first.date), country);
+            }
         }
         const rows = [];
         for (const refuel of sortedRefuels) {
-            const refs = await refuelReferences(vehicle, refuel, nationalMap);
-            rows.push({ label: shortDate(refuel.date).slice(0, 5), pricePerUnit: refuel.pricePerUnit, liters: refuel.liters, national: refs.national, zone: refs.zone });
+            const refs = await refuelReferences(vehicle, refuel, nationalMaps);
+            rows.push({ label: shortDate(refuel.date).slice(0, 5), pricePerUnit: refuel.pricePerUnit, liters: refuel.liters, national: refs.national, zone: refs.zone, countries: [refuelCountry(refuel)] });
         }
         return rows;
     }
@@ -526,30 +544,55 @@ const GPGarage = (() => {
         for (const group of groupByPeriod(sortedRefuels, kind)) {
             let liters = 0;
             let spent = 0;
+            let spainLiters = 0;
             const points = [];
+            const countries = new Set();
+            const abroad = { national: 0, nationalLiters: 0, zone: 0, zoneLiters: 0 };
             for (const refuel of group.refuels) {
                 liters += refuel.liters;
                 spent += refuel.pricePerUnit * refuel.liters;
+                const country = refuelCountry(refuel);
+                countries.add(country);
+                if (country !== 'es') {
+                    if (typeof refuel.nationalAvg === 'number') {
+                        abroad.national += refuel.nationalAvg * refuel.liters;
+                        abroad.nationalLiters += refuel.liters;
+                    }
+                    if (typeof refuel.zoneAvg === 'number') {
+                        abroad.zone += refuel.zoneAvg * refuel.liters;
+                        abroad.zoneLiters += refuel.liters;
+                    }
+                    continue;
+                }
+                spainLiters += refuel.liters;
                 if (hasCoords(refuel)) {
                     points.push({ lat: refuel.stationLat, lon: refuel.stationLon, liters: refuel.liters });
                 }
             }
-            const ref = await GPPriceIndex.periodReference({ fuel: vehicle.fuel, from: group.period.from, to: group.period.to, points });
-            let zone = null;
-            if (ref.zones.length) {
-                let weighted = 0;
-                let weight = 0;
+            let nationalSum = abroad.national;
+            let nationalLiters = abroad.nationalLiters;
+            let zoneSum = abroad.zone;
+            let zoneLiters = abroad.zoneLiters;
+            if (spainLiters > 0) {
+                const ref = await GPPriceIndex.periodReference({ fuel: vehicle.fuel, from: group.period.from, to: group.period.to, points });
                 for (const entry of ref.zones) {
-                    weighted += entry.avg * entry.liters;
-                    weight += entry.liters;
+                    zoneSum += entry.avg * entry.liters;
+                    zoneLiters += entry.liters;
                 }
-                zone = weighted / weight;
+                if (ref.national) {
+                    nationalSum += ref.national.avg * spainLiters;
+                    nationalLiters += spainLiters;
+                }
+            }
+            let zone = null;
+            if (zoneLiters > 0) {
+                zone = zoneSum / zoneLiters;
             }
             let national = null;
-            if (ref.national) {
-                national = ref.national.avg;
+            if (nationalLiters > 0) {
+                national = nationalSum / nationalLiters;
             }
-            rows.push({ label: group.period.label, pricePerUnit: spent / liters, liters, national, zone });
+            rows.push({ label: group.period.label, pricePerUnit: spent / liters, liters, national, zone, countries: [...countries] });
         }
         return rows;
     }
@@ -583,7 +626,7 @@ const GPGarage = (() => {
             item.appendChild(title);
             const lines = [`Pagaste ${number(row.pricePerUnit, 3)} €/${unit} de media · ${number(row.liters, 1)} ${unit}`];
             if (row.national !== null) {
-                lines.push(`España ${number(row.national, 3)}: ${differenceText(row.pricePerUnit, row.national, unit)}`);
+                lines.push(`${row.countries.map(countryLabel).join(' + ')} ${number(row.national, 3)}: ${differenceText(row.pricePerUnit, row.national, unit)}`);
             }
             if (row.zone !== null) {
                 lines.push(`Tu zona ${number(row.zone, 3)}: ${differenceText(row.pricePerUnit, row.zone, unit)}`);
@@ -598,9 +641,14 @@ const GPGarage = (() => {
     }
 
     function drawComparison(vehicle, rows) {
+        const countriesUsed = [...new Set(rows.flatMap((row) => row.countries))];
+        let nationalLabel = GPCountry.tr('Media del país');
+        if (countriesUsed.length === 1) {
+            nationalLabel = GPCountry.tr('Media de {0}').replace('{0}', countryLabel(countriesUsed[0]));
+        }
         const datasets = [
-            { label: 'Lo que pagaste', data: rows.map((row) => row.pricePerUnit), borderColor: '#E8710A', tension: 0.2 },
-            { label: 'Media de España', data: rows.map((row) => row.national), borderColor: '#1D4E89', borderDash: [6, 4], spanGaps: true },
+            { label: GPCountry.tr('Lo que pagaste'), data: rows.map((row) => row.pricePerUnit), borderColor: '#E8710A', tension: 0.2 },
+            { label: nationalLabel, data: rows.map((row) => row.national), borderColor: '#1D4E89', borderDash: [6, 4], spanGaps: true },
         ];
         if (rows.some((row) => row.zone !== null)) {
             datasets.push({ label: `Media de tu zona (${ZONE_RADIUS_KM} km)`, data: rows.map((row) => row.zone), borderColor: '#0F8B8D', borderDash: [2, 3], spanGaps: true });
@@ -608,7 +656,23 @@ const GPGarage = (() => {
         replaceChart('price', el.priceChart, {
             type: 'line',
             data: { labels: rows.map((row) => chartLabel(row.label)), datasets },
-            options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12 } },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const value = number(context.parsed.y, 3) + ' €';
+                                if (context.datasetIndex !== 1) {
+                                    return `${context.dataset.label}: ${value}`;
+                                }
+                                return `${rows[context.dataIndex].countries.map(countryLabel).join(' + ')}: ${value}`;
+                            },
+                        },
+                    },
+                },
+            },
         });
 
         const noun = COMPARE_NOUN[state.compareMode];
@@ -617,10 +681,24 @@ const GPGarage = (() => {
         el.savings.classList.toggle('is-saving', national.refuels > 0 && national.amount >= 0);
         if (!national.refuels) {
             el.savings.textContent = 'Sin datos de la media nacional para estas fechas.';
+        } else if (countriesUsed.length > 1) {
+            const parts = [];
+            for (const code of countriesUsed) {
+                const byCountry = GPFuel.savingsBy(rows.filter((row) => row.countries.length === 1 && row.countries[0] === code), (row) => row.national);
+                if (!byCountry.refuels) {
+                    continue;
+                }
+                let template = 'En {pais}: {importe} menos que la media ({n} {periodo}).';
+                if (byCountry.amount < 0) {
+                    template = 'En {pais}: {importe} más que la media ({n} {periodo}).';
+                }
+                parts.push(GPCountry.tr(template, { pais: countryLabel(code), importe: money(Math.abs(byCountry.amount)), n: byCountry.refuels, periodo: GPCountry.tr(noun) }));
+            }
+            el.savings.textContent = parts.join(' ');
         } else if (national.amount >= 0) {
-            el.savings.textContent = savingsText(national, 'la media de España', noun, 'Gracias a Gasolinera+ llevas ahorrados unos');
+            el.savings.textContent = savingsText(national, GPCountry.tr('la media de {0}').replace('{0}', countryLabel(countriesUsed[0])), noun, 'Gracias a Gasolinera+ llevas ahorrados unos');
         } else {
-            el.savings.textContent = savingsText(national, 'la media de España', noun, '') + ' Comparar precios antes de repostar te ayudará a bajarlo.';
+            el.savings.textContent = savingsText(national, GPCountry.tr('la media de {0}').replace('{0}', countryLabel(countriesUsed[0])), noun, '') + ' Comparar precios antes de repostar te ayudará a bajarlo.';
         }
         if (zone.refuels) {
             el.savingsZone.textContent = savingsText(zone, `la media de tu zona (${ZONE_RADIUS_KM} km)`, noun, 'Llevas ahorrados unos');
@@ -665,7 +743,8 @@ const GPGarage = (() => {
 
     async function loadReferences(refuel, fuel) {
         const date = GPFuel.madridDate(refuel.date);
-        if (GPPriceIndex.available()) {
+        const country = refuelCountry(refuel);
+        if (country === 'es' && GPPriceIndex.available()) {
             const ref = await GPPriceIndex.dayReference({ fuel, date, lat: refuel.stationLat, lon: refuel.stationLon });
             if (ref && ref.national) {
                 refuel.nationalAvg = ref.national.avg;
@@ -676,13 +755,13 @@ const GPGarage = (() => {
             }
         }
         if (refuel.nationalAvg === null) {
-            const map = await nationalByDate(fuel, date);
+            const map = await nationalByDate(fuel, date, country);
             if (typeof map[date] === 'number') {
                 refuel.nationalAvg = map[date];
             }
         }
         if (refuel.zoneAvg === null && hasCoords(refuel)) {
-            const zone = await Api.zoneAverage({ lat: refuel.stationLat, lon: refuel.stationLon, radius: ZONE_RADIUS_KM, fuel, date });
+            const zone = await Api.zoneAverage({ lat: refuel.stationLat, lon: refuel.stationLon, radius: ZONE_RADIUS_KM, fuel, date, country });
             refuel.zoneAvg = zone.media;
             refuel.zoneRadiusKm = zone.radioKm;
         }
@@ -700,6 +779,15 @@ const GPGarage = (() => {
     }
 
     function applyStation(refuel, station) {
+        let country = GPCountry.code;
+        if (station && station.pais) {
+            country = station.pais;
+        } else if (station && refuel.pais && String(refuel.stationId) === String(station.ideess)) {
+            country = refuel.pais;
+        } else if (!station && refuel.pais && refuel.createdAt !== refuel.updatedAt) {
+            country = refuel.pais;
+        }
+        refuel.pais = country;
         refuel.stationId = null;
         refuel.stationName = null;
         refuel.stationLat = null;

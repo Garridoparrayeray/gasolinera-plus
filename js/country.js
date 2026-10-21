@@ -113,7 +113,10 @@ const GPCountry = (() => {
     function tr(source, vars) {
         let text = source;
         if (lang !== 'es') {
-            const found = lookup(source);
+            let found = lookupExact(source);
+            if (found === undefined) {
+                found = lookup(source);
+            }
             if (found !== undefined) {
                 text = found;
             }
@@ -123,7 +126,7 @@ const GPCountry = (() => {
                 text = text.split('{' + name + '}').join(vars[name]);
             });
         }
-        return text;
+        return localize(text);
     }
 
     function localize(text) {

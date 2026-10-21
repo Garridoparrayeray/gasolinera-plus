@@ -65,6 +65,7 @@ const GPRecap = (() => {
         const stations = {};
         let cheapest = null;
         let versusNational = 0;
+        const versusByCountry = {};
         let hasNational = false;
         for (const refuel of list) {
             stats.total += refuel.total;
@@ -81,6 +82,11 @@ const GPRecap = (() => {
                 cheapest = { price: refuel.pricePerUnit, station: refuel.stationName };
             }
             if (typeof refuel.nationalAvg === 'number') {
+                let country = 'es';
+                if (refuel.pais === 'pt' || refuel.pais === 'fr') {
+                    country = refuel.pais;
+                }
+                versusByCountry[country] = (versusByCountry[country] || 0) + (refuel.nationalAvg - refuel.pricePerUnit) * refuel.liters;
                 versusNational += (refuel.nationalAvg - refuel.pricePerUnit) * refuel.liters;
                 hasNational = true;
             }
@@ -146,6 +152,7 @@ const GPRecap = (() => {
             }
         }
         stats.versusNational = null;
+        stats.versusByCountry = versusByCountry;
         if (hasNational) {
             stats.versusNational = versusNational;
         }
@@ -212,14 +219,22 @@ const GPRecap = (() => {
         if (stats.topStation) {
             rows.push(['Donde más has repostado', stats.topStation + stats.topStationInfo]);
         }
-        if (stats.versusNational !== null) {
-            let text = 'Justo en la media';
-            if (stats.versusNational >= 0.01) {
-                text = 'Ahorras ' + fmt(stats.versusNational, 2) + ' €';
-            } else if (stats.versusNational <= -0.01) {
-                text = 'Pagas ' + fmt(-stats.versusNational, 2) + ' € de más';
+        function versusLabel(country) {
+            if (typeof GPCountry === 'undefined') {
+                return 'Frente a la media de ' + { es: 'España', pt: 'Portugal', fr: 'Francia' }[country];
             }
-            rows.push(['Frente a la media de España', text]);
+            return GPCountry.tr('Frente a la media de {0}').replace('{0}', GPCountry.countryName(country));
+        }
+        if (stats.versusNational !== null) {
+            for (const [country, amount] of Object.entries(stats.versusByCountry)) {
+                let text = 'Justo en la media';
+                if (amount >= 0.01) {
+                    text = 'Ahorras ' + fmt(amount, 2) + ' €';
+                } else if (amount <= -0.01) {
+                    text = 'Pagas ' + fmt(-amount, 2) + ' € de más';
+                }
+                rows.push([versusLabel(country), text]);
+            }
         }
         if (stats.versusPrevious !== null) {
             const cents = fmt(Math.abs(stats.versusPrevious) * 100, 1);

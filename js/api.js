@@ -459,9 +459,9 @@ const Api = (() => {
             }
         },
         resolvePlace: async (q) => request('/places/resolve?q=' + encodeURIComponent(q)),
-        zoneAverage: async ({ lat, lon, radius, fuel, date }) => request(`/stats/zone-average?lat=${lat}&lon=${lon}&radius=${radius}&fuel=${fuel}&date=${date}`),
+        zoneAverage: async ({ lat, lon, radius, fuel, date, country }) => request(`/stats/zone-average?lat=${lat}&lon=${lon}&radius=${radius}&fuel=${fuel}&date=${date}`, undefined, country),
         zoneComparison: async (ideess, fuel, country) => request('/stations/' + encodeURIComponent(ideess) + '/zone-comparison?fuel=' + fuel, undefined, country),
-        nationalStats: async (fuel, from, to, group = 'day') => request('/stats/national?fuel=' + fuel + '&from=' + from + '&to=' + to + '&group=' + group),
+        nationalStats: async (fuel, from, to, group = 'day', country = undefined) => request('/stats/national?fuel=' + fuel + '&from=' + from + '&to=' + to + '&group=' + group, undefined, country),
         statsByFuel: async (from, to, group = 'day') => request('/stats/by-fuel?from=' + from + '&to=' + to + '&group=' + group),
         statsByProvince: async (fuel) => request('/stats/by-province?fuel=' + fuel),
         priceDistribution: async (fuel) => request('/stats/price-distribution?fuel=' + fuel),
