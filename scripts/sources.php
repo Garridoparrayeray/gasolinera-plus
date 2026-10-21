@@ -107,6 +107,35 @@ function portugueseHours(array $schedule): string
     return implode('; ', $blocks);
 }
 
+function portugueseObservationsHours(string $obs): string
+{
+    $obs = trim($obs);
+    if ($obs === '' || $obs === '-') {
+        return '';
+    }
+    if (preg_match('/24\s*hora/i', $obs) || preg_match('/\b24\s*h\b/i', $obs)) {
+        return 'L-D: 24H';
+    }
+    if (preg_match('/(?:das\s*)?(\d{1,2})(?:[hH:]|\.|\s*h\s*)(\d{2})?\s*(?:às|as|a|-|ate|\/)\s*(\d{1,2})(?:[hH:]|\.|\s*h\s*)(\d{2})?/iu', $obs, $m)) {
+        $startH = (int)$m[1];
+        $startM = '00';
+        if (isset($m[2]) && $m[2] !== '') {
+            $startM = $m[2];
+        }
+        $endH = (int)$m[3];
+        $endM = '00';
+        if (isset($m[4]) && $m[4] !== '') {
+            $endM = $m[4];
+        }
+        $end = sprintf('%02d:%s', $endH, $endM);
+        if ($end === '00:00' || $end === '24:00') {
+            $end = '23:59';
+        }
+        return sprintf('L-D: %02d:%s-%s', $startH, $startM, $end);
+    }
+    return '';
+}
+
 function previousHours(?\PDO $pdo): array
 {
     if ($pdo === null) {
@@ -140,8 +169,17 @@ function fetchPortugueseHours(array $ids): array
         } while ($running && $status === CURLM_OK);
         foreach ($handles as $id => $handle) {
             $data = json_decode((string)curl_multi_getcontent($handle), true);
-            if (is_array($data) && isset($data['resultado']['HorarioPosto']) && is_array($data['resultado']['HorarioPosto'])) {
-                $hours[$id] = portugueseHours($data['resultado']['HorarioPosto']);
+            $h = '';
+            if (is_array($data) && isset($data['resultado']) && is_array($data['resultado'])) {
+                if (isset($data['resultado']['HorarioPosto']) && is_array($data['resultado']['HorarioPosto'])) {
+                    $h = portugueseHours($data['resultado']['HorarioPosto']);
+                }
+                if ($h === '' && isset($data['resultado']['Observacoes'])) {
+                    $h = portugueseObservationsHours(fieldStr($data['resultado'], 'Observacoes'));
+                }
+            }
+            if ($h !== '') {
+                $hours[$id] = $h;
             }
             curl_multi_remove_handle($multi, $handle);
             curl_close($handle);
@@ -221,6 +259,11 @@ function fetchPortugal(?\PDO $pdo = null): array
     foreach (fetchPortugueseHours($refresh) as $id => $hours) {
         if ($hours !== '' || !isset($previous[$id])) {
             $rows[$id]['Horario'] = $hours;
+        }
+    }
+    foreach ($rows as $id => $row) {
+        if ($rows[$id]['Horario'] === '' && strcasecmp($row['Tipo Venta'], 'Auto-estrada') === 0) {
+            $rows[$id]['Horario'] = 'L-D: 24H';
         }
     }
     return ['fecha' => snapshotNow(), 'estaciones' => array_values($rows)];
