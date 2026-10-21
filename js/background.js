@@ -16,6 +16,15 @@ const GPBackground = (() => {
         if (enabled !== null) {
             details.enabled = enabled;
         }
+        details.labels = {};
+        GPCountry.fuels.forEach((fuel) => {
+            details.labels[fuel.slug] = GPCountry.fuelLabel(fuel.slug);
+        });
+        details.texts = {
+            changed: GPCountry.tr('ha cambiado de precio'),
+            down: GPCountry.tr('ha bajado de precio'),
+            up: GPCountry.tr('ha subido de precio'),
+        };
         const settings = await AlertsStore.getSettings();
         details.threshold = settings.threshold;
         details.rises = settings.rises;

@@ -66,12 +66,16 @@ const AlertsStore = (() => {
     function notificationFor(drop) {
         const fuelDrops = drop.fuelDrops || [];
         const fuelRises = drop.fuelRises || [];
-        let title = drop.favorite.rotulo + ' ha cambiado de precio';
+        let phrase = 'ha cambiado de precio';
         if (fuelRises.length === 0) {
-            title = drop.favorite.rotulo + ' ha bajado de precio';
+            phrase = 'ha bajado de precio';
         } else if (fuelDrops.length === 0) {
-            title = drop.favorite.rotulo + ' ha subido de precio';
+            phrase = 'ha subido de precio';
         }
+        if (typeof GPCountry !== 'undefined') {
+            phrase = GPCountry.tr(phrase);
+        }
+        const title = drop.favorite.rotulo + ' ' + phrase;
         const lines = [...fuelDrops, ...fuelRises].slice(0, 3).map(changeLine);
         return {
             title,

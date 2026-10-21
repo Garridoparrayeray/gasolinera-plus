@@ -37,6 +37,10 @@ function priceText(value, slug) {
 }
 
 function labelFor(slug) {
+    const translated = readJson('labels', {});
+    if (translated[slug]) {
+        return translated[slug];
+    }
     if (LABELS[slug]) {
         return LABELS[slug];
     }
@@ -104,12 +108,14 @@ async function checkPrices() {
         next[key] = prices;
         const lines = drops.concat(rises).slice(0, 3);
         if (lines.length > 0) {
-            let title = favorite.rotulo + ' ha cambiado de precio';
+            const texts = readJson('texts', {});
+            let phrase = texts.changed || 'ha cambiado de precio';
             if (rises.length === 0) {
-                title = favorite.rotulo + ' ha bajado de precio';
+                phrase = texts.down || 'ha bajado de precio';
             } else if (drops.length === 0) {
-                title = favorite.rotulo + ' ha subido de precio';
+                phrase = texts.up || 'ha subido de precio';
             }
+            const title = favorite.rotulo + ' ' + phrase;
             notifications.push({
                 id: 1000 + (i % 900),
                 title: title,
@@ -139,6 +145,12 @@ addEventListener('syncFavorites', (resolve, reject, args) => {
         }
         if (args && typeof args.rises === 'boolean') {
             writeJson('rises', args.rises);
+        }
+        if (args && args.labels) {
+            writeJson('labels', args.labels);
+        }
+        if (args && args.texts) {
+            writeJson('texts', args.texts);
         }
         resolve();
     } catch (e) {
