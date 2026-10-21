@@ -248,13 +248,13 @@ function detectIs24h(string $horario): bool
     return \Services\OpeningHours::isAlwaysOpen($horario);
 }
 
-function fetchCountrySnapshot(?string $source, string $country): array
+function fetchCountrySnapshot(?string $source, string $country, \PDO $pdo): array
 {
     if ($source !== null && is_file($source) && $country !== 'es') {
         return json_decode((string)file_get_contents($source), true);
     }
     if ($country === 'pt') {
-        return fetchPortugal();
+        return fetchPortugal($pdo);
     }
     if ($country === 'fr') {
         return fetchFrance();
@@ -269,7 +269,7 @@ function fetchCountrySnapshot(?string $source, string $country): array
 function runDaily(\PDO $pdo, ?string $source, string $country, int $minStations): void
 {
     echo "Descargando snapshot actual ($country)...\n";
-    $snapshot = fetchCountrySnapshot($source, $country);
+    $snapshot = fetchCountrySnapshot($source, $country, $pdo);
     $fechaIso = feedDateToIso($snapshot['fecha']);
     $total = count($snapshot['estaciones']);
     echo "Fecha del snapshot: $fechaIso ($total estaciones)\n";

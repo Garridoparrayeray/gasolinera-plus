@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Core\Http;
 
 const SOURCE_PT = 'https://precoscombustiveis.dgeg.gov.pt/api/PrecoComb/PesquisarPostos?idsTiposComb=&idMarca=&idTipoPosto=&idDistrito=&idsMunicipios=&qtdPorPagina=%d&pagina=%d';
+const SOURCE_PT_STATION = 'https://precoscombustiveis.dgeg.gov.pt/api/PrecoComb/GetDadosPosto?id=%s';
+const PT_HOURS_REFRESH_DAYS = 7;
 const SOURCE_FR = 'https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/prix-des-carburants-en-france-flux-instantane-v2/exports/json';
 const SOURCE_FR_FIELDS = 'id,latitude,longitude,cp,ville,adresse,pop,departement,code_departement,region,code_region,horaires,horaires_automate_24_24,prix';
 const SOURCE_MAX_PRICE_AGE_DAYS = 10;
@@ -55,7 +57,101 @@ function isRecentPrice(string $updatedAt): bool
     return $time >= time() - SOURCE_MAX_PRICE_AGE_DAYS * 86400;
 }
 
-function fetchPortugal(): array
+function portugueseRange(?string $text): string
+{
+    $text = trim((string)$text);
+    if ($text === '' || stripos($text, 'fechado') !== false) {
+        return '';
+    }
+    if (stripos($text, '24') !== false && stripos($text, 'hora') !== false) {
+        return '00:00-23:59';
+    }
+    if (!preg_match_all('/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/', $text, $matches, PREG_SET_ORDER)) {
+        return '';
+    }
+    $ranges = [];
+    foreach ($matches as $m) {
+        $end = sprintf('%02d:%s', (int)$m[3], $m[4]);
+        if ($end === '00:00' || $end === '24:00') {
+            $end = '23:59';
+        }
+        $ranges[] = sprintf('%02d:%s', (int)$m[1], $m[2]) . '-' . $end;
+    }
+    return implode(' Y ', $ranges);
+}
+
+function portugueseHours(array $schedule): string
+{
+    $weekdays = portugueseRange(fieldStr($schedule, 'DiasUteis'));
+    $saturday = portugueseRange(fieldStr($schedule, 'Sabado'));
+    $sunday = portugueseRange(fieldStr($schedule, 'Domingo'));
+    if ($weekdays === '' && $saturday === '' && $sunday === '') {
+        return '';
+    }
+    if ($weekdays === '00:00-23:59' && $saturday === $weekdays && $sunday === $weekdays) {
+        return 'L-D: 24H';
+    }
+    if ($weekdays !== '' && $saturday === $weekdays && $sunday === $weekdays) {
+        return 'L-D: ' . $weekdays;
+    }
+    $blocks = [];
+    if ($weekdays !== '') {
+        $blocks[] = 'L-V: ' . $weekdays;
+    }
+    if ($saturday !== '') {
+        $blocks[] = 'S: ' . $saturday;
+    }
+    if ($sunday !== '') {
+        $blocks[] = 'D: ' . $sunday;
+    }
+    return implode('; ', $blocks);
+}
+
+function previousHours(?\PDO $pdo): array
+{
+    if ($pdo === null) {
+        return [];
+    }
+    try {
+        $rows = $pdo->query('SELECT ideess, horario_raw FROM stations')->fetchAll(\PDO::FETCH_KEY_PAIR);
+    } catch (\Throwable $e) {
+        return [];
+    }
+    return $rows;
+}
+
+function fetchPortugueseHours(array $ids): array
+{
+    $hours = [];
+    foreach (array_chunk($ids, 8) as $batch) {
+        $multi = curl_multi_init();
+        $handles = [];
+        foreach ($batch as $id) {
+            $handle = curl_init(sprintf(SOURCE_PT_STATION, rawurlencode((string)$id)));
+            curl_setopt_array($handle, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20, CURLOPT_ENCODING => '']);
+            curl_multi_add_handle($multi, $handle);
+            $handles[$id] = $handle;
+        }
+        do {
+            $status = curl_multi_exec($multi, $running);
+            if ($running) {
+                curl_multi_select($multi, 1.0);
+            }
+        } while ($running && $status === CURLM_OK);
+        foreach ($handles as $id => $handle) {
+            $data = json_decode((string)curl_multi_getcontent($handle), true);
+            if (is_array($data) && isset($data['resultado']['HorarioPosto']) && is_array($data['resultado']['HorarioPosto'])) {
+                $hours[$id] = portugueseHours($data['resultado']['HorarioPosto']);
+            }
+            curl_multi_remove_handle($multi, $handle);
+            curl_close($handle);
+        }
+        curl_multi_close($multi);
+    }
+    return $hours;
+}
+
+function fetchPortugal(?\PDO $pdo = null): array
 {
     $map = fuelSourceMap('pt');
     $rows = [];
@@ -108,6 +204,24 @@ function fetchPortugal(): array
             }
         }
         $page++;
+    }
+    $previous = previousHours($pdo);
+    $day = (int)date('z') % PT_HOURS_REFRESH_DAYS;
+    $refresh = [];
+    foreach ($rows as $id => $row) {
+        if (isset($previous[$id]) && $previous[$id] !== '') {
+            $rows[$id]['Horario'] = $previous[$id];
+            if ((int)$id % PT_HOURS_REFRESH_DAYS !== $day) {
+                continue;
+            }
+        }
+        $refresh[] = $id;
+    }
+    echo 'Horarios de Portugal: ' . count($refresh) . " fichas a consultar\n";
+    foreach (fetchPortugueseHours($refresh) as $id => $hours) {
+        if ($hours !== '' || !isset($previous[$id])) {
+            $rows[$id]['Horario'] = $hours;
+        }
     }
     return ['fecha' => snapshotNow(), 'estaciones' => array_values($rows)];
 }
