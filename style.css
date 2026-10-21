@@ -162,17 +162,18 @@ header {
 .country-card__logo svg { display: block; width: 34px; height: 34px; border-radius: 8px; }
 .country-card__text { display: flex; flex-direction: column; min-width: 0; }
 .country-card__text > span { font-size: 0.78rem; color: var(--lockup-subtitle); }
-.country-card__place { margin-left: 6px; font-weight: 600; color: var(--lockup-subtitle); }
+.country-card__place { margin-left: 4px; color: var(--highlight); font-size: 0.6rem; font-weight: 700; letter-spacing: 1.5px; }
 .switcher-langs {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
-    margin-top: 6px; padding: 10px 10px 4px; border-top: 1px solid #2E2E2E;
-    font-size: 0.78rem; color: var(--lockup-subtitle);
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    margin-top: 6px; padding: 12px 10px 4px; border-top: 1px solid #2E2E2E;
+    font-size: 0.8rem; color: var(--lockup-subtitle);
 }
-.switcher-langs span { margin-right: 4px; }
+.switcher-langs span { grid-column: 1 / -1; font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; }
 .switcher-langs button {
-    padding: 5px 11px; border: 1px solid #3A3A3A; border-radius: 999px;
-    background: none; color: #ffffff; font: inherit; cursor: pointer;
+    min-height: 38px; padding: 6px 4px; border: 1px solid #3A3A3A; border-radius: 8px;
+    background: none; color: #ffffff; font: inherit; cursor: pointer; white-space: nowrap;
 }
+.switcher-langs button:hover { background: #262626; }
 .switcher-langs button[aria-pressed="true"] { background: var(--highlight); border-color: var(--highlight); color: #111111; }
 #app-logomark svg { width: 46px; height: 46px; border-radius: 11px; flex-shrink: 0; }
 #app-logomark { display: flex; }
