@@ -41,6 +41,8 @@ const GPBackup = (() => {
         const payload = await GarageStore.exportAll(includeTrips, {
             favorites: readLocalList('gasolinera_favorites'),
             compare: readLocalList('gasolinera_compare'),
+            favoritesPt: readLocalList('gasolinera_favorites_pt'),
+            favoritesFr: readLocalList('gasolinera_favorites_fr'),
         });
         const text = JSON.stringify(payload);
         const Filesystem = GPNative.plugin('Filesystem');
@@ -78,6 +80,8 @@ const GPBackup = (() => {
         const extra = payload.extra || {};
         counts.favorites = mergeLocalList('gasolinera_favorites', extra.favorites);
         counts.compare = mergeLocalList('gasolinera_compare', extra.compare);
+        counts.favorites += mergeLocalList('gasolinera_favorites_pt', extra.favoritesPt);
+        counts.favorites += mergeLocalList('gasolinera_favorites_fr', extra.favoritesFr);
         return counts;
     }
 

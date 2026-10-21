@@ -59,9 +59,15 @@ async function checkPrices() {
 
     for (let i = 0; i < favorites.length; i++) {
         const favorite = favorites[i];
+        let key = favorite.ideess;
+        let query = '';
+        if (favorite.pais && favorite.pais !== 'es') {
+            key = favorite.pais + ':' + favorite.ideess;
+            query = '?pais=' + favorite.pais;
+        }
         let station = null;
         try {
-            const response = await fetch(SITE_URL + '/api/stations/' + encodeURIComponent(favorite.ideess));
+            const response = await fetch(SITE_URL + '/api/stations/' + encodeURIComponent(favorite.ideess) + query);
             if (response.ok) {
                 station = await response.json();
             }
@@ -69,12 +75,12 @@ async function checkPrices() {
             station = null;
         }
         if (!station || !station.combustibles) {
-            if (last[favorite.ideess]) {
-                next[favorite.ideess] = last[favorite.ideess];
+            if (last[key]) {
+                next[key] = last[key];
             }
             continue;
         }
-        const previous = last[favorite.ideess] || {};
+        const previous = last[key] || {};
         const prices = {};
         const drops = [];
         const rises = [];
@@ -95,7 +101,7 @@ async function checkPrices() {
                 rises.push(labelFor(slug) + ': ' + priceText(previous[slug], slug) + ' → ' + priceText(price, slug));
             }
         }
-        next[favorite.ideess] = prices;
+        next[key] = prices;
         const lines = drops.concat(rises).slice(0, 3);
         if (lines.length > 0) {
             let title = favorite.rotulo + ' ha cambiado de precio';

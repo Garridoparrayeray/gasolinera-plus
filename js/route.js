@@ -283,7 +283,7 @@ const GPRoute = (() => {
             state.map.invalidateSize();
             return;
         }
-        state.map = L.map(el.map).setView([40.2, -3.7], 5);
+        state.map = L.map(el.map).setView(GPCountry.config.center, GPCountry.config.zoom - 1);
         if ('ResizeObserver' in window) {
             new ResizeObserver(() => {
                 state.map.invalidateSize();
@@ -577,7 +577,7 @@ const GPRoute = (() => {
             const priceNode = li.querySelector('.route-station__price');
             priceNode.textContent = `${number(entry.price, 3)} €/${unit}`;
             priceNode.style.color = priceColor(entry.price, min, max);
-            li.querySelector('.route-station__main').addEventListener('click', () => GP.openStationModal(String(station.ideess)));
+            li.querySelector('.route-station__main').addEventListener('click', () => GP.openStationModal(String(station.ideess), station.pais));
             li.querySelector('.route-station__stop').addEventListener('click', () => setStop(entry));
             el.stations.appendChild(li);
 
@@ -611,7 +611,11 @@ const GPRoute = (() => {
         if (!state.result) {
             return;
         }
-        const stations = await OfflineEngine.loadData();
+        let countries = [GPCountry.code];
+        if (state.direct.countries && state.direct.countries.length) {
+            countries = state.direct.countries;
+        }
+        const stations = await OfflineEngine.loadCountries(countries);
         state.corridor = buildCorridor(state.direct.coords, Number(el.detour.value), stations, el.filterFuel.value, el.filterOpen.value === '24h');
         renderStations();
         renderAdvice();

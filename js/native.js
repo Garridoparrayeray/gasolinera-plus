@@ -202,17 +202,17 @@ const GPNative = (() => {
             return;
         }
         try {
-            const last = await AlertsStore.get('offlineStationsAt');
+            const last = await AlertsStore.get(GPCountry.storageKey('offlineStationsAt'));
             if (last && Date.now() - last < OFFLINE_REFRESH_MS) {
                 return;
             }
-            const response = await fetch(remoteBase() + '/data/stations-lite.json');
+            const response = await fetch(remoteBase() + GPCountry.liteUrl());
             if (!response.ok) {
                 return;
             }
             const payload = await response.json();
-            await AlertsStore.set('offlineStations', payload);
-            await AlertsStore.set('offlineStationsAt', Date.now());
+            await AlertsStore.set(GPCountry.storageKey('offlineStations'), payload);
+            await AlertsStore.set(GPCountry.storageKey('offlineStationsAt'), Date.now());
         } catch (e) {
             return;
         }
@@ -223,7 +223,7 @@ const GPNative = (() => {
             return null;
         }
         try {
-            const payload = await AlertsStore.get('offlineStations');
+            const payload = await AlertsStore.get(GPCountry.storageKey('offlineStations'));
             if (payload) {
                 return payload;
             }

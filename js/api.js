@@ -1,11 +1,39 @@
 const OfflineEngine = (() => {
     let stationsCache = null;
+    const otherCountries = {};
+
+    async function loadCountry(country) {
+        if (country === GPCountry.code) {
+            const own = await loadData();
+            return own.map((station) => ({ ...station, pais: country }));
+        }
+        if (!otherCountries[country]) {
+            otherCountries[country] = fetch(GPNative.apiBase() + GPCountry.liteUrlFor(country))
+                .then((res) => {
+                    if (!res.ok) {
+                        throw new Error(String(res.status));
+                    }
+                    return res.json();
+                })
+                .then((payload) => (payload.stations || []).map((station) => ({ ...station, pais: country })))
+                .catch(() => {
+                    delete otherCountries[country];
+                    return [];
+                });
+        }
+        return otherCountries[country];
+    }
+
+    async function loadCountries(countries) {
+        const lists = await Promise.all(countries.map(loadCountry));
+        return [].concat(...lists);
+    }
 
     async function loadData() {
         if (!stationsCache) {
             let payload = await GPNative.cachedOfflineStations();
             if (!payload) {
-                const res = await fetch('/data/stations-lite.json');
+                const res = await fetch(GPCountry.liteUrl());
                 payload = await res.json();
             }
             if (Array.isArray(payload)) {
@@ -109,6 +137,7 @@ const OfflineEngine = (() => {
         haversine,
         normalize,
         loadData,
+        loadCountries,
         near: async ({ lat, lon, radius = 10, sort = 'price', fuel = 'gasoleo_a', open, offset = 0, limit = 20 }) => {
             const data = applyFilters(await loadData(), fuel, open);
             const withDist = data
@@ -275,10 +304,10 @@ const OfflineEngine = (() => {
 })();
 
 const Api = (() => {
-    async function request(path, signal) {
+    async function request(path, signal, country) {
         let response;
         try {
-            response = await fetch(GPNative.apiBase() + '/api' + path, { credentials: 'same-origin', signal });
+            response = await fetch(GPNative.apiBase() + '/api' + GPCountry.apiQuery(path, country), { credentials: 'same-origin', signal });
         } catch (e) {
             if (e.name === 'AbortError') {
                 throw e;
@@ -405,9 +434,9 @@ const Api = (() => {
                 throw e;
             }
         },
-        station: async (ideess) => {
+        station: async (ideess, country) => {
             try {
-                return await request('/stations/' + encodeURIComponent(ideess));
+                return await request('/stations/' + encodeURIComponent(ideess), undefined, country);
             } catch (e) {
                 if (isOffline(e)) {
                     const station = await OfflineEngine.station(ideess);
@@ -419,9 +448,9 @@ const Api = (() => {
                 throw e;
             }
         },
-        history: async (ideess, fuel, from, to, group = 'day') => {
+        history: async (ideess, fuel, from, to, group = 'day', country = undefined) => {
             try {
-                return await request('/stations/' + encodeURIComponent(ideess) + '/history?fuel=' + fuel + '&from=' + from + '&to=' + to + '&group=' + group);
+                return await request('/stations/' + encodeURIComponent(ideess) + '/history?fuel=' + fuel + '&from=' + from + '&to=' + to + '&group=' + group, undefined, country);
             } catch (e) {
                 if (isOffline(e)) {
                     return { serie: [], offline: true };
@@ -431,7 +460,7 @@ const Api = (() => {
         },
         resolvePlace: async (q) => request('/places/resolve?q=' + encodeURIComponent(q)),
         zoneAverage: async ({ lat, lon, radius, fuel, date }) => request(`/stats/zone-average?lat=${lat}&lon=${lon}&radius=${radius}&fuel=${fuel}&date=${date}`),
-        zoneComparison: async (ideess, fuel) => request('/stations/' + encodeURIComponent(ideess) + '/zone-comparison?fuel=' + fuel),
+        zoneComparison: async (ideess, fuel, country) => request('/stations/' + encodeURIComponent(ideess) + '/zone-comparison?fuel=' + fuel, undefined, country),
         nationalStats: async (fuel, from, to, group = 'day') => request('/stats/national?fuel=' + fuel + '&from=' + from + '&to=' + to + '&group=' + group),
         statsByFuel: async (from, to, group = 'day') => request('/stats/by-fuel?from=' + from + '&to=' + to + '&group=' + group),
         statsByProvince: async (fuel) => request('/stats/by-province?fuel=' + fuel),

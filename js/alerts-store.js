@@ -32,6 +32,9 @@ const AlertsStore = (() => {
     const KG_FUELS = new Set(['gnc', 'gnl', 'hidrogeno', 'biogas_natural_comprimido', 'biogas_natural_licuado']);
 
     function unitFor(slug) {
+        if (typeof GPCountry !== 'undefined') {
+            return GPCountry.fuelUnit(slug);
+        }
         if (KG_FUELS.has(slug)) {
             return 'kg';
         }
@@ -39,6 +42,9 @@ const AlertsStore = (() => {
     }
 
     function labelFor(slug) {
+        if (typeof GPCountry !== 'undefined') {
+            return GPCountry.fuelLabel(slug);
+        }
         if (FUEL_LABELS[slug]) {
             return FUEL_LABELS[slug];
         }
@@ -159,22 +165,28 @@ const AlertsStore = (() => {
         const drops = [];
 
         for (const favorite of favorites) {
+            let key = favorite.ideess;
+            let query = '';
+            if (favorite.pais && favorite.pais !== 'es') {
+                key = favorite.pais + ':' + favorite.ideess;
+                query = '?pais=' + favorite.pais;
+            }
             let station;
             try {
-                const response = await fetch(`${base}/api/stations/${encodeURIComponent(favorite.ideess)}`);
+                const response = await fetch(`${base}/api/stations/${encodeURIComponent(favorite.ideess)}${query}`);
                 if (!response.ok) {
                     throw new Error(String(response.status));
                 }
                 station = await response.json();
             } catch (e) {
-                if (last[favorite.ideess]) {
-                    next[favorite.ideess] = last[favorite.ideess];
+                if (last[key]) {
+                    next[key] = last[key];
                 }
                 continue;
             }
 
-            const result = compare(last[favorite.ideess] || {}, station.combustibles || {}, settings);
-            next[favorite.ideess] = result.prices;
+            const result = compare(last[key] || {}, station.combustibles || {}, settings);
+            next[key] = result.prices;
             if (result.fuelDrops.length > 0 || result.fuelRises.length > 0) {
                 drops.push({ favorite, fuelDrops: result.fuelDrops, fuelRises: result.fuelRises });
             }

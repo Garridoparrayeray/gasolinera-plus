@@ -1,0 +1,10 @@
+{
+ "header.subtitle": "Prix réels des stations-service",
+ "header.switch": "Changer de pays ou de langue",
+ "switcher.label": "Choisir le pays",
+ "switcher.es": "Prix des stations en Espagne",
+ "switcher.pt": "Prix des stations au Portugal",
+ "switcher.fr": "Prix des stations en France",
+ "switcher.lang": "Langue",
+ "switcher.current": "Vous êtes ici"
+}

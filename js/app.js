@@ -195,7 +195,7 @@
 
     function loadCompareList() {
         try {
-            const raw = localStorage.getItem('gasolinera_compare');
+            const raw = localStorage.getItem(GPCountry.storageKey('gasolinera_compare'));
             let parsed = [];
             if (raw) {
                 parsed = JSON.parse(raw);
@@ -211,7 +211,7 @@
 
     function saveCompareList() {
         try {
-            localStorage.setItem('gasolinera_compare', JSON.stringify(state.compareList));
+            localStorage.setItem(GPCountry.storageKey('gasolinera_compare'), JSON.stringify(state.compareList));
         } catch (e) {
             
             
@@ -254,7 +254,7 @@
 
     function loadFavorites() {
         try {
-            const raw = localStorage.getItem('gasolinera_favorites');
+            const raw = localStorage.getItem(GPCountry.storageKey('gasolinera_favorites'));
             let parsed = [];
             if (raw) {
                 parsed = JSON.parse(raw);
@@ -268,16 +268,37 @@
         }
     }
 
+    function allFavorites() {
+        const all = [];
+        for (const country of Object.keys(GPCountry.countries)) {
+            if (country === GPCountry.code) {
+                state.favoritesList.forEach((favorite) => all.push({ ...favorite, pais: country }));
+                continue;
+            }
+            let key = 'gasolinera_favorites';
+            if (country !== 'es') {
+                key += '_' + country;
+            }
+            try {
+                const list = JSON.parse(localStorage.getItem(key) || '[]');
+                list.forEach((favorite) => all.push({ ...favorite, pais: country }));
+            } catch (e) {
+                continue;
+            }
+        }
+        return all;
+    }
+
     function saveFavorites() {
         try {
-            localStorage.setItem('gasolinera_favorites', JSON.stringify(state.favoritesList));
+            localStorage.setItem(GPCountry.storageKey('gasolinera_favorites'), JSON.stringify(state.favoritesList));
         } catch (e) {
             
             
         }
         updateFavoritesCount();
-        AlertsStore.set('favorites', state.favoritesList).catch(() => {});
-        GPBackground.syncAlerts(state.favoritesList, null).catch(() => {});
+        AlertsStore.set('favorites', allFavorites()).catch(() => {});
+        GPBackground.syncAlerts(allFavorites(), null).catch(() => {});
     }
 
     function isFavorite(ideess) {
@@ -295,7 +316,7 @@
         if (isFavorite(ideess)) {
             return;
         }
-        state.favoritesList.push({ ideess, rotulo, direccion, municipio });
+        state.favoritesList.push({ ideess, rotulo, direccion, municipio, pais: GPCountry.code });
         saveFavorites();
     }
 
@@ -1330,9 +1351,9 @@
         if (state.mapReady) {
             return;
         }
-        let initialLat = 40.4168;
-        let initialLon = -3.7038;
-        let initialZoom = 6;
+        let initialLat = GPCountry.config.center[0];
+        let initialLon = GPCountry.config.center[1];
+        let initialZoom = GPCountry.config.zoom;
         if (state.userLat !== null) {
             initialLat = state.userLat;
             initialLon = state.userLon;
@@ -1962,14 +1983,18 @@
         target.appendChild(el.stationModal);
     }
 
-    async function openStationModal(ideess) {
+    async function openStationModal(ideess, country) {
         if (state.modalLoadingId === String(ideess)) {
             return;
         }
         state.modalLoadingId = String(ideess);
+        state.modalCountry = GPCountry.code;
+        if (country) {
+            state.modalCountry = country;
+        }
         let station;
         try {
-            station = await GPSectionLoading.track('modal', Api.station(ideess));
+            station = await GPSectionLoading.track('modal', Api.station(ideess, state.modalCountry));
         } catch (e) {
             state.modalLoadingId = '';
             showToast('No se pudo abrir la gasolinera: ' + e.message);
@@ -2004,6 +2029,7 @@
 
         el.modalDirections.href = `https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lon}`;
 
+        el.modalFavoriteToggle.hidden = state.modalCountry !== GPCountry.code;
         el.modalFavoriteToggle.setAttribute('aria-pressed', String(isFavorite(ideess)));
         el.modalFavoriteToggle.setAttribute('aria-label', favoriteToggleLabel(ideess));
         el.modalFavoriteToggle.onclick = () => {
@@ -2074,7 +2100,7 @@
         el.modalZoneComparison.textContent = '';
         let data;
         try {
-            data = await Api.zoneComparison(ideess, fuel);
+            data = await Api.zoneComparison(ideess, fuel, state.modalCountry);
         } catch (e) {
             return;
         }
@@ -2091,7 +2117,7 @@
     async function loadHistoryChart(ideess, fuel) {
         let data;
         try {
-            data = await Api.history(ideess, fuel, daysAgoIso(14), todayIso());
+            data = await Api.history(ideess, fuel, daysAgoIso(14), todayIso(), 'day', state.modalCountry);
         } catch (e) {
             return;
         }
@@ -2303,14 +2329,6 @@
     }
     el.mapShowAll.addEventListener('click', clearSelection);
     document.getElementById('stats-province-all').addEventListener('click', toggleProvinceChart);
-    document.querySelector('.home-link-wrap').addEventListener('click', (event) => {
-        event.preventDefault();
-        if (el.stationModal.open) {
-            el.stationModal.close();
-        }
-        switchView('list');
-        window.scrollTo(0, 0);
-    });
     document.querySelectorAll('.site-footer [data-view]').forEach((button) => {
         button.addEventListener('click', () => {
             switchView(button.dataset.view);
@@ -2472,9 +2490,9 @@
         if (permission.display !== 'granted') {
             return 'Has bloqueado las notificaciones de Gasolinera+. Actívalas en los ajustes del móvil.';
         }
-        await AlertsStore.set('favorites', state.favoritesList);
+        await AlertsStore.set('favorites', allFavorites());
         await AlertsStore.set('enabled', true);
-        await GPBackground.syncAlerts(state.favoritesList, true);
+        await GPBackground.syncAlerts(allFavorites(), true);
         await checkAndNotifyDrops();
         return '';
     }
@@ -2501,7 +2519,7 @@
                 alertsWarning = BROWSER_ALERTS_WARNING;
             }
         }
-        await AlertsStore.set('favorites', state.favoritesList);
+        await AlertsStore.set('favorites', allFavorites());
         await AlertsStore.set('enabled', true);
         await checkAndNotifyDrops();
         return '';
@@ -2528,7 +2546,7 @@
     async function disableAlerts() {
         await AlertsStore.set('enabled', false);
         if (GPNative.isNative()) {
-            await GPBackground.syncAlerts(state.favoritesList, false);
+            await GPBackground.syncAlerts(allFavorites(), false);
             return;
         }
         try {
@@ -2589,7 +2607,7 @@
         await AlertsStore.set('alertThreshold', Number(alertsThreshold.value));
         await AlertsStore.set('alertRises', alertsRises.checked);
         if (GPNative.isNative()) {
-            await GPBackground.syncAlerts(state.favoritesList, null);
+            await GPBackground.syncAlerts(allFavorites(), null);
         }
         showAlertsNote(alertsSummary());
     }
@@ -2606,7 +2624,7 @@
     alertsRises.addEventListener('change', () => saveAlertOptions().catch(() => {}));
     loadAlertOptions().catch(() => {});
 
-    AlertsStore.set('favorites', state.favoritesList).catch(() => {});
+    AlertsStore.set('favorites', allFavorites()).catch(() => {});
     AlertsStore.get('enabled').then((enabled) => {
         let permitted = typeof Notification !== 'undefined' && Notification.permission === 'granted';
         if (GPNative.isNative()) {

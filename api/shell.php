@@ -202,6 +202,19 @@ function headlineDelta(array $headline, string $fuel): string
     <link rel="stylesheet" href="/vendor/markercluster/MarkerCluster.css">
     <link rel="stylesheet" href="/vendor/markercluster/MarkerCluster.Default.css">
     <link rel="stylesheet" href="/style.css">
+<?php
+$gpJsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP;
+$gpConfigDir = __DIR__ . '/../config/';
+$gpI18n = array();
+foreach (array('es', 'pt', 'fr') as $gpLang) {
+    $gpI18n[$gpLang] = json_decode((string)file_get_contents($gpConfigDir . 'i18n/' . $gpLang . '.json'), true);
+}
+?>
+    <script>
+        window.GP_COUNTRIES = <?= json_encode(json_decode((string)file_get_contents($gpConfigDir . 'countries.json'), true), $gpJsonFlags) ?>;
+        window.GP_FUELS = <?= json_encode(json_decode((string)file_get_contents($gpConfigDir . 'fuels.json'), true), $gpJsonFlags) ?>;
+        window.GP_I18N = <?= json_encode($gpI18n, $gpJsonFlags) ?>;
+    </script>
 <?php if (!$isNative): ?>
     <script>
       window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -218,20 +231,67 @@ function headlineDelta(array $headline, string $fuel): string
         <h1 class="sr-only">Precios de gasolina y diésel hoy en España</h1>
 
         <header>
-            <a class="home-link-wrap" href="/" aria-label="Gasolinera+, ir a Buscar">
-                <span id="app-logomark" aria-hidden="true">
-                    <svg class="logo-gasolinera" viewBox="0 0 512 512">
+            <div class="home-link-wrap">
+                <button id="home-link" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="country-switcher" aria-label="Cambiar de país o idioma" data-i18n-attr="aria-label:header.switch">
+                    <span id="app-logomark" aria-hidden="true">
+                        <svg class="logo-gasolinera" viewBox="0 0 512 512">
                         <rect width="512" height="512" rx="116" fill="#FF7A1A"/>
                         <g transform="translate(112,112) scale(4.5)">
                             <path d="M32 3c1.6 11.6 10.4 16.2 15.6 24.6 5.6 9.1 2.4 22.3-7.3 27.7-2.7 1.6-5.5 2.3-8.3 2.4 5.5-4.6 7.1-11 3.7-16.3-2.1-3.2-5.6-5.1-5.8-10-3.3 3.3-4.6 7.3-3.9 11.5-4.4-2.7-6.4-6.9-6.5-11.8-4.2 4.6-5.6 10-4.2 15.9C10.8 41.5 10.2 33.8 13.5 26.5 17.4 18 30 14.7 32 3z" fill="#111111"/>
                         </g>
                     </svg>
-                </span>
-                <span>
-                    <strong id="app-title">GASOLINERA<span class="plus">+</span></strong>
-                    <span id="app-subtitle">Precios reales de gasolineras</span>
-                </span>
-            </a>
+                    </span>
+                    <span class="lockup-text">
+                        <strong id="app-title">GASOLINERA<span class="plus">+</span><span id="app-title-country"></span></strong>
+                        <span id="app-subtitle" data-i18n="header.subtitle">Precios reales de gasolineras</span>
+                    </span>
+                    <svg class="lockup-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <nav id="country-switcher" aria-label="Elegir país" data-i18n-attr="aria-label:switcher.label">
+                    <a class="country-card" data-country="es" href="/?pais=es">
+                        <span class="country-card__logo"><svg class="logo-gasolinera" aria-hidden="true" viewBox="0 0 512 512">
+                        <rect width="512" height="512" rx="116" fill="#FF7A1A"/>
+                        <g transform="translate(112,112) scale(4.5)">
+                            <path d="M32 3c1.6 11.6 10.4 16.2 15.6 24.6 5.6 9.1 2.4 22.3-7.3 27.7-2.7 1.6-5.5 2.3-8.3 2.4 5.5-4.6 7.1-11 3.7-16.3-2.1-3.2-5.6-5.1-5.8-10-3.3 3.3-4.6 7.3-3.9 11.5-4.4-2.7-6.4-6.9-6.5-11.8-4.2 4.6-5.6 10-4.2 15.9C10.8 41.5 10.2 33.8 13.5 26.5 17.4 18 30 14.7 32 3z" fill="#111111"/>
+                        </g>
+                    </svg></span>
+                        <span class="country-card__text">
+                            <strong>GASOLINERA<span class="plus">+</span></strong>
+                            <span data-i18n="switcher.es">Precios de gasolineras en España</span>
+                        </span>
+                    </a>
+                    <a class="country-card" data-country="pt" href="/?pais=pt">
+                        <span class="country-card__logo"><svg class="logo-gasolinera" aria-hidden="true" viewBox="0 0 512 512">
+                        <rect width="512" height="512" rx="116" fill="#FF7A1A"/>
+                        <g transform="translate(112,112) scale(4.5)">
+                            <path d="M32 3c1.6 11.6 10.4 16.2 15.6 24.6 5.6 9.1 2.4 22.3-7.3 27.7-2.7 1.6-5.5 2.3-8.3 2.4 5.5-4.6 7.1-11 3.7-16.3-2.1-3.2-5.6-5.1-5.8-10-3.3 3.3-4.6 7.3-3.9 11.5-4.4-2.7-6.4-6.9-6.5-11.8-4.2 4.6-5.6 10-4.2 15.9C10.8 41.5 10.2 33.8 13.5 26.5 17.4 18 30 14.7 32 3z" fill="#111111"/>
+                        </g>
+                    </svg></span>
+                        <span class="country-card__text">
+                            <strong>GASOLINERA<span class="plus">+</span> <span class="country-card__place">PORTUGAL</span></strong>
+                            <span data-i18n="switcher.pt">Precios de gasolineras en Portugal</span>
+                        </span>
+                    </a>
+                    <a class="country-card" data-country="fr" href="/?pais=fr">
+                        <span class="country-card__logo"><svg class="logo-gasolinera" aria-hidden="true" viewBox="0 0 512 512">
+                        <rect width="512" height="512" rx="116" fill="#FF7A1A"/>
+                        <g transform="translate(112,112) scale(4.5)">
+                            <path d="M32 3c1.6 11.6 10.4 16.2 15.6 24.6 5.6 9.1 2.4 22.3-7.3 27.7-2.7 1.6-5.5 2.3-8.3 2.4 5.5-4.6 7.1-11 3.7-16.3-2.1-3.2-5.6-5.1-5.8-10-3.3 3.3-4.6 7.3-3.9 11.5-4.4-2.7-6.4-6.9-6.5-11.8-4.2 4.6-5.6 10-4.2 15.9C10.8 41.5 10.2 33.8 13.5 26.5 17.4 18 30 14.7 32 3z" fill="#111111"/>
+                        </g>
+                    </svg></span>
+                        <span class="country-card__text">
+                            <strong>GASOLINERA<span class="plus">+</span> <span class="country-card__place">FRANCE</span></strong>
+                            <span data-i18n="switcher.fr">Precios de gasolineras en Francia</span>
+                        </span>
+                    </a>
+                    <div class="switcher-langs">
+                        <span data-i18n="switcher.lang">Idioma</span>
+                        <button type="button" data-lang="es" lang="es">Español</button>
+                        <button type="button" data-lang="pt" lang="pt">Português</button>
+                        <button type="button" data-lang="fr" lang="fr">Français</button>
+                    </div>
+                </nav>
+            </div>
             <nav id="view-toggle" role="tablist" aria-label="Secciones">
                 <button id="view-list-btn" type="button" role="tab" aria-selected="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
@@ -1226,6 +1286,7 @@ function headlineDelta(array $headline, string $fuel): string
 <?php if ($isNative): ?>
     <script defer src="/vendor/protomaps-leaflet/protomaps-leaflet.js"></script>
 <?php endif; ?>
+    <script defer src="/js/country.js"></script>
     <script defer src="/js/native.js"></script>
     <script defer src="/js/splash.js"></script>
     <script defer src="/js/map-guard.js"></script>

@@ -24,6 +24,8 @@ const copies = [
     'manifest.json',
     'privacidad.html',
     'data/stations-lite.json',
+    'data/stations-lite-pt.json',
+    'data/stations-lite-fr.json',
     'data/road-graph',
     'docs/guia-usuario.pdf',
 ];

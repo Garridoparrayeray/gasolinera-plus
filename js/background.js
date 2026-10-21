@@ -11,7 +11,7 @@ const GPBackground = (() => {
             return;
         }
         const details = {
-            favorites: favorites.map((favorite) => ({ ideess: favorite.ideess, rotulo: favorite.rotulo })),
+            favorites: favorites.map((favorite) => ({ ideess: favorite.ideess, rotulo: favorite.rotulo, pais: favorite.pais })),
         };
         if (enabled !== null) {
             details.enabled = enabled;

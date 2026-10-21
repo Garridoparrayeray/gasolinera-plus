@@ -913,7 +913,7 @@ const GPGarage = (() => {
 
     function favoriteStations() {
         try {
-            const list = JSON.parse(localStorage.getItem('gasolinera_favorites') || '[]');
+            const list = JSON.parse(localStorage.getItem(GPCountry.storageKey('gasolinera_favorites')) || '[]');
             if (Array.isArray(list)) {
                 return list;
             }
