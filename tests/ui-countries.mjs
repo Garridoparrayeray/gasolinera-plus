@@ -13,6 +13,9 @@ const cases = [
     { code: 'fr', lat: 48.8566, lon: 2.3522, place: 'FRANCE', fuel: 'Gazole' },
 ];
 
+await go('/?pais=es', 1500);
+await ev('localStorage.clear()');
+
 for (const c of cases) {
     s.where = c.code;
     await s.setGeolocation(c.lat, c.lon);
