@@ -2,7 +2,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
-export const FORMAT_VERSION = 1;
+export const FORMAT_VERSION = 2;
 
 class Writer {
     constructor() {
@@ -43,15 +43,17 @@ function speedMs(graph, way) {
 
 export function writeGraph(graph, outDir) {
     const { segCount, segFrom, segTo, segLength, segWay, segGeomStart, segGeomCount, geomLat, geomLon } = graph;
-    const { wayClass, wayOneway, wayToll, keepNode, nodeLat, nodeLon, junctionId, MAIN_CLASS_COUNT, TILE_DEG } = graph;
+    const { wayClass, wayOneway, wayToll, keepNode, nodeLat, nodeLon, junctionId, MAIN_CLASS_COUNT, TILE_DEG, COUNTRIES, nodeCountry } = graph;
 
     const junctionLat = new Float64Array(graph.junctionCount);
     const junctionLon = new Float64Array(graph.junctionCount);
+    const junctionCountry = new Uint8Array(graph.junctionCount);
     for (let i = 0; i < junctionId.length; i++) {
         const j = junctionId[i];
         if (j !== -1) {
             junctionLat[j] = nodeLat[i];
             junctionLon[j] = nodeLon[i];
+            junctionCountry[j] = nodeCountry[i];
         }
     }
 
@@ -72,11 +74,16 @@ export function writeGraph(graph, outDir) {
 
     const globalIndex = new Int32Array(graph.junctionCount).fill(-1);
     let mainCount = 0;
-    for (let j = 0; j < graph.junctionCount; j++) {
-        if (inMain[j]) {
-            globalIndex[j] = mainCount++;
+    const partNodeStart = [];
+    for (let c = 0; c < COUNTRIES.length; c++) {
+        partNodeStart.push(mainCount);
+        for (let j = 0; j < graph.junctionCount; j++) {
+            if (inMain[j] && junctionCountry[j] === c) {
+                globalIndex[j] = mainCount++;
+            }
         }
     }
+    partNodeStart.push(mainCount);
     let totalCount = mainCount;
     for (let s = 0; s < segCount; s++) {
         if (!usable[s]) {
@@ -105,11 +112,16 @@ export function writeGraph(graph, outDir) {
     }
 
     const mainSegIds = [];
-    for (let s = 0; s < segCount; s++) {
-        if (usable[s] && isMainSeg[s]) {
-            mainSegIds.push(s);
+    const partSegStart = [];
+    for (let c = 0; c < COUNTRIES.length; c++) {
+        partSegStart.push(mainSegIds.length);
+        for (let s = 0; s < segCount; s++) {
+            if (usable[s] && isMainSeg[s] && junctionCountry[segFrom[s]] === c) {
+                mainSegIds.push(s);
+            }
         }
     }
+    partSegStart.push(mainSegIds.length);
     const mainSegIndex = new Int32Array(segCount).fill(-1);
     mainSegIds.forEach((s, i) => { mainSegIndex[s] = i; });
 
@@ -174,26 +186,68 @@ export function writeGraph(graph, outDir) {
     rmSync(join(outDir, 'tiles'), { recursive: true, force: true });
     mkdirSync(join(outDir, 'tiles'), { recursive: true });
 
-    const main = new Writer();
-    main.push(magic('GPRG'));
-    main.u32([FORMAT_VERSION, mainCount, totalCount, edgeCount, mainSegIds.length, geomTotal]);
-    main.push(mainLat);
-    main.push(mainLon);
-    main.push(firstEdge);
-    main.push(edgeTarget);
-    main.push(edgeTime);
-    main.push(edgeSeg);
-    main.push(mainSegFrom);
-    main.push(mainSegTo);
-    main.push(mainSegLength);
-    main.push(mainSegClass);
-    main.push(mainSegFlags);
-    main.push(mainGeomStart);
-    main.push(mainGeomLat);
-    main.push(mainGeomLon);
-    const mainBytes = main.bytes();
-    const mainGzipped = gzipSync(mainBytes, { level: 9 });
-    writeFileSync(join(outDir, 'main.bin.gz'), mainGzipped);
+    const parts = {};
+    let mainBytesTotal = 0;
+    let mainRawTotal = 0;
+    COUNTRIES.forEach((country, c) => {
+        const nodeStart = partNodeStart[c];
+        const nodeEnd = partNodeStart[c + 1];
+        const segStart = partSegStart[c];
+        const segEnd = partSegStart[c + 1];
+        const edgeStart = firstEdge[nodeStart];
+        const edgeEnd = firstEdge[nodeEnd];
+        const geomOffset = mainGeomStart[segStart];
+        const geomEnd = mainGeomStart[segEnd];
+        const localFirst = new Uint32Array(nodeEnd - nodeStart + 1);
+        for (let i = 0; i < localFirst.length; i++) {
+            localFirst[i] = firstEdge[nodeStart + i] - edgeStart;
+        }
+        const w = new Writer();
+        w.push(magic('GPRP'));
+        w.u32([FORMAT_VERSION, nodeStart, nodeEnd - nodeStart, segStart, segEnd - segStart, edgeEnd - edgeStart, geomOffset, geomEnd - geomOffset]);
+        w.push(mainLat.subarray(nodeStart, nodeEnd));
+        w.push(mainLon.subarray(nodeStart, nodeEnd));
+        w.push(localFirst);
+        w.push(edgeTarget.subarray(edgeStart, edgeEnd));
+        w.push(edgeTime.subarray(edgeStart, edgeEnd));
+        w.push(edgeSeg.subarray(edgeStart, edgeEnd));
+        w.push(mainSegFrom.subarray(segStart, segEnd));
+        w.push(mainSegTo.subarray(segStart, segEnd));
+        w.push(mainSegLength.subarray(segStart, segEnd));
+        w.push(mainSegClass.subarray(segStart, segEnd));
+        w.push(mainSegFlags.subarray(segStart, segEnd));
+        w.push(mainGeomStart.subarray(segStart, segEnd + 1));
+        w.push(mainGeomLat.subarray(geomOffset, geomEnd));
+        w.push(mainGeomLon.subarray(geomOffset, geomEnd));
+        const bytes = w.bytes();
+        const gzipped = gzipSync(bytes, { level: 9 });
+        writeFileSync(join(outDir, `main-${country}.bin.gz`), gzipped);
+        parts[country] = { bytes: gzipped.length, rawBytes: bytes.length, nodes: nodeEnd - nodeStart, segments: segEnd - segStart };
+        mainBytesTotal += gzipped.length;
+        mainRawTotal += bytes.length;
+    });
+
+    const cellVotes = new Map();
+    for (let j = 0; j < graph.junctionCount; j++) {
+        if (globalIndex[j] === -1) {
+            continue;
+        }
+        const key = `${Math.floor(junctionLat[j] / TILE_DEG)}_${Math.floor(junctionLon[j] / TILE_DEG)}`;
+        if (!cellVotes.has(key)) {
+            cellVotes.set(key, new Uint32Array(COUNTRIES.length));
+        }
+        cellVotes.get(key)[junctionCountry[j]]++;
+    }
+    const cells = {};
+    for (const [key, votes] of cellVotes) {
+        let best = 0;
+        for (let c = 1; c < votes.length; c++) {
+            if (votes[c] > votes[best]) {
+                best = c;
+            }
+        }
+        cells[key] = COUNTRIES[best];
+    }
 
     const tiles = new Map();
     for (let s = 0; s < segCount; s++) {
@@ -281,19 +335,20 @@ export function writeGraph(graph, outDir) {
         tileGzipTotal += gzipped.length;
     }
 
-    const mainGzip = mainGzipped.length;
     const manifest = {
         version: FORMAT_VERSION,
         builtAt: new Date().toISOString(),
         tileDeg: TILE_DEG,
         classes: graph.CLASSES,
         mainClassCount: MAIN_CLASS_COUNT,
+        countries: COUNTRIES,
         mainNodes: mainCount,
         totalNodes: totalCount,
         mainEdges: edgeCount,
         mainSegments: mainSegIds.length,
-        mainBytes: mainGzipped.length,
-        mainRawBytes: mainBytes.length,
+        geomTotal,
+        parts,
+        cells,
         tiles: tileIndex,
     };
     writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(manifest));
@@ -302,8 +357,9 @@ export function writeGraph(graph, outDir) {
         mainNodes: mainCount,
         totalNodes: totalCount,
         mainEdges: edgeCount,
-        mainMB: +(mainBytes.length / 1e6).toFixed(1),
-        mainGzipMB: +(mainGzip / 1e6).toFixed(1),
+        mainMB: +(mainRawTotal / 1e6).toFixed(1),
+        mainGzipMB: +(mainBytesTotal / 1e6).toFixed(1),
+        parts: Object.fromEntries(Object.entries(parts).map(([country, part]) => [country, +(part.bytes / 1e6).toFixed(1)])),
         tiles: tiles.size,
         tilesMB: +(tileBytesTotal / 1e6).toFixed(1),
         tilesGzipMB: +(tileGzipTotal / 1e6).toFixed(1),

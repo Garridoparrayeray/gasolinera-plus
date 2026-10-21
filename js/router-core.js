@@ -79,14 +79,13 @@ const GPRouter = (() => {
         }
     }
 
-    function parseMain(buffer) {
-        const header = new Uint32Array(buffer, 4, 6);
+    function parsePart(buffer) {
         const magic = String.fromCharCode(...new Uint8Array(buffer, 0, 4));
-        if (magic !== 'GPRG') {
-            throw new Error('main.bin no es un grafo de Gasolinera+');
+        if (magic !== 'GPRP') {
+            throw new Error('el mapa de carreteras no es de esta versión de Gasolinera+');
         }
-        const [version, M, N, E, S, G] = header;
-        let offset = 28;
+        const [version, nodeStart, nodeCount, segStart, segCount, edgeCount, geomOffset, geomCount] = new Uint32Array(buffer, 4, 8);
+        let offset = 36;
         function take(Type, count) {
             const array = new Type(buffer, offset, count);
             offset += Math.ceil((count * Type.BYTES_PER_ELEMENT) / 4) * 4;
@@ -94,23 +93,139 @@ const GPRouter = (() => {
         }
         return {
             version,
-            mainNodes: M,
-            totalNodes: N,
-            lat: take(Int32Array, M),
-            lon: take(Int32Array, M),
-            firstEdge: take(Uint32Array, M + 1),
-            edgeTarget: take(Uint32Array, E),
-            edgeTime: take(Uint32Array, E),
-            edgeSeg: take(Uint32Array, E),
-            segFrom: take(Uint32Array, S),
-            segTo: take(Uint32Array, S),
-            segLength: take(Float32Array, S),
-            segClass: take(Uint8Array, S),
-            segFlags: take(Uint8Array, S),
-            geomStart: take(Uint32Array, S + 1),
-            geomLat: take(Int32Array, G),
-            geomLon: take(Int32Array, G),
+            nodeStart,
+            nodeCount,
+            segStart,
+            segCount,
+            geomOffset,
+            lat: take(Int32Array, nodeCount),
+            lon: take(Int32Array, nodeCount),
+            firstEdge: take(Uint32Array, nodeCount + 1),
+            edgeTarget: take(Uint32Array, edgeCount),
+            edgeTime: take(Uint32Array, edgeCount),
+            edgeSeg: take(Uint32Array, edgeCount),
+            segFrom: take(Uint32Array, segCount),
+            segTo: take(Uint32Array, segCount),
+            segLength: take(Float32Array, segCount),
+            segClass: take(Uint8Array, segCount),
+            segFlags: take(Uint8Array, segCount),
+            geomStart: take(Uint32Array, segCount + 1),
+            geomLat: take(Int32Array, geomCount),
+            geomLon: take(Int32Array, geomCount),
         };
+    }
+
+    function mergeParts(manifest, parts) {
+        const M = manifest.mainNodes;
+        const S = manifest.mainSegments;
+        const G = manifest.geomTotal;
+        parts.sort((a, b) => a.nodeStart - b.nodeStart);
+        const m = {
+            mainNodes: M,
+            totalNodes: manifest.totalNodes,
+            nodeLoaded: new Uint8Array(M),
+            segRanges: [],
+            lat: new Int32Array(M),
+            lon: new Int32Array(M),
+            segFrom: new Uint32Array(S),
+            segTo: new Uint32Array(S),
+            segLength: new Float32Array(S),
+            segClass: new Uint8Array(S),
+            segFlags: new Uint8Array(S),
+            geomStart: new Uint32Array(S + 1),
+            geomLat: new Int32Array(G),
+            geomLon: new Int32Array(G),
+        };
+        for (const p of parts) {
+            m.nodeLoaded.fill(1, p.nodeStart, p.nodeStart + p.nodeCount);
+            m.lat.set(p.lat, p.nodeStart);
+            m.lon.set(p.lon, p.nodeStart);
+            m.segFrom.set(p.segFrom, p.segStart);
+            m.segTo.set(p.segTo, p.segStart);
+            m.segLength.set(p.segLength, p.segStart);
+            m.segClass.set(p.segClass, p.segStart);
+            m.segFlags.set(p.segFlags, p.segStart);
+            m.geomStart.set(p.geomStart, p.segStart);
+            m.geomLat.set(p.geomLat, p.geomOffset);
+            m.geomLon.set(p.geomLon, p.geomOffset);
+            m.segRanges.push([p.segStart, p.segStart + p.segCount]);
+        }
+        let edgeCount = 0;
+        for (const p of parts) {
+            for (let e = 0; e < p.edgeTarget.length; e++) {
+                if (m.nodeLoaded[p.edgeTarget[e]]) {
+                    edgeCount++;
+                }
+            }
+        }
+        m.firstEdge = new Uint32Array(M + 1);
+        m.edgeTarget = new Uint32Array(edgeCount);
+        m.edgeTime = new Uint32Array(edgeCount);
+        m.edgeSeg = new Uint32Array(edgeCount);
+        let k = 0;
+        let next = 0;
+        for (const p of parts) {
+            m.firstEdge.fill(k, next, p.nodeStart);
+            for (let i = 0; i < p.nodeCount; i++) {
+                m.firstEdge[p.nodeStart + i] = k;
+                for (let e = p.firstEdge[i]; e < p.firstEdge[i + 1]; e++) {
+                    if (m.nodeLoaded[p.edgeTarget[e]]) {
+                        m.edgeTarget[k] = p.edgeTarget[e];
+                        m.edgeTime[k] = p.edgeTime[e];
+                        m.edgeSeg[k] = p.edgeSeg[e];
+                        k++;
+                    }
+                }
+            }
+            next = p.nodeStart + p.nodeCount;
+        }
+        m.firstEdge.fill(k, next, M + 1);
+        return m;
+    }
+
+    function tileKeysAround(manifest, lat, lon) {
+        const size = manifest.tileDeg;
+        const keys = [];
+        const y0 = Math.floor((lat - DETAIL_RADIUS_DEG) / size);
+        const y1 = Math.floor((lat + DETAIL_RADIUS_DEG) / size);
+        const x0 = Math.floor((lon - DETAIL_RADIUS_DEG * 1.4) / size);
+        const x1 = Math.floor((lon + DETAIL_RADIUS_DEG * 1.4) / size);
+        for (let y = y0; y <= y1; y++) {
+            for (let x = x0; x <= x1; x++) {
+                const key = `${y}_${x}`;
+                if (manifest.tiles[key]) {
+                    keys.push(key);
+                }
+            }
+        }
+        return keys;
+    }
+
+    function countriesFor(manifest, points) {
+        const size = manifest.tileDeg;
+        const found = new Set();
+        const add = (lat, lon) => {
+            const country = manifest.cells[`${Math.floor(lat / size)}_${Math.floor(lon / size)}`];
+            if (country) {
+                found.add(country);
+            }
+        };
+        for (let i = 0; i < points.length; i++) {
+            add(points[i][0], points[i][1]);
+            if (i > 0) {
+                const [aLat, aLon] = points[i - 1];
+                const [bLat, bLon] = points[i];
+                const steps = Math.ceil(Math.max(Math.abs(bLat - aLat), Math.abs(bLon - aLon)) / (size / 5));
+                for (let k = 1; k < steps; k++) {
+                    add(aLat + ((bLat - aLat) * k) / steps, aLon + ((bLon - aLon) * k) / steps);
+                }
+            }
+        }
+        const countries = manifest.countries.filter((country) => found.has(country));
+        if (!countries.length) {
+            countries.push(manifest.countries[0]);
+        }
+        return countries;
     }
 
     function parseTile(buffer) {
@@ -142,9 +257,9 @@ const GPRouter = (() => {
     }
 
     class Router {
-        constructor(manifest, mainBuffer, loadTile) {
+        constructor(manifest, partBuffers, loadTile) {
             this.manifest = manifest;
-            this.main = parseMain(mainBuffer);
+            this.main = mergeParts(manifest, partBuffers.map(parsePart));
             this.loadTileBuffer = loadTile;
             const N = this.main.totalNodes;
             this.nodeLat = new Int32Array(N);
@@ -163,21 +278,7 @@ const GPRouter = (() => {
         }
 
         tileKeysAround(lat, lon) {
-            const size = this.manifest.tileDeg;
-            const keys = [];
-            const y0 = Math.floor((lat - DETAIL_RADIUS_DEG) / size);
-            const y1 = Math.floor((lat + DETAIL_RADIUS_DEG) / size);
-            const x0 = Math.floor((lon - DETAIL_RADIUS_DEG * 1.4) / size);
-            const x1 = Math.floor((lon + DETAIL_RADIUS_DEG * 1.4) / size);
-            for (let y = y0; y <= y1; y++) {
-                for (let x = x0; x <= x1; x++) {
-                    const key = `${y}_${x}`;
-                    if (this.manifest.tiles[key]) {
-                        keys.push(key);
-                    }
-                }
-            }
-            return keys;
+            return tileKeysAround(this.manifest, lat, lon);
         }
 
         async ensureTiles(points) {
@@ -189,16 +290,27 @@ const GPRouter = (() => {
             }
             const missing = [...keys].filter((key) => !this.tiles.has(key));
             const buffers = await Promise.all(missing.map((key) => this.loadTileBuffer(key)));
-            missing.forEach((key, i) => this.addTile(key, parseTile(buffers[i])));
+            missing.forEach((key, i) => {
+                if (buffers[i]) {
+                    this.addTile(key, parseTile(buffers[i]));
+                } else {
+                    this.tiles.set(key, { segFrom: [], usable: [] });
+                }
+            });
         }
 
         addTile(key, tile) {
             this.tiles.set(key, tile);
+            tile.usable = new Uint8Array(tile.segFrom.length);
             for (let i = 0; i < tile.nodeGlobal.length; i++) {
                 this.nodeLat[tile.nodeGlobal[i]] = tile.nodeLat[i];
                 this.nodeLon[tile.nodeGlobal[i]] = tile.nodeLon[i];
             }
             for (let s = 0; s < tile.segFrom.length; s++) {
+                if (!this.isLoaded(tile.segFrom[s]) || !this.isLoaded(tile.segTo[s])) {
+                    continue;
+                }
+                tile.usable[s] = 1;
                 const ref = { tile, s };
                 const oneway = tile.segOneway[s];
                 if (oneway !== -1) {
@@ -208,6 +320,10 @@ const GPRouter = (() => {
                     this.addDetailEdge(tile.segTo[s], tile.segFrom[s], tile.segTime[s], ref, true);
                 }
             }
+        }
+
+        isLoaded(node) {
+            return node >= this.main.mainNodes || this.main.nodeLoaded[node] === 1;
         }
 
         addDetailEdge(from, to, time, ref, reversed) {
@@ -345,6 +461,9 @@ const GPRouter = (() => {
             };
             for (const tile of this.tiles.values()) {
                 for (let s = 0; s < tile.segFrom.length; s++) {
+                    if (!tile.usable[s]) {
+                        continue;
+                    }
                     const a = tile.segFrom[s];
                     const b = tile.segTo[s];
                     consider({ tile, s }, this.nodeLat[a] / 1e6, this.nodeLon[a] / 1e6, this.nodeLat[b] / 1e6, this.nodeLon[b] / 1e6, tile.segLength[s]);
@@ -353,21 +472,23 @@ const GPRouter = (() => {
             const m = this.main;
             const latE6 = lat * 1e6;
             const lonE6 = lon * 1e6;
-            for (let s = 0; s < m.segFrom.length; s++) {
-                const a = m.segFrom[s];
-                const b = m.segTo[s];
-                const reach = (m.segLength[s] + SNAP_RADIUS_M) * 12;
-                if (Math.abs(m.lat[a] - latE6) > reach || Math.abs(m.lat[b] - latE6) > reach) {
-                    continue;
+            for (const [first, end] of m.segRanges) {
+                for (let s = first; s < end; s++) {
+                    const a = m.segFrom[s];
+                    const b = m.segTo[s];
+                    const reach = (m.segLength[s] + SNAP_RADIUS_M) * 12;
+                    if (Math.abs(m.lat[a] - latE6) > reach || Math.abs(m.lat[b] - latE6) > reach) {
+                        continue;
+                    }
+                    if (Math.abs(m.lon[a] - lonE6) > reach * 1.5 || Math.abs(m.lon[b] - lonE6) > reach * 1.5) {
+                        continue;
+                    }
+                    let penalty = 0;
+                    if (m.segClass[s] < 4) {
+                        penalty = FAST_ROAD_SNAP_PENALTY_M;
+                    }
+                    consider({ s }, m.lat[a] / 1e6, m.lon[a] / 1e6, m.lat[b] / 1e6, m.lon[b] / 1e6, m.segLength[s], penalty);
                 }
-                if (Math.abs(m.lon[a] - lonE6) > reach * 1.5 || Math.abs(m.lon[b] - lonE6) > reach * 1.5) {
-                    continue;
-                }
-                let penalty = 0;
-                if (m.segClass[s] < 4) {
-                    penalty = FAST_ROAD_SNAP_PENALTY_M;
-                }
-                consider({ s }, m.lat[a] / 1e6, m.lon[a] / 1e6, m.lat[b] / 1e6, m.lon[b] / 1e6, m.segLength[s], penalty);
             }
             for (const candidate of found) {
                 candidate.info = this.segmentInfo(candidate.ref);
@@ -824,5 +945,5 @@ const GPRouter = (() => {
         }
     }
 
-    return { Router, parseMain, parseTile, metersBetween };
+    return { Router, parsePart, parseTile, metersBetween, tileKeysAround, countriesFor };
 })();

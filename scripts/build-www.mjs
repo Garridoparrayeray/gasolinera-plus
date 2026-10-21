@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -46,7 +46,6 @@ const copies = [
     'manifest.json',
     'privacidad.html',
     'data/stations-lite.json',
-    'data/road-graph',
     'data/price-index-seed',
 ];
 
@@ -62,6 +61,25 @@ for (const entry of copies) {
     const stat = statSync(source);
     if (stat.isFile()) {
         bytes += stat.size;
+    }
+}
+
+const graphSource = join(root, 'data', 'road-graph');
+if (existsSync(join(graphSource, 'manifest.json'))) {
+    const manifest = JSON.parse(readFileSync(join(graphSource, 'manifest.json'), 'utf8'));
+    const home = manifest.countries[0];
+    manifest.bundled = [home];
+    const graphTarget = join(out, 'data', 'road-graph');
+    mkdirSync(join(graphTarget, 'tiles'), { recursive: true });
+    writeFileSync(join(graphTarget, 'manifest.json'), JSON.stringify(manifest));
+    for (const name of [`main-${home}.bin.gz`, 'places.json']) {
+        cpSync(join(graphSource, name), join(graphTarget, name));
+        bytes += statSync(join(graphSource, name)).size;
+    }
+    for (const key of Object.keys(manifest.tiles)) {
+        if (manifest.cells[key] === home) {
+            cpSync(join(graphSource, 'tiles', `${key}.bin.gz`), join(graphTarget, 'tiles', `${key}.bin.gz`));
+        }
     }
 }
 

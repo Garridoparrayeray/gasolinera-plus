@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const graphDir = process.env.GRAPH_DIR || join(root, 'data', 'road-graph');
-if (!existsSync(join(graphDir, 'main.bin.gz'))) {
+if (!existsSync(join(graphDir, 'manifest.json')) || !JSON.parse(readFileSync(join(graphDir, 'manifest.json'), 'utf8')).parts) {
     console.log('router: SKIP (no hay grafo en ' + graphDir + ')');
     process.exit(0);
 }
@@ -17,9 +17,23 @@ const toArrayBuffer = (gzipped) => {
     return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
 };
 const manifest = JSON.parse(readFileSync(join(graphDir, 'manifest.json'), 'utf8'));
-const loadStart = Date.now();
-const router = new GPRouter.Router(manifest, toArrayBuffer(readFileSync(join(graphDir, 'main.bin.gz'))), async (key) => toArrayBuffer(readFileSync(join(graphDir, 'tiles', `${key}.bin.gz`))));
-const loadMs = Date.now() - loadStart;
+const routers = new Map();
+let loadMs = 0;
+function routerFor(points) {
+    const countries = GPRouter.countriesFor(manifest, points);
+    const key = countries.join(',');
+    if (!routers.has(key)) {
+        const loadStart = Date.now();
+        const parts = countries.map((country) => toArrayBuffer(readFileSync(join(graphDir, `main-${country}.bin.gz`))));
+        routers.set(key, new GPRouter.Router(manifest, parts, async (tile) => toArrayBuffer(readFileSync(join(graphDir, 'tiles', `${tile}.bin.gz`)))));
+        loadMs = Math.max(loadMs, Date.now() - loadStart);
+    }
+    return routers.get(key);
+}
+
+assert.deepEqual(GPRouter.countriesFor(manifest, [[43.2630, -2.9350], [40.4168, -3.7038]]), ['es'], 'Bilbao → Madrid solo necesita España');
+assert.deepEqual(GPRouter.countriesFor(manifest, [[43.2630, -2.9350], [41.3874, 2.1686]]), ['es'], 'Bilbao → Barcelona solo necesita España');
+console.log('OK  una ruta dentro de España no descarga otros países');
 
 const cases = [
     { name: 'Bilbao → Madrid', from: [43.2630, -2.9350], to: [40.4168, -3.7038], km: [380, 440], hours: [3.4, 5.0] },
@@ -42,7 +56,7 @@ for (const c of cases) {
     }
     points.push(c.to);
     const started = Date.now();
-    const result = await router.route(points);
+    const result = await routerFor(points).route(points);
     const ms = Date.now() - started;
     if (result.error) {
         failures++;
@@ -67,15 +81,15 @@ for (const c of cases) {
     console.log(`${label} ${c.name}: ${km.toFixed(1)} km, ${Math.floor(hours)} h ${Math.round((hours % 1) * 60)} min, ${result.coords.length} puntos, ${result.visited} nodos visitados, ${ms} ms`);
 }
 
-const island = await router.route([[40.4168, -3.7038], [39.5696, 2.6502]]);
+const island = await routerFor([[40.4168, -3.7038], [39.5696, 2.6502]]).route([[40.4168, -3.7038], [39.5696, 2.6502]]);
 assert.equal(island.error, 'no-connection', 'Madrid → Palma no tiene conexión por carretera');
 console.log('OK  Madrid → Palma responde sin conexión por carretera');
 
-const sea = await router.route([[43.6, -3.2], [43.2630, -2.9350]]);
+const sea = await routerFor([[43.6, -3.2], [43.2630, -2.9350]]).route([[43.6, -3.2], [43.2630, -2.9350]]);
 assert.equal(sea.error, 'no-road', 'un punto en el mar no tiene carretera');
 console.log('OK  un punto en el mar no se ajusta a ninguna carretera');
 
-console.log(`carga del grafo: ${loadMs} ms`);
+console.log(`carga del grafo (la más lenta): ${loadMs} ms, combinaciones de países: ${[...routers.keys()].join(' | ')}`);
 if (failures) {
     console.log(`router: ${failures} fallos`);
     process.exit(1);

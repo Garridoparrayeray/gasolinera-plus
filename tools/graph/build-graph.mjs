@@ -5,6 +5,9 @@ import { writeGraph } from './write-graph.mjs';
 
 const args = process.argv.slice(2);
 const inputs = [];
+const inputCountry = [];
+const COUNTRIES = [];
+let country = 'es';
 let outDir = null;
 let stationsPath = null;
 for (let i = 0; i < args.length; i++) {
@@ -12,12 +15,18 @@ for (let i = 0; i < args.length; i++) {
         outDir = args[++i];
     } else if (args[i] === '--stations') {
         stationsPath = args[++i];
+    } else if (args[i] === '--country') {
+        country = args[++i];
     } else {
         inputs.push(args[i]);
+        if (!COUNTRIES.includes(country)) {
+            COUNTRIES.push(country);
+        }
+        inputCountry.push(COUNTRIES.indexOf(country));
     }
 }
 if (!inputs.length || !outDir) {
-    console.error('uso: node build-graph.mjs --out <carpeta> [--stations stations-lite.json] <extracto.osm.pbf>...');
+    console.error('uso: node build-graph.mjs --out <carpeta> [--stations stations-lite.json] [--country es] <extracto.osm.pbf>... [--country pt <extracto.osm.pbf>...]');
     process.exit(1);
 }
 
@@ -261,6 +270,7 @@ log('pasada 2: coordenadas y lugares');
 const nodeLat = new Float64Array(nodeCount);
 const nodeLon = new Float64Array(nodeCount);
 const found = new Uint8Array(nodeCount);
+const nodeCountry = new Uint8Array(nodeCount);
 const places = [];
 for (let fileIndex = 0; fileIndex < inputs.length; fileIndex++) {
     for (const { blob } of readBlobs(inputs[fileIndex], nodeBlocks[fileIndex])) {
@@ -281,6 +291,9 @@ for (let fileIndex = 0; fileIndex < inputs.length; fileIndex++) {
                         cursor++;
                     }
                     if (cursor < nodeCount && ids[cursor] === id) {
+                        if (!found[cursor]) {
+                            nodeCountry[cursor] = inputCountry[fileIndex];
+                        }
                         nodeLat[cursor] = dense.lat[i];
                         nodeLon[cursor] = dense.lon[i];
                         found[cursor] = 1;
@@ -289,6 +302,9 @@ for (let fileIndex = 0; fileIndex < inputs.length; fileIndex++) {
                 for (const { index, tags } of dense.tagged) {
                     const kind = PLACE_KINDS[tags.place];
                     if (kind === undefined || !tags.name) {
+                        continue;
+                    }
+                    if (inputCountry[fileIndex] !== 0 && kind > PLACE_KINDS.village) {
                         continue;
                     }
                     let alt = '';
@@ -521,7 +537,7 @@ writeFileSync(join(outDir, 'places.json'), JSON.stringify({ generatedAt: new Dat
 log(`${placeRows.length} lugares con nombre`);
 
 const graph = {
-    CLASSES, MAIN_CLASS_COUNT, TILE_DEG,
+    CLASSES, MAIN_CLASS_COUNT, TILE_DEG, COUNTRIES, nodeCountry,
     junctionCount, keepNode, parent: null,
     nodeIndexOfJunction: null,
     segCount,

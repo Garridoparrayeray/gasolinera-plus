@@ -41,7 +41,9 @@ jobs:
         run: |
           node --max-old-space-size=65536 tools/graph/build-graph.mjs \
             --out "$RUNNER_TEMP/road-graph" --stations data/stations-lite.json \
-            "$RUNNER_TEMP/osm/spain.osm.pbf" "$RUNNER_TEMP/osm/canarias.osm.pbf"             "$RUNNER_TEMP/osm/portugal.osm.pbf" "$RUNNER_TEMP/osm/france.osm.pbf"
+            --country es "$RUNNER_TEMP/osm/spain.osm.pbf" "$RUNNER_TEMP/osm/canarias.osm.pbf" \
+            --country pt "$RUNNER_TEMP/osm/portugal.osm.pbf" \
+            --country fr "$RUNNER_TEMP/osm/france.osm.pbf"
           cat "$RUNNER_TEMP/road-graph/build-stats.json"
 
       - name: Check the graph with reference routes

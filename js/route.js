@@ -72,6 +72,8 @@ const GPRoute = (() => {
         return `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
     }
 
+    const COUNTRY_NAMES = { es: 'España', pt: 'Portugal', fr: 'Francia' };
+
     function setStatus(text) {
         el.status.textContent = text;
     }
@@ -107,7 +109,7 @@ const GPRoute = (() => {
             state.pending.set(id, {
                 resolve,
                 reject,
-                onProgress: ({ received, total, done }) => {
+                onProgress: ({ received, total, done, country }) => {
                     el.progress.hidden = false;
                     if (done) {
                         el.progressBar.style.width = '100%';
@@ -119,10 +121,14 @@ const GPRoute = (() => {
                         percent = Math.min(99, Math.round((received / total) * 100));
                     }
                     el.progressBar.style.width = percent + '%';
-                    setStatus(`Cargando el mapa de carreteras (${number(total / 1e6, 0)} MB)… ${percent} %`);
+                    let where = '';
+                    if (COUNTRY_NAMES[country]) {
+                        where = ' de ' + COUNTRY_NAMES[country];
+                    }
+                    setStatus(`Cargando el mapa de carreteras${where} (${number(total / 1e6, 0)} MB)… ${percent} %`);
                 },
             });
-            worker().postMessage({ id, type: 'route', points, avoidTolls: el.avoidTolls.checked });
+            worker().postMessage({ id, type: 'route', points, avoidTolls: el.avoidTolls.checked, remote: GPNative.apiBase() });
         });
     }
 
