@@ -16,8 +16,11 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
+    runs-on: [self-hosted, windows, osm]
+    timeout-minutes: 300
+    defaults:
+      run:
+        shell: C:/PROGRA~1/Git/bin/bash.exe --noprofile --norc -eo pipefail {0}
     steps:
       - uses: actions/checkout@v7
 
@@ -30,32 +33,46 @@ jobs:
           mkdir -p "$RUNNER_TEMP/osm"
           curl -sSfL -o "$RUNNER_TEMP/osm/spain.osm.pbf" https://download.geofabrik.de/europe/spain-latest.osm.pbf
           curl -sSfL -o "$RUNNER_TEMP/osm/canarias.osm.pbf" https://download.geofabrik.de/africa/canary-islands-latest.osm.pbf
+          curl -sSfL -o "$RUNNER_TEMP/osm/portugal.osm.pbf" https://download.geofabrik.de/europe/portugal-latest.osm.pbf
+          curl -sSfL -o "$RUNNER_TEMP/osm/france.osm.pbf" https://download.geofabrik.de/europe/france-latest.osm.pbf
           ls -la "$RUNNER_TEMP/osm"
 
       - name: Build road graph and places
         run: |
-          node --max-old-space-size=12288 tools/graph/build-graph.mjs \
+          node --max-old-space-size=65536 tools/graph/build-graph.mjs \
             --out "$RUNNER_TEMP/road-graph" --stations data/stations-lite.json \
-            "$RUNNER_TEMP/osm/spain.osm.pbf" "$RUNNER_TEMP/osm/canarias.osm.pbf"
+            "$RUNNER_TEMP/osm/spain.osm.pbf" "$RUNNER_TEMP/osm/canarias.osm.pbf"             "$RUNNER_TEMP/osm/portugal.osm.pbf" "$RUNNER_TEMP/osm/france.osm.pbf"
           cat "$RUNNER_TEMP/road-graph/build-stats.json"
 
       - name: Check the graph with reference routes
         env:
           GRAPH_DIR: ${{ runner.temp }}/road-graph
-        run: node --max-old-space-size=4096 tests/router.test.mjs
+        run: node --max-old-space-size=16384 tests/router.test.mjs
 
       - name: Pack
         run: |
           rm -f "$RUNNER_TEMP/road-graph/build-stats.json"
-          tar -czf road-graph.tar.gz -C "$RUNNER_TEMP/road-graph" .
+          tar --force-local -czf road-graph.tar.gz -C "$RUNNER_TEMP/road-graph" .
           ls -la road-graph.tar.gz
 
       - name: Publish release asset
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v3
         with:
           tag_name: road-graph
           name: Grafo de carreteras (OpenStreetMap)
-          body: Red viaria de España y Canarias para el motor de rutas de Gasolinera+, generada a partir de OpenStreetMap (© OpenStreetMap contributors, ODbL). Se regenera cada mes.
+          body: Red viaria de España, Canarias, Portugal y Francia para el motor de rutas de Gasolinera+, generada a partir de OpenStreetMap (© OpenStreetMap contributors, ODbL). Se regenera cada mes.
           files: road-graph.tar.gz
           make_latest: false
           prerelease: false
+
+      - name: Publish test release asset
+        if: github.ref != 'refs/heads/main'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: road-graph-test
+          name: Grafo de carreteras de prueba (OpenStreetMap)
+          body: Red viaria de España, Canarias, Portugal y Francia para el motor de rutas de Gasolinera+, generada a partir de OpenStreetMap (© OpenStreetMap contributors, ODbL). Se regenera cada mes.
+          files: road-graph.tar.gz
+          make_latest: false
+          prerelease: true

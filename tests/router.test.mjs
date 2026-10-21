@@ -28,6 +28,10 @@ const cases = [
     { name: 'Santa Cruz → La Laguna (Tenerife)', from: [28.4636, -16.2518], to: [28.4874, -16.3159], km: [7, 14], hours: [0.1, 0.4] },
     { name: 'Barcelona → Sevilla', from: [41.3874, 2.1686], to: [37.3891, -5.9845], km: [950, 1100], hours: [9, 12.5] },
     { name: 'Bilbao → Madrid parando en Burgos', from: [43.2630, -2.9350], via: [42.3439, -3.6969], to: [40.4168, -3.7038], km: [390, 460], hours: [3.6, 5.3] },
+    { name: 'Lisboa → Oporto', from: [38.7223, -9.1393], to: [41.1579, -8.6291], km: [290, 350], hours: [2.6, 4.2] },
+    { name: 'Bilbao → Lisboa', from: [43.2630, -2.9350], to: [38.7223, -9.1393], km: [850, 1000], hours: [8, 11.5] },
+    { name: 'Bilbao → Burdeos', from: [43.2630, -2.9350], to: [44.8378, -0.5792], km: [300, 380], hours: [3, 4.8] },
+    { name: 'París → Versalles', from: [48.8566, 2.3522], to: [48.8049, 2.1204], km: [15, 30], hours: [0.3, 1.0] },
 ];
 
 let failures = 0;

@@ -64,24 +64,18 @@ class GrowArray {
     }
 }
 
+const ZONE_SPEED = {
+    'ES:urban': 50, 'ES:rural': 90, 'ES:motorway': 120, 'ES:trunk': 100, 'ES:living_street': 20,
+    'PT:urban': 50, 'PT:rural': 90, 'PT:motorway': 120, 'PT:trunk': 100,
+    'FR:urban': 50, 'FR:rural': 80, 'FR:motorway': 130, 'FR:trunk': 110, 'FR:zone30': 30, 'FR:walk': 20,
+};
+
 function parseMaxspeed(value) {
     if (!value) {
         return 0;
     }
-    if (value === 'ES:urban') {
-        return 50;
-    }
-    if (value === 'ES:rural') {
-        return 90;
-    }
-    if (value === 'ES:motorway') {
-        return 120;
-    }
-    if (value === 'ES:trunk') {
-        return 100;
-    }
-    if (value === 'ES:living_street') {
-        return 20;
+    if (ZONE_SPEED[value]) {
+        return ZONE_SPEED[value];
     }
     const match = /^(\d+)/.exec(value);
     if (!match) {
