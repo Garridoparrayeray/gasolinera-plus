@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.9.0
+
+### Novedades
+- Histórico de 400 días para España, Portugal y Francia: el garaje compara cada repostaje frente a la media oficial de su país.
+- Horarios de Portugal: regla de apertura 24 h en autopistas y rescate de horarios desde observaciones.
+
 ## 1.2.0
 
 ### Novedades
