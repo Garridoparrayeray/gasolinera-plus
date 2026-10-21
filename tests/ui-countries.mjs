@@ -9,8 +9,8 @@ await s.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, de
 
 const cases = [
     { code: 'es', lat: 43.263, lon: -2.935, place: '', fuel: 'Gasóleo A' },
-    { code: 'pt', lat: 38.7223, lon: -9.1393, place: 'PORTUGAL', fuel: 'Gasóleo' },
-    { code: 'fr', lat: 48.8566, lon: 2.3522, place: 'FRANCE', fuel: 'Gazole' },
+    { code: 'pt', lat: 38.7223, lon: -9.1393, place: 'Portugal', fuel: 'Gasóleo' },
+    { code: 'fr', lat: 48.8566, lon: 2.3522, place: 'France', fuel: 'Gazole' },
 ];
 
 await go('/?pais=es', 1500);

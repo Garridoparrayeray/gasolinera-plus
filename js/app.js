@@ -461,7 +461,14 @@
             showSearchPrompt();
         }
         GPNative.getPosition({ timeout: 10000, maximumAge: 5 * 60 * 1000 }).then(
-            (position) => {
+            async (position) => {
+                if (!(await insideCountry(position.coords.latitude, position.coords.longitude))) {
+                    closeGeoAsk();
+                    updateGeoToggle();
+                    showToast(GPCountry.tr('Estás fuera de {pais}: te enseño las gasolineras más baratas del país.', { pais: GPCountry.countryName(GPCountry.code) }));
+                    showSearchPrompt();
+                    return;
+                }
                 state.userLat = position.coords.latitude;
                 state.userLon = position.coords.longitude;
                 document.dispatchEvent(new CustomEvent('gp:location', { detail: { lat: state.userLat, lon: state.userLon } }));
@@ -487,6 +494,15 @@
                 }
             }
         );
+    }
+
+    async function insideCountry(lat, lon) {
+        try {
+            const stations = await OfflineEngine.loadData();
+            return stations.some((station) => OfflineEngine.haversine(lat, lon, station.lat, station.lon) < 25);
+        } catch (e) {
+            return true;
+        }
     }
 
     function showSearchPrompt() {
@@ -946,7 +962,7 @@
         } else {
             el.stationsStatus.textContent = `${placeSummary()}: ${state.stationsTotal.toLocaleString(GPCountry.uiLocale)} gasolineras · ${filterSummary()}`;
             if (state.stationsMode === 'cheapest') {
-                el.stationsStatus.textContent += '. Activa tu ubicación para ver las de tu zona.';
+                el.stationsStatus.textContent += GPCountry.tr('. Activa tu ubicación para ver las de tu zona.');
             }
         }
         flashStatus();

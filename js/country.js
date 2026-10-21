@@ -373,7 +373,18 @@ const GPCountry = (() => {
             return;
         }
         if (code !== 'es') {
-            document.getElementById('app-title-country').textContent = config.native.toUpperCase();
+            const place = document.getElementById('app-title-country');
+            place.textContent = config.native;
+            const fit = () => {
+                const title = document.getElementById('app-title').getBoundingClientRect().width;
+                const plus = document.querySelector('#app-title .plus').getBoundingClientRect().width;
+                place.style.width = Math.max(0, title - plus) + 'px';
+            };
+            fit();
+            if (document.fonts) {
+                document.fonts.ready.then(fit);
+            }
+            window.addEventListener('resize', fit);
         }
         nav.querySelectorAll('.country-card').forEach((card) => {
             if (card.dataset.country === code) {

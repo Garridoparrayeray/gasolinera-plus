@@ -7,7 +7,7 @@ if ($uri === '/api/shell.php') {
     return true;
 }
 
-if (preg_match('#^/data/[\w.-]+\.(json|bin)$#', $uri) && is_file(__DIR__ . $uri)) {
+if (preg_match('#^/data/[\w./-]+\.(json|bin|gz)$#', $uri) && !str_contains($uri, '..') && is_file(__DIR__ . $uri)) {
     header('Access-Control-Allow-Origin: *');
     if (str_ends_with($uri, '.json')) {
         header('Content-Type: application/json; charset=utf-8');
