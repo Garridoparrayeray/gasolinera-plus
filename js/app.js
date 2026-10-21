@@ -2799,8 +2799,8 @@
     loadNationalHeadline();
     applyOpenRequest(window.GP_PENDING_OPEN);
 
-    const pathMatch = window.location.pathname.match(/^(?:\/(?:pt|fr))?\/stations\/([^/]+)/);
+    const pathMatch = window.location.pathname.match(/^\/(pt\/|fr\/)*stations\/([^/]+)/);
     if (pathMatch) {
-        openStationModal(decodeURIComponent(pathMatch[1]));
+        openStationModal(decodeURIComponent(pathMatch[2]));
     }
 })();
