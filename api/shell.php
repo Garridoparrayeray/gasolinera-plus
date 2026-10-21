@@ -16,6 +16,7 @@ $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = parse_url($requestUri, PHP_URL_PATH);
 
 if (!$isNative) {
+    require_once __DIR__ . '/Core/Country.php';
     require_once __DIR__ . '/Core/Config.php';
     require_once __DIR__ . '/Core/Database.php';
     try {

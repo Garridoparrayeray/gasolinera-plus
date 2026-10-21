@@ -25,3 +25,8 @@ data/price-index-seed/
 google-services.json
 GoogleService-Info.plist
 local.properties
+
+data/gasolinera-pt.sqlite
+data/gasolinera-fr.sqlite
+data/stations-lite-pt.json
+data/stations-lite-fr.json

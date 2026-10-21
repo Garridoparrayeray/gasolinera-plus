@@ -110,7 +110,7 @@ class StationsController
 
         $place = null;
         if ($model->looksLikePlaceQuery($q)) {
-            $place = PlaceGeocoder::resolve($q);
+            $place = PlaceGeocoder::resolve($q, \Core\Country::code());
         }
 
         $sortForText = $sort;
@@ -148,7 +148,7 @@ class StationsController
         $geocodedFrom = null;
         if ($page['total'] === 0 && !$page['textMatched']) {
             if ($place === null) {
-                $place = PlaceGeocoder::resolve($q);
+                $place = PlaceGeocoder::resolve($q, \Core\Country::code());
             }
             if ($place !== null) {
                 $page = $model->near(
@@ -442,7 +442,7 @@ class StationsController
             Response::error('Escribe un lugar o una dirección', 422);
             return;
         }
-        $place = PlaceGeocoder::resolve($q);
+        $place = PlaceGeocoder::resolve($q, implode(',', array_keys(\Core\Country::all())));
         if ($place === null) {
             Response::error('No se ha encontrado ese lugar', 404);
             return;

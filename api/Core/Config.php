@@ -10,7 +10,11 @@ class Config
     public static function current(): array
     {
         if (self::$current === null) {
-            self::$current = require __DIR__ . '/../Config/config.php';
+            $config = require __DIR__ . '/../Config/config.php';
+            $config['db_path'] = Country::dbPath();
+            $config['attribution'] = 'Datos: ' . Country::current()['source'];
+            $config['country'] = Country::code();
+            self::$current = $config;
         }
         return self::$current;
     }

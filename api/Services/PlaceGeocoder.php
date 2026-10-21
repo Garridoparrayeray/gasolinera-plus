@@ -10,18 +10,18 @@ class PlaceGeocoder
     private const CONTACT = 'https://gasolineraplus.vercel.app';
 
     
-    public static function resolve(string $query): ?array
+    public static function resolve(string $query, string $countryCodes = 'es'): ?array
     {
         $trimmed = trim($query);
         if ($trimmed === '') {
             return null;
         }
 
-        $cacheKey = 'geocode_' . preg_replace('/[^a-z0-9]+/', '_', mb_strtolower($trimmed));
-        return Cache::remember($cacheKey, 30 * 24 * 3600, function () use ($trimmed) {
+        $cacheKey = 'geocode_' . preg_replace('/[^a-z0-9]+/', '_', $countryCodes . '_' . mb_strtolower($trimmed));
+        return Cache::remember($cacheKey, 30 * 24 * 3600, function () use ($trimmed, $countryCodes) {
             $url = 'https://nominatim.openstreetmap.org/search?' . http_build_query([
                 'q' => $trimmed,
-                'countrycodes' => 'es',
+                'countrycodes' => $countryCodes,
                 'format' => 'jsonv2',
                 'limit' => 1,
             ]);

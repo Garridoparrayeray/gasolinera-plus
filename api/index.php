@@ -27,6 +27,11 @@ if (!\Core\RateLimit::allow(\Core\RateLimit::clientIp(), 240, 60)) {
     exit;
 }
 
+if (!\Core\Country::hasData() && !str_starts_with($request->path, '/places/')) {
+    Response::error('Todavía no hay precios de ' . \Core\Country::current()['name']['es'], 503);
+    exit;
+}
+
 $router = new Router();
 
 $stations = new StationsController();
