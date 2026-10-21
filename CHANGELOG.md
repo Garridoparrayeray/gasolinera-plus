@@ -1,5 +1,19 @@
 # Cambios
 
+## 1.2.0
+
+### Novedades
+- Gasolinera+ Portugal y Gasolinera+ France. Toca el logo para cambiar de país: cada uno tiene sus precios oficiales del día (DGEG en Portugal, prix-carburants.gouv.fr en Francia), su mapa, sus estadísticas y sus favoritas.
+- La app está en español, portugués y francés. Cada país abre en su idioma y se puede cambiar desde el mismo menú.
+- Rutas entre países: Bilbao–Lisboa o Madrid–Burdeos con las gasolineras más baratas del camino a ambos lados de la frontera. España viene en la app; los mapas de carreteras de Portugal (14 MB) y Francia (87 MB) se descargan la primera vez que una ruta pasa por allí y se quedan en el móvil.
+- Mapas sin conexión de las regiones de Portugal y Francia, agrupados por país.
+- Una sola tipografía en toda la app.
+
+### Cambios
+- Si abres un país estando fuera de él, la app te enseña sus gasolineras más baratas en vez de buscar cerca de ti.
+- Los avisos de bajada de precio vigilan las favoritas de los tres países y llegan en el idioma de la app.
+- La copia de seguridad incluye las favoritas de Portugal y Francia.
+
 ## 1.1.1
 
 ### Cambios
