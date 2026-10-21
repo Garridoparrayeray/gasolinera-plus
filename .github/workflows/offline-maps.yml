@@ -37,6 +37,11 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Free disk space for the three countries
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
       - name: Install pmtiles CLI (go-pmtiles)
         run: |
           mkdir -p "$RUNNER_TEMP/bin"
@@ -61,7 +66,7 @@ jobs:
           if ! gh release view "$TAG" > /dev/null 2>&1; then
             gh release create "$TAG" --target "$GITHUB_SHA" --latest=false \
               --title "Mapas sin conexión (OpenStreetMap)" \
-              --notes "Mapas vectoriales por comunidad autónoma para usar Gasolinera+ sin conexión. Datos © OpenStreetMap contributors (ODbL), teselas de Protomaps (https://protomaps.com). Se regeneran cada mes y la app lee index.json."
+              --notes "Mapas vectoriales por región de España, Portugal y Francia para usar Gasolinera+ sin conexión. Datos © OpenStreetMap contributors (ODbL), teselas de Protomaps (https://protomaps.com). Se regeneran cada mes y la app lee index.json."
           fi
           for file in "$DIR"/*.pmtiles; do
             gh release upload "$TAG" "$file" --clobber

@@ -131,7 +131,7 @@ for (const region of regions) {
         maxzoom--;
     }
     log(`${region.name}: ${(bytes / 1048576).toFixed(1)} MB a z${maxzoom}`);
-    entries.push({ id: region.id, name: region.name, bbox: region.bbox, file, bytes, maxzoom, buildDate });
+    entries.push({ id: region.id, country: region.country, name: region.name, bbox: region.bbox, file, bytes, maxzoom, buildDate });
 }
 
 const index = {

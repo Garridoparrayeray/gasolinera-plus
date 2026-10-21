@@ -252,6 +252,8 @@ const GPMaps = (() => {
         const list = document.getElementById('offline-maps-list');
         const note = document.getElementById('offline-maps-note');
 
+        const COUNTRY_NAMES = { es: 'España', pt: 'Portugal', fr: 'Francia' };
+
         function say(text) {
             note.textContent = text;
             note.hidden = text === '';
@@ -263,7 +265,19 @@ const GPMaps = (() => {
                 say('No se pudo cargar la lista de mapas. Comprueba la conexión e inténtalo de nuevo.');
                 return;
             }
+            let lastCountry = '';
             for (const entry of state.index.regions) {
+                let country = 'es';
+                if (entry.country) {
+                    country = entry.country;
+                }
+                if (country !== lastCountry) {
+                    const heading = document.createElement('li');
+                    heading.className = 'offline-maps-country';
+                    heading.textContent = COUNTRY_NAMES[country];
+                    list.appendChild(heading);
+                    lastCountry = country;
+                }
                 const installed = state.installed[entry.id];
                 const outdated = installed && installed.file !== entry.file;
                 const item = document.createElement('li');
