@@ -26,11 +26,11 @@ if (str_starts_with($uri, '/api/')) {
     require __DIR__ . '/api/index.php';
     return true;
 }
-if ($uri === '/robots.txt' || $uri === '/sitemap.xml' || $uri === '/llms.txt' || $uri === '/gasolineras' || preg_match('#^/gasolineras/#', $uri)) {
+if ($uri === '/robots.txt' || $uri === '/sitemap.xml' || $uri === '/llms.txt' || preg_match('#^/sitemap-(es|pt|fr)\.xml$#', $uri) || preg_match('#^(/gasolineras|/pt/postos|/fr/stations-service)(/|$)#', $uri)) {
     require __DIR__ . '/api/seo.php';
     return true;
 }
-if ($uri === '/' || preg_match('#^/stations/#', $uri)) {
+if ($uri === '/' || preg_match('#^(/(pt|fr))?/stations/#', $uri) || preg_match('#^/(pt|fr)/?$#', $uri)) {
     require __DIR__ . '/api/shell.php';
     return true;
 }

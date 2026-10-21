@@ -29,7 +29,11 @@ const GPCountry = (() => {
     const params = new URLSearchParams(window.location.search);
 
     let code = 'es';
-    const requestedCountry = params.get('pais');
+    let requestedCountry = params.get('pais');
+    const pathMatch = /^\/(pt|fr)(\/|$)/.exec(window.location.pathname);
+    if (!requestedCountry && pathMatch) {
+        requestedCountry = pathMatch[1];
+    }
     const storedCountry = stored(COUNTRY_KEY);
     if (requestedCountry && countries[requestedCountry]) {
         code = requestedCountry;
@@ -338,7 +342,12 @@ const GPCountry = (() => {
         const url = new URL(window.location.href);
         url.search = '';
         url.hash = '';
-        url.searchParams.set('pais', nextCountry);
+        if (!window.Capacitor && pathMatch && nextCountry === code) {
+            url.pathname = '/' + code;
+        } else {
+            url.pathname = '/';
+            url.searchParams.set('pais', nextCountry);
+        }
         if (nextLang) {
             url.searchParams.set('lang', nextLang);
         }
@@ -369,6 +378,9 @@ const GPCountry = (() => {
         nav.querySelectorAll('.country-card').forEach((card) => {
             if (card.dataset.country === code) {
                 card.setAttribute('aria-current', 'page');
+            }
+            if (!window.Capacitor && card.dataset.country !== 'es') {
+                card.setAttribute('href', '/' + card.dataset.country);
             }
         });
         nav.querySelectorAll('[data-lang]').forEach((choice) => {

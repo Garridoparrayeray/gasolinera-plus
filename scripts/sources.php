@@ -112,6 +112,14 @@ function fetchPortugal(): array
     return ['fecha' => snapshotNow(), 'estaciones' => array_values($rows)];
 }
 
+function frenchLabel(array $brands, string $id, string $town): string
+{
+    if (isset($brands[$id]) && trim((string)$brands[$id]) !== '') {
+        return mb_strtoupper(trim((string)$brands[$id]));
+    }
+    return mb_strtoupper('Station ' . $town);
+}
+
 function frenchHours(array $record): string
 {
     if (fieldStr($record, 'horaires_automate_24_24') === 'Oui') {
@@ -146,9 +154,23 @@ function frenchHours(array $record): string
     return implode('; ', $blocks);
 }
 
+function frenchBrands(): array
+{
+    $path = __DIR__ . '/../data/brands-fr.json';
+    if (!is_file($path)) {
+        return [];
+    }
+    $data = json_decode((string)file_get_contents($path), true);
+    if (!is_array($data) || !isset($data['brands']) || !is_array($data['brands'])) {
+        return [];
+    }
+    return $data['brands'];
+}
+
 function fetchFrance(): array
 {
     $map = fuelSourceMap('fr');
+    $brands = frenchBrands();
     $records = json_decode(httpGetWithRetries(SOURCE_FR . '?select=' . SOURCE_FR_FIELDS, 180), true);
     if (!is_array($records)) {
         throw new \RuntimeException('respuesta inesperada de data.economie.gouv.fr');
@@ -180,7 +202,7 @@ function fetchFrance(): array
         }
         $rows[] = [
             'IDEESS' => (string)$record['id'],
-            'Rótulo' => mb_strtoupper($town),
+            'Rótulo' => frenchLabel($brands, (string)$record['id'], $town),
             'Dirección' => trim(fieldStr($record, 'adresse')),
             'Localidad' => $town,
             'Municipio' => $town,

@@ -1,0 +1,53 @@
+seo.section	Gasolineras	Postos	Stations-service
+seo.areaIndex	Gasolineras por provincia	Postos por distrito	Stations par département
+seo.index.title	Gasolineras por provincia: precios hoy | Gasolinera+	Postos por distrito: preços de hoje | Gasolinera+	Stations par département : prix du jour | Gasolinera+
+seo.index.h1	Gasolineras por provincia	Postos de combustível por distrito	Stations-service par département
+seo.index.intro	Precios de gasolina y diésel en las {n} provincias de España.	Preços de gasolina e gasóleo nos {n} distritos de Portugal.	Prix de l'essence et du gazole dans {n} départements de France.
+seo.index.national	Media nacional hoy: {list}.	Média nacional hoje: {list}.	Moyenne nationale aujourd'hui : {list}.
+seo.index.averages	Precios medios en España hoy	Preços médios em Portugal hoje	Prix moyens en France aujourd'hui
+seo.index.choose	Elige tu provincia	Escolha o seu distrito	Choisissez votre département
+seo.cta	Ver el mapa y buscar cerca de ti	Ver o mapa e procurar perto de si	Voir la carte et chercher près de chez vous
+seo.prov.title	Gasolineras baratas en {p}: precios hoy | Gasolinera+	Postos baratos em {p}: preços hoje | Gasolinera+	Carburant pas cher · {p} : prix du jour | Gasolinera+
+seo.prov.h1	Gasolineras baratas en {p}	Postos de combustível baratos em {p}	Stations-service pas chères · {p}
+seo.muni.title	Gasolineras en {m} ({p}): precios hoy | Gasolinera+	Postos em {m} ({p}): preços hoje | Gasolinera+	Stations à {m} ({p}) : prix du jour | Gasolinera+
+seo.muni.h1	Gasolineras en {m} ({p})	Postos de combustível em {m} ({p})	Stations-service à {m} ({p})
+seo.intro.count	Hay {n} gasolineras en {place}.	Há {n} postos de combustível em {place}.	{place} compte {n} stations-service.
+seo.intro.today	Hoy, de media: {list}.	Hoje, em média: {list}.	Aujourd'hui, en moyenne : {list}.
+seo.intro.cheapest	El {fuel} más barato está en {name} ({town}), a {price} €/L.	O {fuel} mais barato está em {name} ({town}), a {price} €/L.	Le {fuel} le moins cher est chez {name} ({town}), à {price} €/L.
+seo.and	y	e	et
+seo.desc.suffix	Compara precios y horarios en Gasolinera+.	Compare preços e horários no Gasolinera+.	Comparez prix et horaires sur Gasolinera+.
+seo.h2.today	Precios de hoy	Preços de hoje	Prix du jour
+seo.h2.cheapest	{fuel} más barato	{fuel} mais barato	{fuel} le moins cher
+seo.h2.towns	Gasolineras por municipio en {p}	Postos por concelho em {p}	Stations-service par commune · {p}
+seo.h2.all	Todas las gasolineras de {m}	Todos os postos de {m}	Toutes les stations-service de {m}
+seo.more	Más gasolineras en {p}	Mais postos em {p}	Plus de stations-service · {p}
+seo.table.fuel	Carburante	Combustível	Carburant
+seo.table.mean	Media	Média	Moyenne
+seo.table.min	Más barato	Mais barato	Moins cher
+seo.table.max	Más caro	Mais caro	Plus cher
+seo.table.station	Gasolinera	Posto	Station
+seo.h24	24 horas	24 horas	24 h/24
+seo.footer	Precios oficiales de {fuente}, actualizados el {date}. Son precios de referencia: confírmalos en el surtidor.	Preços oficiais de {fuente}, atualizados em {date}. São preços de referência: confirme-os na bomba.	Prix officiels de {fuente}, mis à jour le {date}. Ce sont des prix indicatifs : vérifiez-les à la pompe.
+seo.notfound.title	Página no encontrada	Página não encontrada	Page introuvable
+seo.notfound.link	Ver gasolineras por provincia	Ver postos por distrito	Voir les stations par département
+seo.go	Ir a Gasolinera+	Ir para o Gasolinera+	Aller sur Gasolinera+
+seo.ld.cheapest	{fuel} más barato en {place}	{fuel} mais barato em {place}	{fuel} le moins cher · {place}
+seo.home.title	Gasolinera+ · Precios de gasolina y diésel hoy en España	Gasolinera+ · Preços de gasolina e gasóleo em Portugal	Gasolinera+ · Prix de l'essence et du gazole en France
+seo.home.desc	Encuentra la gasolinera más barata cerca de ti. Precios de gasolina y diésel de cada día, mapa, rutas con paradas para repostar y control de tu consumo.	Encontre o posto mais barato perto de si. Preços de gasolina e gasóleo de cada dia, mapa, rotas com paragens para abastecer e controlo do consumo.	Trouvez la station la moins chère près de chez vous. Prix de l'essence et du gazole du jour, carte, itinéraires avec arrêts et suivi de consommation.
+seo.home.h1	Precios de gasolina y diésel hoy en España	Preços de gasolina e gasóleo hoje em Portugal	Prix de l'essence et du gazole aujourd'hui en France
+seo.home.h2	Gasolineras cerca de ti	Postos perto de si	Stations près de chez vous
+seo.station.title	{name} · {town}: precios hoy | Gasolinera+	{name} · {town}: preços hoje | Gasolinera+	{name} · {town} : prix du jour | Gasolinera+
+seo.station.desc	{name}, {address}, {town} ({prov}).{today} Horario y comparación con la zona.	{name}, {address}, {town} ({prov}).{today} Horário e comparação com a zona.	{name}, {address}, {town} ({prov}).{today} Horaires et comparaison avec le secteur.
+seo.station.today	Hoy: {list}.	Hoje: {list}.	Aujourd'hui : {list}.
+seo.og.alt	Logo de Gasolinera+: una llama negra sobre fondo naranja	Logótipo do Gasolinera+: uma chama preta sobre fundo laranja	Logo de Gasolinera+ : une flamme noire sur fond orange
+seo.llms.country	Gasolineras de España	Postos de combustível de Portugal	Stations-service de France
+seo.headline.today	Hoy, {d}	Hoje, {d}	Aujourd'hui, {d}
+seo.headline.todayFull	Precios de hoy, {d}	Preços de hoje, {d}	Prix du jour, {d}
+seo.headline.yesterday	Ayer, {d}	Ontem, {d}	Hier, {d}
+seo.headline.yesterdayFull	Precios de ayer, {d}. Los de hoy se publican por la mañana.	Preços de ontem, {d}. Os de hoje publicam-se de manhã.	Prix d'hier, {d}. Ceux du jour sont publiés le matin.
+seo.headline.old	Precios del {d}	Preços de {d}	Prix du {d}
+seo.headline.oldFull	Precios del {d}. Aún no hay datos más recientes.	Preços de {d}. Ainda não há dados mais recentes.	Prix du {d}. Pas encore de données plus récentes.
+seo.headline.same	sin cambios desde ayer	sem alterações desde ontem	sans changement depuis hier
+seo.headline.since	desde ayer	desde ontem	depuis hier
+seo.headline.fuelToday	{fuel} hoy en {pais}	{fuel} hoje em {pais}	{fuel} aujourd'hui · {pais}
+seo.headline.averages	Precios medios en {pais}	Preços médios em {pais}	Prix moyens · {pais}

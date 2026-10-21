@@ -526,7 +526,7 @@ dialog {
 }
 dialog::backdrop { background: rgba(34, 29, 18, 0.5); }
 
-#station-modal h3 { font-family: var(--font-display); margin: 10px 0 4px; font-size: 1.2rem; color: var(--text); }
+#station-modal .modal-address { font-family: var(--font-display); margin: 10px 0 4px; font-size: 1.2rem; font-weight: 700; color: var(--text); }
 #modal-municipio, #modal-horario { color: var(--text-secondary); font-size: 0.85rem; margin: 2px 0; }
 
 #modal-fuels {
@@ -1603,7 +1603,7 @@ html.desktop[data-view] #national-stats { display: block !important; }
 .desktop #station-modal #modal-top-actions { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; margin: 0; }
 .desktop #station-modal #modal-top-actions .btn-icon { width: 36px; height: 36px; border-radius: 6px; }
 .desktop #station-modal #modal-rotulo { align-self: flex-start; margin: 0; padding: 0 130px 0 0; background: none; color: var(--text); font-family: var(--font-display); font-size: 22px; font-weight: 800; }
-.desktop #station-modal h3 { margin: 0; font-family: var(--font-body); font-size: 14px; font-weight: 400; color: var(--text-secondary); }
+.desktop #station-modal .modal-address { margin: 0; font-family: var(--font-body); font-size: 14px; font-weight: 400; color: var(--text-secondary); }
 .desktop #modal-municipio,
 .desktop #modal-horario { margin: 0; font-size: 14px; }
 .desktop #modal-fuels { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin: 4px 0; border: 0; }

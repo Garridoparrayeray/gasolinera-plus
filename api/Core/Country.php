@@ -20,6 +20,8 @@ class Country
         $requested = '';
         if (isset($_GET['pais']) && is_string($_GET['pais'])) {
             $requested = strtolower(trim($_GET['pais']));
+        } elseif (isset($_SERVER['REQUEST_URI']) && preg_match('#^/(pt|fr)(/|$|\?)#', (string)$_SERVER['REQUEST_URI'], $match)) {
+            $requested = $match[1];
         }
         if (isset(self::all()[$requested])) {
             return $requested;
@@ -34,11 +36,35 @@ class Country
 
     public static function dbPath(): string
     {
-        return __DIR__ . '/../../' . self::current()['db'];
+        return self::dbPathFor(self::code());
+    }
+
+    public static function dbPathFor(string $code): string
+    {
+        return __DIR__ . '/../../' . self::all()[$code]['db'];
     }
 
     public static function hasData(): bool
     {
         return is_file(self::dbPath());
+    }
+
+    public static function withData(): array
+    {
+        $codes = [];
+        foreach (array_keys(self::all()) as $code) {
+            if (is_file(self::dbPathFor($code))) {
+                $codes[] = $code;
+            }
+        }
+        return $codes;
+    }
+
+    public static function prefix(string $code): string
+    {
+        if ($code === self::DEFAULT) {
+            return '';
+        }
+        return '/' . $code;
     }
 }

@@ -1,11 +1,15 @@
 <?php
+require_once __DIR__ . '/Core/Country.php';
 require_once __DIR__ . '/Services/Seo.php';
 
 $isNative = getenv('GP_NATIVE') === '1';
 $siteUrl = \Services\Seo::siteUrl();
-$ogTitle = 'Gasolinera+ · Precios de gasolina y diésel hoy en España';
-$ogDescription = 'Encuentra la gasolinera más barata cerca de ti. Precios de gasolina y diésel actualizados cada día, mapa, rutas con paradas de repostaje y control de tu consumo.';
-$ogUrl = $siteUrl . '/';
+$pageLang = \Services\Seo::lang();
+$ogTitle = \Services\Seo::t('seo.home.title');
+$ogDescription = \Services\Seo::t('seo.home.desc');
+$pageHeading = \Services\Seo::t('seo.home.h1');
+$ogUrl = \Services\Seo::base() . '/';
+$alternateLinks = '';
 $canonicalUrl = $ogUrl;
 $robotsContent = 'index, follow';
 $structuredData = '';
@@ -16,7 +20,6 @@ $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = parse_url($requestUri, PHP_URL_PATH);
 
 if (!$isNative) {
-    require_once __DIR__ . '/Core/Country.php';
     require_once __DIR__ . '/Core/Config.php';
     require_once __DIR__ . '/Core/Database.php';
     try {
@@ -24,7 +27,7 @@ if (!$isNative) {
         $provinceLinks = \Services\Seo::provinces($pdo);
         $headline = \Services\Seo::nationalHeadline($pdo);
 
-        if (preg_match('#^/stations/([^/]+)/?$#', $path, $matches)) {
+        if (preg_match('#^/(?:(?:pt|fr)/)?stations/([^/]+)/?$#', $path, $matches)) {
             $ideess = urldecode($matches[1]);
             $stmt = $pdo->prepare('SELECT * FROM stations WHERE ideess = ?');
             $stmt->execute([$ideess]);
@@ -34,7 +37,8 @@ if (!$isNative) {
                 $provinceName = \Services\Seo::display($station['provincia']);
                 $stationName = \Services\Seo::display($station['rotulo']);
                 $townName = \Services\Seo::display($station['municipio']);
-                $ogTitle = $stationName . ' · ' . $townName . ': precios hoy | Gasolinera+';
+                $ogTitle = \Services\Seo::t('seo.station.title', array('name' => $stationName, 'town' => $townName));
+                $pageHeading = $stationName . ' · ' . $townName;
 
                 $priceStmt = $pdo->prepare('SELECT carburante, precio FROM current_prices WHERE ideess = ?');
                 $priceStmt->execute([$ideess]);
@@ -44,48 +48,62 @@ if (!$isNative) {
                 }
 
                 $priceText = array();
-                foreach (array('gasoleo_a', 'gasolina_95_e5') as $key) {
+                foreach (\Services\Seo::profile()['headline'] as $key) {
                     if (isset($prices[$key])) {
-                        $priceText[] = \Services\Seo::FUELS[$key] . ' ' . \Services\Seo::price($prices[$key]) . ' €';
+                        $priceText[] = \Services\Seo::fuelLabel($key) . ' ' . \Services\Seo::price($prices[$key]) . ' €';
                     }
                 }
-                $desc = $stationName . ', ' . \Services\Seo::display($station['direccion']) . ', ' . $townName . ' (' . $provinceName . ').';
+                $todayText = '';
                 if (!empty($priceText)) {
-                    $desc .= ' Hoy: ' . implode(', ', $priceText) . '.';
+                    $todayText = ' ' . \Services\Seo::t('seo.station.today', array('list' => implode(', ', $priceText)));
                 }
-                $ogDescription = $desc . ' Horario, ubicación y comparación con la zona en Gasolinera+.';
-                $ogUrl = $siteUrl . '/stations/' . rawurlencode($ideess);
+                $ogDescription = \Services\Seo::trim(\Services\Seo::t('seo.station.desc', array(
+                    'name' => $stationName,
+                    'address' => \Services\Seo::display($station['direccion']),
+                    'town' => $townName,
+                    'prov' => $provinceName,
+                    'today' => $todayText,
+                )), 160);
+                $ogUrl = $siteUrl . \Services\Seo::stationPath($ideess);
                 $canonicalUrl = $ogUrl;
 
                 $updated = \Services\Seo::lastUpdate($pdo);
-                $provinceUrl = $siteUrl . '/gasolineras/' . \Services\Seo::slug($provinceName);
+                $provinceUrl = $siteUrl . \Services\Seo::sectionUrl() . '/' . \Services\Seo::slug($provinceName);
                 $structuredData = \Services\Seo::jsonLd(\Services\Seo::stationJsonLd($station, $prices, $updated, $provinceName));
                 $structuredData .= \Services\Seo::jsonLd(\Services\Seo::breadcrumb(array(
-                    array('Gasolinera+', $siteUrl . '/'),
-                    array('Gasolineras', $siteUrl . '/gasolineras'),
+                    array('Gasolinera+', \Services\Seo::base() . '/'),
+                    array(\Services\Seo::t('seo.section'), $siteUrl . \Services\Seo::sectionUrl()),
                     array($provinceName, $provinceUrl),
                     array($stationName, $ogUrl),
                 )));
             } else {
                 $robotsContent = 'noindex, follow';
             }
-        } elseif ($path === '/' || $path === '') {
+        } elseif (preg_match('#^(/(pt|fr))?/?$#', (string)$path)) {
+            foreach (\Core\Country::withData() as $altCode) {
+                $altProfile = \Services\Seo::profile($altCode);
+                $altUrl = $siteUrl . \Core\Country::prefix($altCode) . '/';
+                $alternateLinks .= '    <link rel="alternate" hreflang="' . $altProfile['lang'] . '-' . $altProfile['iso'] . '" href="' . htmlspecialchars($altUrl) . '">' . "\n";
+                if ($altCode === \Core\Country::DEFAULT) {
+                    $alternateLinks .= '    <link rel="alternate" hreflang="x-default" href="' . htmlspecialchars($altUrl) . '">' . "\n";
+                }
+            }
             $structuredData = \Services\Seo::jsonLd(array(
                 '@context' => 'https://schema.org',
                 '@type' => 'WebSite',
                 'name' => 'Gasolinera+',
-                'url' => $siteUrl . '/',
-                'inLanguage' => 'es',
+                'url' => $ogUrl,
+                'inLanguage' => $pageLang,
                 'description' => $ogDescription,
             ));
             $structuredData .= \Services\Seo::jsonLd(array(
                 '@context' => 'https://schema.org',
                 '@type' => 'WebApplication',
                 'name' => 'Gasolinera+',
-                'url' => $siteUrl . '/',
+                'url' => $ogUrl,
                 'applicationCategory' => 'TravelApplication',
                 'operatingSystem' => 'Web, Android, iOS',
-                'inLanguage' => 'es',
+                'inLanguage' => $pageLang,
                 'description' => $ogDescription,
                 'offers' => array('@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'EUR'),
             ));
@@ -101,22 +119,20 @@ $headlineDate = '';
 $headlineStale = false;
 $headlineStaleClass = '';
 if (isset($headline['gasoleo_a'])) {
-    $months = array('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre');
     $madrid = new \DateTimeZone('Europe/Madrid');
     $fecha = $headline['gasoleo_a']['fecha'];
-    $parts = explode('-', $fecha);
-    $label = (int)$parts[2] . ' de ' . $months[(int)$parts[1] - 1];
+    $label = preg_replace('/ (de )?\d{4}$/', '', \Services\Seo::date($fecha));
     $today = (new \DateTime('now', $madrid))->format('Y-m-d');
     $yesterday = (new \DateTime('yesterday', $madrid))->format('Y-m-d');
     if ($fecha === $today) {
-        $headlineDay = 'Hoy, ' . $label;
-        $headlineDate = 'Precios de hoy, ' . $label;
+        $headlineDay = \Services\Seo::t('seo.headline.today', array('d' => $label));
+        $headlineDate = \Services\Seo::t('seo.headline.todayFull', array('d' => $label));
     } elseif ($fecha === $yesterday) {
-        $headlineDay = 'Ayer, ' . $label;
-        $headlineDate = 'Precios de ayer, ' . $label . '. Los de hoy se publican por la mañana.';
+        $headlineDay = \Services\Seo::t('seo.headline.yesterday', array('d' => $label));
+        $headlineDate = \Services\Seo::t('seo.headline.yesterdayFull', array('d' => $label));
     } else {
-        $headlineDay = 'Precios del ' . $label;
-        $headlineDate = 'Precios del ' . $label . '. Aún no hay datos más recientes.';
+        $headlineDay = \Services\Seo::t('seo.headline.old', array('d' => $label));
+        $headlineDate = \Services\Seo::t('seo.headline.oldFull', array('d' => $label));
         $headlineStale = true;
         $headlineStaleClass = ' is-stale';
     }
@@ -137,7 +153,7 @@ function headlineDelta(array $headline, string $fuel): string
         return '<span class="national-line__delta"></span>';
     }
     if (abs($delta) < 0.0005) {
-        return '<span class="national-line__delta">sin cambios desde ayer</span>';
+        return '<span class="national-line__delta">' . htmlspecialchars(\Services\Seo::t('seo.headline.same')) . '</span>';
     }
     $class = 'is-up';
     $arrow = '▲';
@@ -145,11 +161,11 @@ function headlineDelta(array $headline, string $fuel): string
         $class = 'is-down';
         $arrow = '▼';
     }
-    return '<span class="national-line__delta ' . $class . '">' . $arrow . ' ' . number_format(abs($delta), 3, '.', '') . ' desde ayer</span>';
+    return '<span class="national-line__delta ' . $class . '">' . $arrow . ' ' . number_format(abs($delta), 3, '.', '') . ' ' . htmlspecialchars(\Services\Seo::t('seo.headline.since')) . '</span>';
 }
 ?>
 <!DOCTYPE html>
-<html lang="es" class="is-loading">
+<html lang="<?= $pageLang ?>" class="is-loading">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -165,13 +181,17 @@ function headlineDelta(array $headline, string $fuel): string
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1024">
     <meta property="og:image:height" content="1024">
-    <meta property="og:image:alt" content="Logo de Gasolinera+: una llama negra sobre fondo naranja">
+    <meta property="og:image:alt" content="<?= htmlspecialchars(\Services\Seo::t('seo.og.alt')) ?>">
+    <meta property="og:locale" content="<?= \Services\Seo::profile()['locale'] ?>">
     <meta property="og:site_name" content="Gasolinera+">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:image" content="<?= htmlspecialchars($siteUrl) ?>/icons/og-image.png">
+    <meta name="twitter:title" content="<?= htmlspecialchars($ogTitle) ?>">
+    <meta name="twitter:description" content="<?= htmlspecialchars($ogDescription) ?>">
     <meta name="robots" content="<?= htmlspecialchars($robotsContent) ?>">
     <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl) ?>">
+<?= $alternateLinks ?>
 <?php if (is_string($verificationToken) && $verificationToken !== ''): ?>
     <meta name="google-site-verification" content="<?= htmlspecialchars($verificationToken) ?>">
 <?php endif; ?>
@@ -227,7 +247,8 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
 
     <main class="app-container">
 
-        <h1 class="sr-only">Precios de gasolina y diésel hoy en España</h1>
+        <h1 class="sr-only"><?= htmlspecialchars($pageHeading) ?></h1>
+        <h2 class="sr-only"><?= htmlspecialchars(\Services\Seo::t('seo.home.h2')) ?></h2>
 
         <header>
             <div class="home-link-wrap">
@@ -360,16 +381,18 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
         <section id="national-stats">
             <button id="national-stats-toggle" type="button" aria-expanded="false">
                 <span class="national-stats__figures">
-                    <span><small>Gasóleo A hoy en España</small><strong id="national-gasoleo-a"><?= htmlspecialchars(headlinePrice($headline, 'gasoleo_a')) ?></strong></span>
-                    <span><small>Gasolina 95 hoy en España</small><strong id="national-gasolina-95"><?= htmlspecialchars(headlinePrice($headline, 'gasolina_95_e5')) ?></strong></span>
+<?php $headlineFuels = \Services\Seo::profile()['headline']; ?>
+                    <span><small><?= htmlspecialchars(\Services\Seo::t('seo.headline.fuelToday', array('fuel' => \Services\Seo::fuelLabel($headlineFuels[0])))) ?></small><strong id="national-gasoleo-a"><?= htmlspecialchars(headlinePrice($headline, $headlineFuels[0])) ?></strong></span>
+                    <span><small><?= htmlspecialchars(\Services\Seo::t('seo.headline.fuelToday', array('fuel' => \Services\Seo::fuelLabel($headlineFuels[1])))) ?></small><strong id="national-gasolina-95"><?= htmlspecialchars(headlinePrice($headline, $headlineFuels[1])) ?></strong></span>
                 </span>
                 <svg id="national-stats-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
 <?php if ($headlineDay !== null): ?>
             <p id="national-date" class="national-date<?= $headlineStaleClass ?>"><?= htmlspecialchars($headlineDate) ?></p>
             <div id="national-line" class="national-line">
-                <div class="national-line__day<?= $headlineStaleClass ?>"><small>Precios medios en España</small><strong><?= htmlspecialchars($headlineDay) ?></strong></div>
-<?php foreach (array('gasoleo_a' => 'Gasóleo A', 'gasolina_95_e5' => 'Gasolina 95') as $fuelKey => $fuelName): ?>
+                <div class="national-line__day<?= $headlineStaleClass ?>"><small><?= htmlspecialchars(\Services\Seo::t('seo.headline.averages')) ?></small><strong><?= htmlspecialchars($headlineDay) ?></strong></div>
+<?php foreach ($headlineFuels as $fuelKey): ?>
+<?php $fuelName = htmlspecialchars(\Services\Seo::fuelLabel($fuelKey)); ?>
 <?php if (isset($headline[$fuelKey])): ?>
                 <div class="national-kpi"><small><?= $fuelName ?></small><strong><?= htmlspecialchars(headlinePrice($headline, $fuelKey)) ?></strong><?= headlineDelta($headline, $fuelKey) ?></div>
 <?php endif; ?>
@@ -1016,7 +1039,7 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
             </button>
         </div>
         <span id="modal-rotulo" class="badge"></span>
-        <h3 id="modal-direccion"></h3>
+        <p id="modal-direccion" class="modal-address"></p>
         <p id="modal-municipio"></p>
         <p id="modal-horario"></p>
         <ul id="modal-fuels"></ul>

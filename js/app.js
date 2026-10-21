@@ -22,6 +22,7 @@
 
     const TREND_SYMBOL = { up: '▲', down: '▼', same: '=' };
 
+    const HEADLINE_SECOND = GPCountry.config.headline[1];
     const PAGE_SIZE = 10;
     const FUEL_PREF_KEY = 'gasolinera_fuel';
 
@@ -417,7 +418,7 @@
         } catch (e) {
             return;
         }
-        const slugs = ['gasoleo_a', 'gasolina_95_e5', 'adblue'].filter((slug) => station.combustibles[slug]);
+        const slugs = ['gasoleo_a', HEADLINE_SECOND, 'adblue'].filter((slug) => station.combustibles[slug]);
         for (const slug of slugs) {
             const tile = document.createElement('span');
             const label = document.createElement('small');
@@ -693,7 +694,7 @@
         title.textContent = dayLabel.text;
         day.append(caption, title);
         line.append(day);
-        for (const [name, data] of [['Gasóleo A', gasoleoA], ['Gasolina 95', gasolina95]]) {
+        for (const [name, data] of [[GPCountry.fuelShort('gasoleo_a'), gasoleoA], [GPCountry.fuelShort(HEADLINE_SECOND), gasolina95]]) {
             if (!data || !data.hoy) {
                 continue;
             }
@@ -733,7 +734,7 @@
 
     function renderStatsNationalKpis() {
         const gasoleoA = state.nationalSeries.gasoleo_a;
-        const gasolina95 = state.nationalSeries.gasolina_95_e5;
+        const gasolina95 = state.nationalSeries[HEADLINE_SECOND];
         if (gasoleoA && gasoleoA.hoy) {
             setStatsKpi('stats-kpi-a', `${gasoleoA.hoy.media.toFixed(3)} €`, '', seriesDelta(gasoleoA));
         }
@@ -802,7 +803,7 @@
     async function loadNationalHeadline() {
         const [gasoleoA, gasolina95] = await Promise.all([
             Api.nationalStats('gasoleo_a', daysAgoIso(14), todayIso()).catch(() => null),
-            Api.nationalStats('gasolina_95_e5', daysAgoIso(14), todayIso()).catch(() => null),
+            Api.nationalStats(HEADLINE_SECOND, daysAgoIso(14), todayIso()).catch(() => null),
         ]);
         if (gasoleoA) {
             state.nationalSeries.gasoleo_a = gasoleoA;
@@ -813,7 +814,7 @@
             }
         }
         if (gasolina95) {
-            state.nationalSeries.gasolina_95_e5 = gasolina95;
+            state.nationalSeries[HEADLINE_SECOND] = gasolina95;
             if (gasolina95.hoy) {
                 showPriceDate(gasolina95.hoy.fecha);
                 el.nationalGasolina95.textContent = `${gasolina95.hoy.media.toFixed(3)} €`;
@@ -1254,11 +1255,11 @@
         }
 
         const filterFuel = el.filterFuel.value;
-        let secondaryFuel = 'gasolina_95_e5';
-        if (filterFuel === 'gasolina_95_e5') {
+        let secondaryFuel = HEADLINE_SECOND;
+        if (filterFuel === HEADLINE_SECOND) {
             secondaryFuel = 'gasoleo_a';
         }
-        const priceSlugs = ['gasoleo_a', 'gasolina_95_e5'];
+        const priceSlugs = ['gasoleo_a', HEADLINE_SECOND];
         if (!priceSlugs.includes(filterFuel)) {
             priceSlugs.push(filterFuel);
         }

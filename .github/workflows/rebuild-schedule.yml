@@ -53,6 +53,9 @@ jobs:
           echo "DB=$DB" >> "$GITHUB_ENV"
           echo "LITE=$LITE" >> "$GITHUB_ENV"
           mkdir -p "$RUNNER_TEMP/prev"
+          if [ "$C" = "fr" ]; then
+            gh release download data-fr -p brands-fr.json -D data --clobber || echo "::notice::Sin marcas nuevas de OSM; se usan las del repositorio"
+          fi
           if gh release download "data-$C" -p "gasolinera-$C.sqlite.gz" -D "$RUNNER_TEMP/prev"; then
             gunzip -c "$RUNNER_TEMP/prev/gasolinera-$C.sqlite.gz" > "$DB"
             echo "Base de ayer descargada de la release data-$C"

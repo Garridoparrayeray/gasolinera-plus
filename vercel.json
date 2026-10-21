@@ -19,41 +19,94 @@
   "headers": [
     {
       "source": "/vendor/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=2592000" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, stale-while-revalidate=2592000"
+        }
+      ]
     },
     {
       "source": "/icons/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=2592000" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, stale-while-revalidate=2592000"
+        }
+      ]
     },
     {
       "source": "/js/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=300, stale-while-revalidate=86400" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300, stale-while-revalidate=86400"
+        }
+      ]
     },
     {
       "source": "/style.css",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=300, stale-while-revalidate=86400" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300, stale-while-revalidate=86400"
+        }
+      ]
     },
     {
       "source": "/data/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, stale-while-revalidate=86400"
+        }
+      ]
     },
     {
       "source": "/data/road-graph/(.*)",
-      "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }]
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
     },
     {
       "source": "/data/stations-lite(.*).json",
-      "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }]
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
     },
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "geolocation=(self), camera=(), microphone=(), payment=(), usb=()" },
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains" },
-        { "key": "Content-Security-Policy", "value": "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(self), camera=(), microphone=(), payment=(), usb=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'"
+        }
       ]
     }
   ],
@@ -112,6 +165,38 @@
     {
       "source": "/gasolineras/(.*)",
       "destination": "/api/seo.php"
+    },
+    {
+      "source": "/sitemap-(es|pt|fr).xml",
+      "destination": "/api/seo.php"
+    },
+    {
+      "source": "/pt/postos",
+      "destination": "/api/seo.php"
+    },
+    {
+      "source": "/pt/postos/(.*)",
+      "destination": "/api/seo.php"
+    },
+    {
+      "source": "/fr/stations-service",
+      "destination": "/api/seo.php"
+    },
+    {
+      "source": "/fr/stations-service/(.*)",
+      "destination": "/api/seo.php"
+    },
+    {
+      "source": "/(pt|fr)/stations/(.*)",
+      "destination": "/api/shell.php"
+    },
+    {
+      "source": "/(pt|fr)",
+      "destination": "/api/shell.php"
+    },
+    {
+      "source": "/(pt|fr)/",
+      "destination": "/api/shell.php"
     },
     {
       "source": "/",

@@ -1,56 +1,140 @@
 {
   "es": {
     "native": "España",
-    "name": { "es": "España", "pt": "Espanha", "fr": "Espagne" },
+    "name": {
+      "es": "España",
+      "pt": "Espanha",
+      "fr": "Espagne"
+    },
     "lang": "es",
     "locale": "es-ES",
     "db": "data/gasolinera.sqlite",
     "lite": "data/stations-lite.json",
-    "center": [40.2, -3.7],
+    "center": [
+      40.2,
+      -3.7
+    ],
     "zoom": 6,
-    "bbox": [-18.4, 27.4, 4.6, 43.9],
+    "bbox": [
+      -18.4,
+      27.4,
+      4.6,
+      43.9
+    ],
     "minStations": 9000,
     "source": "Ministerio para la Transición Ecológica (geoportalgasolineras.es)",
     "labels": {
-      "region": { "es": "Comunidad autónoma", "pt": "Comunidade autónoma", "fr": "Communauté autonome" },
-      "province": { "es": "Provincia", "pt": "Província", "fr": "Province" },
-      "municipality": { "es": "Municipio", "pt": "Município", "fr": "Commune" }
-    }
+      "region": {
+        "es": "Comunidad autónoma",
+        "pt": "Comunidade autónoma",
+        "fr": "Communauté autonome"
+      },
+      "province": {
+        "es": "Provincia",
+        "pt": "Província",
+        "fr": "Province"
+      },
+      "municipality": {
+        "es": "Municipio",
+        "pt": "Município",
+        "fr": "Commune"
+      }
+    },
+    "headline": [
+      "gasoleo_a",
+      "gasolina_95_e5"
+    ]
   },
   "pt": {
     "native": "Portugal",
-    "name": { "es": "Portugal", "pt": "Portugal", "fr": "Portugal" },
+    "name": {
+      "es": "Portugal",
+      "pt": "Portugal",
+      "fr": "Portugal"
+    },
     "lang": "pt",
     "locale": "pt-PT",
     "db": "data/gasolinera-pt.sqlite",
     "lite": "data/stations-lite-pt.json",
-    "center": [39.6, -8.0],
+    "center": [
+      39.6,
+      -8.0
+    ],
     "zoom": 7,
-    "bbox": [-31.4, 32.3, -6.1, 42.2],
+    "bbox": [
+      -31.4,
+      32.3,
+      -6.1,
+      42.2
+    ],
     "minStations": 2500,
     "source": "Direção-Geral de Energia e Geologia (precoscombustiveis.dgeg.gov.pt)",
     "labels": {
-      "region": { "es": "Región", "pt": "Região", "fr": "Région" },
-      "province": { "es": "Distrito", "pt": "Distrito", "fr": "District" },
-      "municipality": { "es": "Concejo", "pt": "Concelho", "fr": "Commune" }
-    }
+      "region": {
+        "es": "Región",
+        "pt": "Região",
+        "fr": "Région"
+      },
+      "province": {
+        "es": "Distrito",
+        "pt": "Distrito",
+        "fr": "District"
+      },
+      "municipality": {
+        "es": "Concejo",
+        "pt": "Concelho",
+        "fr": "Commune"
+      }
+    },
+    "headline": [
+      "gasoleo_a",
+      "gasolina_95_e5"
+    ]
   },
   "fr": {
     "native": "France",
-    "name": { "es": "Francia", "pt": "França", "fr": "France" },
+    "name": {
+      "es": "Francia",
+      "pt": "França",
+      "fr": "France"
+    },
     "lang": "fr",
     "locale": "fr-FR",
     "db": "data/gasolinera-fr.sqlite",
     "lite": "data/stations-lite-fr.json",
-    "center": [46.6, 2.4],
+    "center": [
+      46.6,
+      2.4
+    ],
     "zoom": 6,
-    "bbox": [-5.3, 41.3, 9.6, 51.2],
+    "bbox": [
+      -5.3,
+      41.3,
+      9.6,
+      51.2
+    ],
     "minStations": 8000,
     "source": "Ministère de l'Économie (prix-carburants.gouv.fr)",
     "labels": {
-      "region": { "es": "Región", "pt": "Região", "fr": "Région" },
-      "province": { "es": "Departamento", "pt": "Departamento", "fr": "Département" },
-      "municipality": { "es": "Municipio", "pt": "Comuna", "fr": "Commune" }
-    }
+      "region": {
+        "es": "Región",
+        "pt": "Região",
+        "fr": "Région"
+      },
+      "province": {
+        "es": "Departamento",
+        "pt": "Departamento",
+        "fr": "Département"
+      },
+      "municipality": {
+        "es": "Municipio",
+        "pt": "Comuna",
+        "fr": "Commune"
+      }
+    },
+    "headline": [
+      "gasoleo_a",
+      "gasolina_95_e10"
+    ]
   }
 }

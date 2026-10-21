@@ -6,14 +6,119 @@ namespace Services;
 
 class Seo
 {
-    public const FUELS = [
-        'gasoleo_a' => 'Gasóleo A',
-        'gasolina_95_e5' => 'Gasolina 95',
-        'gasoleo_premium' => 'Gasóleo premium',
-        'gasolina_98_e5' => 'Gasolina 98',
+    public const PROFILES = [
+        'es' => ['section' => 'gasolineras', 'lang' => 'es', 'locale' => 'es_ES', 'iso' => 'ES', 'fuels' => ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_e5']],
+        'pt' => ['section' => 'postos', 'lang' => 'pt', 'locale' => 'pt_PT', 'iso' => 'PT', 'fuels' => ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_premium']],
+        'fr' => ['section' => 'stations-service', 'lang' => 'fr', 'locale' => 'fr_FR', 'iso' => 'FR', 'fuels' => ['gasoleo_a', 'gasolina_95_e10', 'gasolina_98_e5', 'gasolina_95_e85']],
     ];
 
-    public const HEADLINE_FUELS = ['gasoleo_a', 'gasolina_95_e5'];
+    private static array $dictionaries = [];
+    private static ?array $fuelCatalog = null;
+
+    public static function profile(?string $code = null): array
+    {
+        if ($code === null) {
+            $code = \Core\Country::code();
+        }
+        $profile = self::PROFILES[$code];
+        $profile['headline'] = \Core\Country::all()[$code]['headline'];
+        return $profile;
+    }
+
+    public static function lang(): string
+    {
+        return self::profile()['lang'];
+    }
+
+    public static function t(string $key, array $vars = [], ?string $lang = null): string
+    {
+        if ($lang === null) {
+            $lang = self::lang();
+        }
+        if (!isset(self::$dictionaries[$lang])) {
+            self::$dictionaries[$lang] = json_decode((string)file_get_contents(__DIR__ . '/../../config/i18n/' . $lang . '.json'), true);
+        }
+        $text = $key;
+        if (isset(self::$dictionaries[$lang][$key])) {
+            $text = self::$dictionaries[$lang][$key];
+        }
+        $vars['fuente'] = \Core\Country::current()['source'];
+        if (!isset($vars['pais'])) {
+            $vars['pais'] = \Core\Country::current()['name'][$lang];
+        }
+        foreach ($vars as $name => $value) {
+            $text = str_replace('{' . $name . '}', (string)$value, $text);
+        }
+        return $text;
+    }
+
+    public static function fuels(): array
+    {
+        if (self::$fuelCatalog === null) {
+            self::$fuelCatalog = [];
+            foreach (json_decode((string)file_get_contents(__DIR__ . '/../../config/fuels.json'), true) as $fuel) {
+                self::$fuelCatalog[$fuel['slug']] = $fuel;
+            }
+        }
+        $out = [];
+        foreach (self::profile()['fuels'] as $slug) {
+            $out[$slug] = self::$fuelCatalog[$slug]['label'][self::lang()];
+        }
+        return $out;
+    }
+
+    public static function fuelLabel(string $slug): string
+    {
+        self::fuels();
+        return self::$fuelCatalog[$slug]['label'][self::lang()];
+    }
+
+    public static function base(): string
+    {
+        return self::siteUrl() . \Core\Country::prefix(\Core\Country::code());
+    }
+
+    public static function sectionUrl(): string
+    {
+        return \Core\Country::prefix(\Core\Country::code()) . '/' . self::profile()['section'];
+    }
+
+    public static function stationPath(string $ideess): string
+    {
+        return \Core\Country::prefix(\Core\Country::code()) . '/stations/' . rawurlencode($ideess);
+    }
+
+    public static function trim(string $text, int $max): string
+    {
+        if (mb_strlen($text) <= $max) {
+            return $text;
+        }
+        $cut = mb_substr($text, 0, $max - 1);
+        $space = mb_strrpos($cut, ' ');
+        if ($space !== false && $space > $max * 0.6) {
+            $cut = mb_substr($cut, 0, $space);
+        }
+        return rtrim($cut, " ,.;:·") . '…';
+    }
+
+    public static function date(string $iso): string
+    {
+        $months = [
+            'es' => ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
+            'pt' => ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'],
+            'fr' => ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'],
+        ];
+        $parts = explode('-', $iso);
+        if (count($parts) !== 3) {
+            return $iso;
+        }
+        $lang = self::lang();
+        $month = $months[$lang][(int)$parts[1] - 1];
+        if ($lang === 'fr') {
+            return (int)$parts[2] . ' ' . $month . ' ' . $parts[0];
+        }
+        return (int)$parts[2] . ' de ' . $month . ' de ' . $parts[0];
+    }
 
     private const ARTICLES = ['A', 'LA', 'LAS', 'LOS', 'EL', 'ILLES', 'ELS', 'L\'', 'ES'];
 
@@ -44,7 +149,7 @@ class Seo
     {
         $text = mb_strtolower($text, 'UTF-8');
         $text = strtr($text, [
-            'á' => 'a', 'à' => 'a', 'ä' => 'a', 'â' => 'a',
+            'á' => 'a', 'à' => 'a', 'ä' => 'a', 'â' => 'a', 'ã' => 'a', 'æ' => 'ae', 'œ' => 'oe', 'õ' => 'o', 'ÿ' => 'y',
             'é' => 'e', 'è' => 'e', 'ë' => 'e', 'ê' => 'e',
             'í' => 'i', 'ì' => 'i', 'ï' => 'i', 'î' => 'i',
             'ó' => 'o', 'ò' => 'o', 'ö' => 'o', 'ô' => 'o',
@@ -119,13 +224,15 @@ class Seo
 
     public static function nationalHeadline(\PDO $pdo): array
     {
-        $stmt = $pdo->query("SELECT fecha, carburante, media, estaciones FROM national_price_history WHERE carburante IN ('gasoleo_a', 'gasolina_95_e5') ORDER BY fecha DESC LIMIT 6");
+        $headlineFuels = self::profile()['headline'];
+        $stmt = $pdo->prepare('SELECT fecha, carburante, media, estaciones FROM national_price_history WHERE carburante IN (?, ?) ORDER BY fecha DESC LIMIT 6');
+        $stmt->execute($headlineFuels);
         $series = [];
         foreach ($stmt->fetchAll() as $row) {
             $series[$row['carburante']][] = $row;
         }
         $headline = [];
-        foreach (self::HEADLINE_FUELS as $fuel) {
+        foreach (self::profile()['headline'] as $fuel) {
             if (empty($series[$fuel])) {
                 continue;
             }
@@ -160,7 +267,7 @@ class Seo
 
     public static function fuelPlaceholders(): string
     {
-        return implode(',', array_fill(0, count(self::FUELS), '?'));
+        return implode(',', array_fill(0, count(self::profile()['fuels']), '?'));
     }
 
     public static function averages(\PDO $pdo, string $whereSql, array $params): array
@@ -170,7 +277,7 @@ class Seo
             WHERE ' . $whereSql . ' AND ' . self::freshClause() . ' AND p.carburante IN (' . self::fuelPlaceholders() . ')
             GROUP BY p.carburante';
         $stmt = $pdo->prepare($sql);
-        $stmt->execute(array_merge($params, array_keys(self::FUELS)));
+        $stmt->execute(array_merge($params, self::profile()['fuels']));
         $out = [];
         foreach ($stmt->fetchAll() as $row) {
             $out[$row['carburante']] = $row;
@@ -196,14 +303,14 @@ class Seo
             '@context' => 'https://schema.org',
             '@type' => 'GasStation',
             'name' => self::display($station['rotulo']),
-            'url' => $base . '/stations/' . rawurlencode($station['ideess']),
+            'url' => $base . self::stationPath($station['ideess']),
             'address' => [
                 '@type' => 'PostalAddress',
                 'streetAddress' => self::display($station['direccion']),
                 'addressLocality' => self::display($station['municipio']),
                 'addressRegion' => $provinceName,
                 'postalCode' => $station['cp'],
-                'addressCountry' => 'ES',
+                'addressCountry' => self::profile()['iso'],
             ],
             'geo' => [
                 '@type' => 'GeoCoordinates',
@@ -216,7 +323,7 @@ class Seo
             $data['openingHours'] = 'Mo-Su 00:00-23:59';
         }
         $offers = [];
-        foreach (self::FUELS as $key => $label) {
+        foreach (self::fuels() as $key => $label) {
             if (!isset($prices[$key])) {
                 continue;
             }
