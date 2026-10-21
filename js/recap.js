@@ -261,26 +261,26 @@ const GPRecap = (() => {
         ctx.textBaseline = 'alphabetic';
 
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = "800 64px 'Bricolage Grotesque', 'Inter', sans-serif";
+        ctx.font = "800 64px 'Bricolage Grotesque', sans-serif";
         ctx.fillText('GASOLINERA', 72, 150);
         const wordWidth = ctx.measureText('GASOLINERA').width;
         ctx.fillStyle = ORANGE;
         ctx.fillText('+', 72 + wordWidth + 8, 150);
 
         ctx.fillStyle = '#BDB8AE';
-        ctx.font = "600 40px 'Inter', sans-serif";
+        ctx.font = "600 40px 'Bricolage Grotesque', sans-serif";
         ctx.fillText('Tu resumen · ' + stats.label, 72, 230);
         ctx.fillStyle = '#FFFFFF';
         ctx.fillText(fitText(ctx, stats.vehicle, WIDTH - 144), 72, 286);
 
         ctx.fillStyle = '#BDB8AE';
-        ctx.font = "600 44px 'Inter', sans-serif";
+        ctx.font = "600 44px 'Bricolage Grotesque', sans-serif";
         ctx.fillText('Has gastado', 72, 480);
         ctx.fillStyle = ORANGE;
-        ctx.font = "800 170px 'Bricolage Grotesque', 'Inter', sans-serif";
+        ctx.font = "800 170px 'Bricolage Grotesque', sans-serif";
         ctx.fillText(fitText(ctx, fmt(stats.total, 2) + ' €', WIDTH - 144), 72, 650);
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = "600 44px 'Inter', sans-serif";
+        ctx.font = "600 44px 'Bricolage Grotesque', sans-serif";
         let noun = 'repostajes';
         if (stats.count === 1) {
             noun = 'repostaje';
@@ -295,10 +295,10 @@ const GPRecap = (() => {
             ctx.fillStyle = '#2A2A2A';
             ctx.fillRect(72, y, WIDTH - 144, 3);
             ctx.fillStyle = '#BDB8AE';
-            ctx.font = `600 ${labelSize}px 'Inter', sans-serif`;
+            ctx.font = `600 ${labelSize}px 'Bricolage Grotesque', sans-serif`;
             ctx.fillText(label, 72, y + 48);
             ctx.fillStyle = '#FFFFFF';
-            ctx.font = `800 ${valueSize}px 'Bricolage Grotesque', 'Inter', sans-serif`;
+            ctx.font = `800 ${valueSize}px 'Bricolage Grotesque', sans-serif`;
             ctx.fillText(fitText(ctx, value, WIDTH - 144), 72, y + 106);
             y += step;
         }
@@ -306,7 +306,7 @@ const GPRecap = (() => {
         ctx.fillStyle = ORANGE;
         ctx.fillRect(0, height - 24, WIDTH, 24);
         ctx.fillStyle = '#BDB8AE';
-        ctx.font = "600 34px 'Inter', sans-serif";
+        ctx.font = "600 34px 'Bricolage Grotesque', sans-serif";
         ctx.fillText('Hecho con Gasolinera+', 72, height - 78);
         return canvas;
     }

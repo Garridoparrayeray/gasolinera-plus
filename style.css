@@ -22,8 +22,8 @@
     --status-down: #1B6B3A;
     --status-muted: #8A8A8A;
     --lockup-subtitle: #D9D6D0;
-    --font-display: 'Bricolage Grotesque', 'Inter', sans-serif;
-    --font-body: 'Inter', sans-serif;
+    --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+    --font-body: 'Bricolage Grotesque', system-ui, sans-serif;
     --page-pad: 20px;
     --content-max: 640px;
 }

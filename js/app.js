@@ -6,7 +6,7 @@
             return;
         }
         const styles = getComputedStyle(document.documentElement);
-        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.font.family = "'Bricolage Grotesque', system-ui, sans-serif";
         Chart.defaults.font.size = 12;
         Chart.defaults.color = styles.getPropertyValue('--text').trim();
         Chart.defaults.borderColor = styles.getPropertyValue('--border').trim();

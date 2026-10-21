@@ -1,11 +1,12 @@
 importScripts('/js/alerts-store.js');
 
-const CACHE_VERSION = 'v16';
+const CACHE_VERSION = 'v17';
 const CACHE_NAME = 'gasolinera-shell-' + CACHE_VERSION;
 const API_CACHE_NAME = 'gasolinera-api-' + CACHE_VERSION;
 const SHELL_FILES = [
     '/',
     '/style.css',
+    '/js/country.js',
     '/js/native.js',
     '/js/splash.js',
     '/js/map-guard.js',
@@ -31,8 +32,6 @@ const SHELL_FILES = [
     '/js/permissions.js',
     '/js/feedback.js',
     '/vendor/fonts/fonts.css',
-    '/vendor/fonts/inter-latin-standard-normal.woff2',
-    '/vendor/fonts/inter-latin-ext-standard-normal.woff2',
     '/vendor/fonts/bricolage-grotesque-latin-standard-normal.woff2',
     '/vendor/fonts/bricolage-grotesque-latin-ext-standard-normal.woff2',
     '/vendor/leaflet/leaflet.css',

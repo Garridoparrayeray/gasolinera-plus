@@ -72,7 +72,7 @@ s.where = 'arranque';
 
 check('corre como app nativa Android', await waitFor("typeof GPNative !== 'undefined' && GPNative.isNative() && GPNative.platform() === 'android'", 10000));
 check('Leaflet y Chart.js cargados sin CDN', (await ev("typeof L !== 'undefined' && typeof Chart !== 'undefined'")) === true);
-check('fuentes propias cargadas', await waitFor("document.fonts.check('16px Inter') && document.fonts.check('16px \"Bricolage Grotesque\"')", 5000));
+check('fuentes propias cargadas', await waitFor("document.fonts.check('16px \"Bricolage Grotesque\"')", 5000));
 check('User-Agent propio para los tiles de OSM', (await ev('navigator.userAgent')).includes('GasolineraPlus/'));
 check('sin seccion de descarga dentro de la app', (await ev("document.getElementById('get-app') === null")) === true);
 

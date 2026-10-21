@@ -190,7 +190,6 @@ function headlineDelta(array $headline, string $fuel): string
         })();
     </script>
 <?php endif; ?>
-    <link rel="preload" href="/vendor/fonts/inter-latin-standard-normal.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/vendor/fonts/bricolage-grotesque-latin-standard-normal.woff2" as="font" type="font/woff2" crossorigin>
 <?= $structuredData ?>
     <link rel="manifest" href="/manifest.json">
