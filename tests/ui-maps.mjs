@@ -53,7 +53,7 @@ await ev("localStorage.clear(); indexedDB.deleteDatabase('gasolinera-garage')");
 await go('/', 2500);
 await ev("document.getElementById('view-garage-btn').click()");
 check('la tarjeta de mapas esta visible en la app', (await ev("!document.getElementById('offline-maps-card').hidden")) === true);
-check('la lista de mapas se carga aunque la carpeta no exista', await waitFor("document.querySelectorAll('#offline-maps-list li').length === 2", 6000), await ev("document.getElementById('offline-maps-note').textContent"));
+check('la lista de mapas se carga aunque la carpeta no exista', await waitFor("document.querySelectorAll('#offline-maps-list li:not(.offline-maps-country)').length === 2", 6000), await ev("document.getElementById('offline-maps-note').textContent"));
 check('no sale el aviso de error', (await ev("document.getElementById('offline-maps-note').hidden")) === true);
 check('crea la carpeta de mapas antes de descargar', (await ev("window.__fs.mkdirs.includes('maps')")) === true, await ev('JSON.stringify(window.__fs.mkdirs)'));
 
