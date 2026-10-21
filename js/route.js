@@ -61,7 +61,7 @@ const GPRoute = (() => {
     };
 
     function number(value, digits) {
-        return value.toLocaleString('es-ES', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+        return value.toLocaleString(GPCountry.uiLocale, { minimumFractionDigits: digits, maximumFractionDigits: digits });
     }
 
     function durationText(seconds) {

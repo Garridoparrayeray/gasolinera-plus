@@ -92,7 +92,7 @@ const GPTrips = (() => {
     }
 
     function number(value, digits) {
-        return value.toLocaleString('es-ES', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+        return value.toLocaleString(GPCountry.uiLocale, { minimumFractionDigits: digits, maximumFractionDigits: digits });
     }
 
     function clock(seconds) {
@@ -816,7 +816,7 @@ const GPTrips = (() => {
         button.className = 'garage-refuel-item';
         button.innerHTML = '<strong></strong><small></small>';
         const date = new Date(trip.startedAt);
-        let title = `${date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} · ${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} · ${number(m.distanceKm, 1)} km`;
+        let title = `${date.toLocaleDateString(GPCountry.uiLocale, { day: 'numeric', month: 'short' })} · ${date.toLocaleTimeString(GPCountry.uiLocale, { hour: '2-digit', minute: '2-digit' })} · ${number(m.distanceKm, 1)} km`;
         if (trip.auto) {
             title += ' · automático';
         }
@@ -868,7 +868,7 @@ const GPTrips = (() => {
             el.list.appendChild(tripItem(trip, names));
         }
         el.historyOpen.hidden = total <= RECENT_LIMIT;
-        el.historyOpen.textContent = `Ver todo el historial (${total.toLocaleString('es-ES')} viajes)`;
+        el.historyOpen.textContent = `Ver todo el historial (${total.toLocaleString(GPCountry.uiLocale)} viajes)`;
         document.dispatchEvent(new CustomEvent('gp:history-refresh'));
     }
 
@@ -957,8 +957,8 @@ const GPTrips = (() => {
         state.openTrip = trip;
         const m = trip.metrics;
         const date = new Date(trip.startedAt);
-        el.dialogTitle.textContent = `Viaje del ${date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}`;
-        el.dialogSubtitle.textContent = `${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} – ${new Date(trip.endedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+        el.dialogTitle.textContent = `Viaje del ${date.toLocaleDateString(GPCountry.uiLocale, { weekday: 'long', day: 'numeric', month: 'long' })}`;
+        el.dialogSubtitle.textContent = `${date.toLocaleTimeString(GPCountry.uiLocale, { hour: '2-digit', minute: '2-digit' })} – ${new Date(trip.endedAt).toLocaleTimeString(GPCountry.uiLocale, { hour: '2-digit', minute: '2-digit' })}`;
         const tiles = [
             tile('Distancia', `${number(m.distanceKm, 1)} km`),
             tile('Duración', minutesText(m.durationSeconds)),

@@ -59,7 +59,7 @@ const GPHistory = (() => {
         if (count === 1) {
             word = one;
         }
-        return `${count.toLocaleString('es-ES')} ${word}`;
+        return `${count.toLocaleString(GPCountry.uiLocale)} ${word}`;
     }
 
     function periodText() {
@@ -95,7 +95,7 @@ const GPHistory = (() => {
             state.total = state.refuels.list.length;
             const spent = state.refuels.list.reduce((sum, refuel) => sum + refuel.total, 0);
             el.summary.textContent = plural(state.total, 'repostaje', 'repostajes') + periodText()
-                + ` · ${spent.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €.`;
+                + ` · ${spent.toLocaleString(GPCountry.uiLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €.`;
         }
         const page = state.refuels.list.slice(state.offset, state.offset + PAGE_SIZE);
         for (const refuel of page) {
@@ -121,7 +121,7 @@ const GPHistory = (() => {
                 loadRefuelsPage(reset);
             }
             el.more.hidden = state.offset >= state.total;
-            el.more.textContent = `Cargar más (${(state.total - state.offset).toLocaleString('es-ES')} restantes)`;
+            el.more.textContent = `Cargar más (${(state.total - state.offset).toLocaleString(GPCountry.uiLocale)} restantes)`;
         } catch (error) {
             el.summary.textContent = 'No se pudo leer el historial: ' + error.message;
         } finally {

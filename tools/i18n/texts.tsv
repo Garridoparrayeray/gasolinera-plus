@@ -1,0 +1,597 @@
++ Añadir coche	+ Adicionar carro	+ Ajouter une voiture
+. Activa tu ubicación para ver las de tu zona.	. Ative a sua localização para ver os da sua zona.	. Activez votre position pour voir celles de votre secteur.
+. Depósito lleno: 100 %.	. Depósito cheio: 100 %.	. Réservoir plein : 100 %.
+. Gasolinera+ solo la usa mientras vas en coche y los recorridos se quedan en tu móvil. ¿Continuar?	. O Gasolinera+ só a usa enquanto vai de carro e os percursos ficam no seu telemóvel. Continuar?	. Gasolinera+ ne l'utilise que pendant que vous êtes en voiture et les trajets restent sur votre téléphone. Continuer ?
+. Se abre como una app. Los viajes automáticos, los avisos con la app cerrada y los mapas sin conexión son de la app de Android.	. Abre como uma app. As viagens automáticas, os alertas com a app fechada e os mapas offline são da app para Android.	. Elle s'ouvre comme une appli. Les trajets automatiques, les alertes appli fermée et les cartes hors ligne sont dans l'appli Android.
+. Se abrirá como una app, a pantalla completa.	. Abrirá como uma app, em ecrã completo.	. Elle s'ouvrira comme une appli, en plein écran.
+. Usa Wi-Fi si puedes. ¿Continuar?	. Use Wi-Fi se puder. Continuar?	. Utilisez le Wi-Fi si possible. Continuer ?
+) solo guarda lo que tú creas: favoritas, comparador, carburante elegido, avisos, garaje y viajes. Es técnicamente necesario (Art. 22.2 LSSI). Si borras los datos sin haber exportado una copia, se pierden.	) só guarda o que cria: favoritos, comparador, combustível escolhido, alertas, garagem e viagens. É tecnicamente necessário. Se apagar os dados sem ter exportado uma cópia, perdem-se.	) ne conserve que ce que vous créez : favoris, comparateur, carburant choisi, alertes, garage et trajets. Il est techniquement nécessaire. Si vous effacez les données sans avoir exporté de sauvegarde, elles sont perdues.
+). La app no lleva analíticas. El servicio se aloja en Vercel, que procesa direcciones IP temporalmente por motivos técnicos y de seguridad.	). A app não tem análises. O serviço está alojado na Vercel, que processa endereços IP temporariamente por motivos técnicos e de segurança.	). L'appli n'a pas de statistiques d'audience. Le service est hébergé chez Vercel, qui traite temporairement les adresses IP pour des raisons techniques et de sécurité.
+). Se abrirá en su propia ventana, con acceso directo en el menú Inicio.	). Abrirá na sua própria janela, com atalho no menu Iniciar.	). Elle s'ouvrira dans sa propre fenêtre, avec un raccourci dans le menu Démarrer.
+(coche)	(carro)	(voiture)
+(derecho a la intimidad), el	(direito à privacidade), o	(droit à la vie privée), le
+(en Edge:	(no Edge:	(dans Edge :
+/100 km	/100 km	/100 km
+1 año	1 ano	1 an
+1 céntimo	1 cêntimo	1 centime
+1. Buscar gasolinera	1. Procurar posto	1. Chercher la station
+10 céntimos	10 cêntimos	10 centimes
+2 céntimos	2 cêntimos	2 centimes
+2. Fecha y hora	2. Data e hora	2. Date et heure
+3 céntimos	3 cêntimos	3 centimes
+3 meses	3 meses	3 mois
+3. Total pagado	3. Total pago	3. Total payé
+30 días	30 dias	30 jours
+4. Litros	4. Litros	4. Litres
+5 céntimos	5 cêntimos	5 centimes
+5. Kilómetros	5. Quilómetros	5. Kilomètres
+6. Comprueba que todo es correcto	6. Confirme que está tudo correto	6. Vérifiez que tout est correct
+Abierto 24 horas	Aberto 24 horas	Ouvert 24 h/24
+Abierto 24h	Aberto 24h	Ouvert 24h/24
+Abierto ahora	Aberto agora	Ouvert maintenant
+Abrir ajustes	Abrir definições	Ouvrir les réglages
+Abrir ajustes de batería	Abrir definições de bateria	Ouvrir les réglages de batterie
+Abrir en Google Maps	Abrir no Google Maps	Ouvrir dans Google Maps
+Activa tu ubicación, o escribe un municipio y pulsa buscar, para ver gasolineras.	Ative a sua localização, ou escreva uma localidade e carregue em procurar, para ver postos.	Activez votre position, ou tapez une commune et appuyez sur chercher, pour voir les stations.
+Activada	Ativada	Activée
+Activados	Ativados	Activées
+Activados, pero en este navegador puede que las notificaciones no funcionen con la web cerrada: comprobaremos las bajadas de precio cada vez que abras Gasolinera+. Para recibir avisos en segundo plano, instala la app.	Ativados, mas neste navegador as notificações podem não funcionar com a página fechada: verificaremos as descidas de preço sempre que abrir o Gasolinera+. Para receber alertas em segundo plano, instale a app.	Activées, mais dans ce navigateur les notifications peuvent ne pas fonctionner site fermé : nous vérifierons les baisses de prix à chaque ouverture de Gasolinera+. Pour recevoir des alertes en arrière-plan, installez l'appli.
+Activar	Ativar	Activer
+Activar ubicación	Ativar localização	Activer la position
+Actualizar	Atualizar	Mettre à jour
+Actualizar km	Atualizar km	Mettre à jour les km
+Ahorras	Poupa	Vous économisez
+Ajustes: desvío y orden	Definições: desvio e ordem	Réglages : détour et tri
+Al activarlos se te pedirá permiso para enviar notificaciones.	Ao ativá-los, será pedida autorização para enviar notificações.	En les activant, l'autorisation d'envoyer des notifications vous sera demandée.
+Analíticas:	Análises:	Statistiques d'audience :
+Anotar repostaje	Registar abastecimento	Noter un plein
+Apertura	Abertura	Ouverture
+Aplicaciones	Aplicações	Applications
+Aquí ves qué permisos usa la app y puedes activarlos o desactivarlos. Los permisos del sistema solo se retiran desde los ajustes del móvil: te llevamos con el botón «Abrir ajustes».	Aqui vê que permissões a app usa e pode ativá-las ou desativá-las. As permissões do sistema só se retiram nas definições do telemóvel: levamo-lo lá com o botão «Abrir definições».	Ici, vous voyez les autorisations utilisées par l'appli et pouvez les activer ou les désactiver. Les autorisations système ne se retirent que dans les réglages du téléphone : le bouton « Ouvrir les réglages » vous y emmène.
+Artículo 18 de la Constitución Española	artigo 18.º da Constituição Espanhola	article 18 de la Constitution espagnole
+Atrás	Voltar	Retour
+Avisar si cambia al menos	Avisar se mudar pelo menos	Prévenir si le prix change d'au moins
+Avisarme cuando bajen de precio	Avisar-me quando o preço descer	M'avertir quand le prix baisse
+Avisarme también cuando suban	Avisar-me também quando subir	M'avertir aussi quand il monte
+Aviso Legal, Privacidad y Cookies	Aviso legal, privacidade e cookies	Mentions légales, confidentialité et cookies
+Aviso legal y privacidad	Aviso legal e privacidade	Mentions légales et confidentialité
+Avisos de bajada de precio	Alertas de descida de preço	Alertes de baisse de prix
+Añade gasolineras desde su ficha o desde la lista para compararlas aquí, una junto a otra.	Adicione postos a partir da sua ficha ou da lista para os comparar aqui, lado a lado.	Ajoutez des stations depuis leur fiche ou la liste pour les comparer ici, côte à côte.
+Añade gasolineras desde su ficha para tenerlas siempre a mano aquí.	Adicione postos a partir da sua ficha para os ter sempre à mão aqui.	Ajoutez des stations depuis leur fiche pour les avoir toujours sous la main ici.
+Añade tu coche en "Coche" y te diré hasta dónde llegas y dónde te conviene parar.	Adicione o seu carro em "Carro" e digo-lhe até onde chega e onde lhe convém parar.	Ajoutez votre voiture dans « Voiture » et je vous dirai jusqu'où vous allez et où vous arrêter.
+Añadir	Adicionar	Ajouter
+Añadir a comparar	Adicionar à comparação	Ajouter au comparateur
+Añadir a favoritas	Adicionar aos favoritos	Ajouter aux favoris
+Añadir a pantalla de inicio	Adicionar ao ecrã principal	Sur l'écran d'accueil
+Añadir coche	Adicionar carro	Ajouter une voiture
+Añadir un dispositivo	Adicionar um dispositivo	Ajouter un appareil
+Aún no hay suficiente histórico para calcular una variación.	Ainda não há histórico suficiente para calcular uma variação.	Pas encore assez d'historique pour calculer une variation.
+Barata	Barato	Pas chère
+Batería	Bateria	Batterie
+Bloqueada	Bloqueada	Bloquée
+Borrar	Apagar	Supprimer
+Borrar coche	Apagar carro	Supprimer la voiture
+Borrar viaje	Apagar viagem	Supprimer le trajet
+Busca por nombre, calle o municipio	Procure por nome, rua ou concelho	Cherchez par nom, rue ou commune
+Buscando tu ubicación…	A procurar a sua localização…	Recherche de votre position…
+Buscando…	A procurar…	Recherche…
+Buscar	Procurar	Chercher
+Buscar gasolinera	Procurar posto	Chercher une station
+Buscar gasolinera para sus estadísticas	Procurar posto para ver as estatísticas	Chercher une station pour ses statistiques
+Buscar gasolineras	Procurar postos	Chercher des stations
+Buscar sin ubicación	Procurar sem localização	Chercher sans position
+Buscar una gasolinera…	Procurar um posto…	Chercher une station…
+Calculando la ruta en tu dispositivo…	A calcular a rota no seu dispositivo…	Calcul de l'itinéraire sur votre appareil…
+Calcular ruta	Calcular rota	Calculer l'itinéraire
+Cancelar	Cancelar	Annuler
+Capacidad del depósito (L)	Capacidade do depósito (L)	Capacité du réservoir (L)
+Cara	Caro	Chère
+Carburante	Combustível	Carburant
+Carburante para las estadísticas	Combustível para as estatísticas	Carburant pour les statistiques
+Cargando…	A carregar…	Chargement…
+Cargar más	Carregar mais	Charger plus
+Cerca de mí	Perto de mim	Près de moi
+Cerca de ti	Perto de si	Près de vous
+Cerrar	Fechar	Fermer
+Cerrar aviso	Fechar aviso	Fermer l'avis
+Coche	Carro	Voiture
+Coche borrado	Carro apagado	Voiture supprimée
+Coche nuevo desde cero	Carro novo de raiz	Nouvelle voiture
+Combustible en el depósito ahora	Combustível no depósito agora	Carburant dans le réservoir
+Compara lo que pagas con la media de España y de tu zona por repostaje, por semana o por mes. La tarjeta «Tu resumen» genera una imagen o un PDF con tu gasto, consumo y dónde repostas más.	Compare o que paga com a média de {pais} e da sua zona por abastecimento, por semana ou por mês. O cartão «O seu resumo» gera uma imagem ou um PDF com o seu gasto, consumo e onde abastece mais.	Comparez ce que vous payez avec la moyenne nationale et celle de votre secteur, par plein, par semaine ou par mois. La carte « Votre bilan » crée une image ou un PDF de vos dépenses, de votre consommation et de vos stations habituelles.
+Comparar	Comparar	Comparer
+Comparar con la media y tu resumen	Comparar com a média e o seu resumo	Comparer à la moyenne et votre bilan
+Comparar gasolineras	Comparar postos	Comparer des stations
+Comparar precios antes de repostar te ayudará a bajarlo.	Comparar preços antes de abastecer ajuda a baixá-lo.	Comparer les prix avant de faire le plein vous aidera à le réduire.
+Comparativa entre carburantes	Comparação entre combustíveis	Comparatif des carburants
+Compartir	Partilhar	Partager
+Compartir gasolinera	Partilhar posto	Partager la station
+Compartir imagen	Partilhar imagem	Partager l'image
+Compartir tu resumen	Partilhar o seu resumo	Partager votre bilan
+Con tan pocos litros no cuenta como depósito lleno: lo he marcado como parcial.	Com tão poucos litros não conta como depósito cheio: marquei-o como parcial.	Avec si peu de litres, ce n'est pas un plein complet : je l'ai noté comme partiel.
+Conexión recuperada	Ligação recuperada	Connexion rétablie
+Consumo homologado (L/100 km)	Consumo homologado (L/100 km)	Consommation homologuée (L/100 km)
+Consumo medio	Consumo médio	Consommation moyenne
+Consumo real	Consumo real	Consommation réelle
+Contacto.	Contacto.	Contact.
+Cookies y almacenamiento local:	Cookies e armazenamento local:	Cookies et stockage local :
+Copia creada. Guárdala en un sitio seguro (Drive, correo…).	Cópia criada. Guarde-a num sítio seguro (Drive, e-mail…).	Sauvegarde créée. Rangez-la en lieu sûr (Drive, e-mail…).
+Copia de Gasolinera+	Cópia do Gasolinera+	Sauvegarde Gasolinera+
+Copia de seguridad	Cópia de segurança	Sauvegarde
+Copia importada	Cópia importada	Sauvegarde importée
+Copiar mensaje	Copiar mensagem	Copier le message
+Corregir	Corrigir	Corriger
+Coste estimado	Custo estimado	Coût estimé
+Coste por km	Custo por km	Coût au km
+Cualquier horario	Qualquer horário	Tous horaires
+Cuando	Quando	Quand
+Cuentakilómetros	Conta-quilómetros	Compteur kilométrique
+Cuéntanos qué ha pasado o qué te gustaría, y en qué pantalla.	Conte-nos o que aconteceu ou o que gostaria, e em que ecrã.	Dites-nous ce qui s'est passé ou ce que vous aimeriez, et sur quel écran.
+Cuéntanos un poco más para poder ayudarte.	Conte-nos um pouco mais para o podermos ajudar.	Dites-nous en un peu plus pour qu'on puisse vous aider.
+Cómo llegar	Como chegar	Itinéraire
+Dar permisos	Dar permissões	Autoriser
+Deja la pantalla encendida: si la bloqueas se pausa la grabación.	Deixe o ecrã ligado: se o bloquear, a gravação fica em pausa.	Laissez l'écran allumé : si vous le verrouillez, l'enregistrement se met en pause.
+Depósito ahora:	Depósito agora:	Réservoir maintenant :
+Desactivada	Desativada	Désactivée
+Desactivados	Desativados	Désactivées
+Desactivar	Desativar	Désactiver
+Descargar	Descarregar	Télécharger
+Descargar la guía en PDF	Descarregar o guia em PDF	Télécharger le guide en PDF
+Descargar para Android	Descarregar para Android	Télécharger pour Android
+Desde	Desde	Depuis
+Después no hay gasolineras a tu alcance con ese carburante: amplía el desvío.	Depois não há postos ao seu alcance com esse combustível: aumente o desvio.	Ensuite, aucune station à votre portée avec ce carburant : augmentez le détour.
+Destino	Destino	Destination
+Destino elegido en el mapa	Destino escolhido no mapa	Destination choisie sur la carte
+Desvío máximo	Desvio máximo	Détour maximum
+Detección automática activada	Deteção automática ativada	Détection automatique activée
+Detección automática de viajes	Deteção automática de viagens	Détection automatique des trajets
+Detectar mis viajes en coche automáticamente	Detetar as minhas viagens de carro automaticamente	Détecter automatiquement mes trajets en voiture
+Diario	Diário	Quotidien
+Distancia	Distância	Distance
+Distribución de precios hoy	Distribuição de preços hoje	Répartition des prix aujourd'hui
+Donde más has repostado	Onde mais abasteceu	Où vous faites le plus souvent le plein
+Dónde	Onde	Où
+Dónde repostar	Onde abastecer	Où faire le plein
+EN CURSO	EM CURSO	EN COURS
+EN PAUSA	EM PAUSA	EN PAUSE
+Editar	Editar	Modifier
+Editar coche	Editar carro	Modifier la voiture
+El	O	Le
+El Bluetooth del móvil está apagado. Enciéndelo, conéctate al coche y vuelve a abrir esta opción.	O Bluetooth do telemóvel está desligado. Ligue-o, ligue-se ao carro e volte a abrir esta opção.	Le Bluetooth du téléphone est coupé. Activez-le, connectez-vous à la voiture et rouvrez cette option.
+El GPS no responde. Comprueba que la ubicación está activada.	O GPS não responde. Confirme que a localização está ativada.	Le GPS ne répond pas. Vérifiez que la localisation est activée.
+El fichero no es un JSON válido	O ficheiro não é um JSON válido	Le fichier n'est pas un JSON valide
+El fichero no es una copia de Gasolinera+	O ficheiro não é uma cópia do Gasolinera+	Le fichier n'est pas une sauvegarde Gasolinera+
+El precio más bajo de cada carburante va resaltado.	O preço mais baixo de cada combustível está destacado.	Le prix le plus bas de chaque carburant est mis en évidence.
+El sistema no deja usar tu ubicación. Puedes buscar por pueblo, calle o marca sin ella.	O sistema não deixa usar a sua localização. Pode procurar por localidade, rua ou marca sem ela.	Le système n'autorise pas votre position. Vous pouvez chercher par commune, rue ou marque sans elle.
+Elige la gasolinera al anotar el repostaje para compararte también con tu zona.	Escolha o posto ao registar o abastecimento para se comparar também com a sua zona.	Choisissez la station en notant le plein pour vous comparer aussi à votre secteur.
+Elige primero un dispositivo de la lista.	Escolha primeiro um dispositivo da lista.	Choisissez d'abord un appareil dans la liste.
+Elige tu coche y pulsa Añadir. Para que arranque con la app cerrada, desactiva también el ahorro de batería para Gasolinera+ en los ajustes del móvil.	Escolha o seu carro e carregue em Adicionar. Para arrancar com a app fechada, desative também a poupança de bateria para o Gasolinera+ nas definições do telemóvel.	Choisissez votre voiture et appuyez sur Ajouter. Pour démarrer appli fermée, désactivez aussi l'économie de batterie pour Gasolinera+ dans les réglages du téléphone.
+Elige un dispositivo	Escolha um dispositivo	Choisissez un appareil
+Empareja antes el móvil con el coche en los ajustes de Bluetooth. Necesita la ubicación "Permitir todo el tiempo" y quitar el ahorro de batería para Gasolinera+. Puedes añadir más de un coche y quitarlos cuando quieras. Un minuto después de desconectarte, si ya no te mueves, el viaje termina solo. Si lo habías pausado, se reanuda al volver a conectarte.	Emparelhe antes o telemóvel com o carro nas definições de Bluetooth. Precisa da localização "Permitir sempre" e de tirar a poupança de bateria ao Gasolinera+. Pode adicionar mais de um carro e retirá-los quando quiser. Um minuto depois de se desligar, se já não se mexer, a viagem termina sozinha. Se a tinha posto em pausa, retoma ao voltar a ligar-se.	Associez d'abord le téléphone à la voiture dans les réglages Bluetooth. Il faut la position « Toujours autoriser » et retirer l'économie de batterie pour Gasolinera+. Vous pouvez ajouter plusieurs voitures et les retirer quand vous voulez. Une minute après la déconnexion, si vous ne bougez plus, le trajet se termine seul. S'il était en pause, il reprend à la reconnexion.
+Empezar al conectarme al Bluetooth de mi coche	Começar ao ligar-me ao Bluetooth do meu carro	Démarrer à la connexion au Bluetooth de ma voiture
+Empezar viaje	Começar viagem	Démarrer un trajet
+Empieza con un coche nuevo o recupera tus datos importando una copia de seguridad. Así conocerás tu consumo real, cuánto gastas al mes y hasta dónde llegas con lo que queda en el depósito. Todo se guarda solo en este dispositivo.	Comece com um carro novo ou recupere os seus dados importando uma cópia de segurança. Assim conhecerá o seu consumo real, quanto gasta por mês e até onde chega com o que resta no depósito. Tudo fica guardado só neste dispositivo.	Commencez avec une nouvelle voiture ou récupérez vos données en important une sauvegarde. Vous connaîtrez votre consommation réelle, vos dépenses mensuelles et jusqu'où vous irez avec ce qui reste dans le réservoir. Tout reste uniquement sur cet appareil.
+En Chrome o Edge, abre el menú del navegador y elige	No Chrome ou Edge, abra o menu do navegador e escolha	Dans Chrome ou Edge, ouvrez le menu du navigateur et choisissez
+En Coche añade tu coche y anota cada repostaje con el asistente de seis pasos: gasolinera, fecha y precio, total, litros, kilómetros y comprobación. Puedes cancelar en cualquier paso. La app calcula tu consumo real, tu coste por kilómetro y lo que te queda en el depósito.	Em Carro adicione o seu carro e registe cada abastecimento com o assistente de seis passos: posto, data e preço, total, litros, quilómetros e confirmação. Pode cancelar em qualquer passo. A app calcula o seu consumo real, o custo por quilómetro e o que lhe resta no depósito.	Dans Voiture, ajoutez votre voiture et notez chaque plein avec l'assistant en six étapes : station, date et prix, total, litres, kilomètres et vérification. Vous pouvez annuler à tout moment. L'appli calcule votre consommation réelle, votre coût au kilomètre et ce qui reste dans le réservoir.
+En Listado elige carburante, radio, orden y horario y pulsa «Buscar gasolineras». Puedes buscar por pueblo, calle, código postal o marca, incluso juntando palabras («repsol amorebieta»). Con tu ubicación activada, las marcas y calles solo salen dentro del radio elegido.	Em Lista escolha combustível, raio, ordem e horário e carregue em «Procurar postos». Pode procurar por localidade, rua, código postal ou marca, até juntando palavras («galp sintra»). Com a localização ativada, as marcas e ruas só aparecem dentro do raio escolhido.	Dans Liste, choisissez carburant, rayon, tri et horaires puis appuyez sur « Chercher des stations ». Vous pouvez chercher par commune, rue, code postal ou marque, même en combinant des mots (« total lyon »). Avec la position activée, marques et rues n'apparaissent que dans le rayon choisi.
+En Ruta indica origen y destino, elige cuánto puedes desviarte y pulsa «Calcular ruta». Verás las gasolineras del camino, la más barata resaltada, y podrás recalcular pasando por una. Con tu coche añadido, la app te dice dónde parar según tu depósito.	Em Rota indique origem e destino, escolha quanto se pode desviar e carregue em «Calcular rota». Verá os postos do caminho, o mais barato destacado, e poderá recalcular passando por um. Com o seu carro adicionado, a app diz-lhe onde parar conforme o seu depósito.	Dans Itinéraire, indiquez départ et arrivée, choisissez le détour accepté et appuyez sur « Calculer l'itinéraire ». Vous verrez les stations sur le trajet, la moins chère mise en évidence, et pourrez recalculer en passant par l'une d'elles. Avec votre voiture ajoutée, l'appli vous dit où vous arrêter selon votre réservoir.
+En Safari, pulsa	No Safari, toque em	Dans Safari, touchez
+En el navegador, pulsa el candado junto a la dirección web y cambia el permiso desde ahí.	No navegador, carregue no cadeado junto ao endereço e mude a permissão aí.	Dans le navigateur, touchez le cadenas à côté de l'adresse et modifiez l'autorisation.
+En estricto cumplimiento del	Em estrito cumprimento do	En stricte conformité avec le
+Enviar por correo	Enviar por e-mail	Envoyer par e-mail
+Error	Erro	Erreur
+Error o algo que no funciona	Erro ou algo que não funciona	Bug ou quelque chose qui ne marche pas
+Es una cifra muy alta para un cuentakilómetros.	É um valor muito alto para um conta-quilómetros.	C'est un chiffre très élevé pour un compteur.
+España	Espanha	Espagne
+Esta versión de la app no admite el Bluetooth del coche. Actualiza la app.	Esta versão da app não suporta o Bluetooth do carro. Atualize a app.	Cette version de l'appli ne gère pas le Bluetooth de la voiture. Mettez l'appli à jour.
+Esta versión de la app no puede mostrar notificaciones.	Esta versão da app não pode mostrar notificações.	Cette version de l'appli ne peut pas afficher de notifications.
+Estad.	Estat.	Stats
+Estadísticas	Estatísticas	Statistiques
+Estas funciones necesitan llevar el móvil encima, por eso no están en la web del ordenador:	Estas funções precisam que leve o telemóvel consigo, por isso não estão na versão web do computador:	Ces fonctions demandent d'avoir le téléphone sur soi, elles ne sont donc pas sur le site pour ordinateur :
+Este año	Este ano	Cette année
+Este dispositivo no permite leer el mapa descargado	Este dispositivo não permite ler o mapa descarregado	Cet appareil ne peut pas lire la carte téléchargée
+Este mes	Este mês	Ce mois-ci
+Este móvil no tiene Bluetooth.	Este telemóvel não tem Bluetooth.	Ce téléphone n'a pas de Bluetooth.
+Este navegador no admite notificaciones.	Este navegador não suporta notificações.	Ce navigateur ne gère pas les notifications.
+Este navegador no puede usar el GPS.	Este navegador não consegue usar o GPS.	Ce navigateur ne peut pas utiliser le GPS.
+Estás con Wi-Fi. ¿Quieres descargar ahora el mapa de tu zona para usarlo sin conexión? Ocupa desde decenas hasta varios cientos de MB.	Está ligado ao Wi-Fi. Quer descarregar agora o mapa da sua zona para usar offline? Ocupa de dezenas a várias centenas de MB.	Vous êtes en Wi-Fi. Voulez-vous télécharger la carte de votre secteur pour l'utiliser hors ligne ? Elle pèse de quelques dizaines à plusieurs centaines de Mo.
+Evitar peajes	Evitar portagens	Éviter les péages
+Exportar copia	Exportar cópia	Exporter une sauvegarde
+Falta el permiso «Dispositivos cercanos» para ver los Bluetooth. Actívalo en Ajustes del móvil → Aplicaciones → Gasolinera+ → Permisos y vuelve aquí.	Falta a permissão «Dispositivos próximos» para ver os Bluetooth. Ative-a em Definições → Aplicações → Gasolinera+ → Permissões e volte aqui.	Il manque l'autorisation « Appareils à proximité » pour voir les Bluetooth. Activez-la dans Réglages → Applications → Gasolinera+ → Autorisations et revenez ici.
+Favoritas	Favoritos	Favoris
+Fecha	Data	Date
+Fecha y hora	Data e hora	Date et heure
+Filtros	Filtros	Filtres
+Francia	França	France
+Frente a la media de España	Face à média de {pais}	Par rapport à la moyenne nationale
+Frente al mes pasado	Face ao mês passado	Par rapport au mois dernier
+Fuentes de datos y exención de responsabilidad:	Fontes de dados e isenção de responsabilidade:	Sources des données et limitation de responsabilité :
+GRABANDO	A GRAVAR	ENREGISTREMENT
+Garaje, viajes y rutas:	Garagem, viagens e rotas:	Garage, trajets et itinéraires :
+Gasolina 95 hoy	Gasolina 95 hoje	SP95 aujourd'hui
+Gasolina 95 hoy en España	Gasolina 95 hoje em {pais}	SP95 aujourd'hui · {pais}
+Gasolinera	Posto	Station
+Gasolinera no encontrada en los datos sin conexión	Posto não encontrado nos dados offline	Station introuvable dans les données hors ligne
+Gasolinera+ como app	Gasolinera+ como app	Gasolinera+ en appli
+Gasolinera+ en tu móvil	Gasolinera+ no seu telemóvel	Gasolinera+ sur votre téléphone
+Gasolinera+ es un proyecto independiente y sin ánimo de lucro. Los precios salen de los datos abiertos del Ministerio para la Transición Ecológica y los mapas son de OpenStreetMap.	O Gasolinera+ é um projeto independente e sem fins lucrativos. Os preços vêm dos dados abertos de {fuente} e os mapas são do OpenStreetMap.	Gasolinera+ est un projet indépendant et à but non lucratif. Les prix proviennent des données ouvertes de {fuente} et les cartes d'OpenStreetMap.
+Gasolinera+ · Precios de gasolina y diésel hoy en España	Gasolinera+ · Preços de gasolina e gasóleo hoje em {pais}	Gasolinera+ · Prix de l'essence et du gazole aujourd'hui · {pais}
+Gasolineras	Postos	Stations
+Gasolineras con precio	Postos com preço	Stations avec prix
+Gasolineras del camino	Postos do caminho	Stations sur le trajet
+Gasolineras en ruta	Postos na rota	Stations sur la route
+Gasolineras favoritas	Postos favoritos	Stations favorites
+Gasolineras por provincia	Postos por distrito	Stations par département
+Gasto (€)	Gasto (€)	Dépense (€)
+Gasto este mes	Gasto este mês	Dépense ce mois-ci
+Gasto medio por repostaje	Gasto médio por abastecimento	Dépense moyenne par plein
+Gasto por mes	Gasto por mês	Dépense par mois
+Gasóleo A hoy	Gasóleo hoje	Gazole aujourd'hui
+Gasóleo A hoy en España	Gasóleo hoje em {pais}	Gazole aujourd'hui · {pais}
+Generando…	A gerar…	Création…
+Graba viajes a mano o de forma automática. Sin conexión, la app usa los datos guardados. En «Permisos y privacidad» (arriba) activas o desactivas la ubicación y los avisos. Exporta una copia de seguridad de vez en cuando: tus datos solo están en tu dispositivo.	Grave viagens manualmente ou de forma automática. Offline, a app usa os dados guardados. Em «Permissões e privacidade» (acima) ativa ou desativa a localização e os alertas. Exporte uma cópia de segurança de vez em quando: os seus dados só estão no seu dispositivo.	Enregistrez vos trajets à la main ou automatiquement. Hors ligne, l'appli utilise les données enregistrées. Dans « Autorisations et confidentialité » (plus haut), vous activez ou désactivez la position et les alertes. Exportez une sauvegarde de temps en temps : vos données ne sont que sur votre appareil.
+Grabando. En el navegador mantén la app abierta y la pantalla encendida: si la bloqueas, el GPS se pausa.	A gravar. No navegador mantenha a app aberta e o ecrã ligado: se o bloquear, o GPS fica em pausa.	Enregistrement. Dans le navigateur, gardez l'appli ouverte et l'écran allumé : si vous le verrouillez, le GPS se met en pause.
+Grabando. Puedes bloquear el móvil: el viaje sigue grabándose.	A gravar. Pode bloquear o telemóvel: a viagem continua a ser gravada.	Enregistrement. Vous pouvez verrouiller le téléphone : le trajet continue d'être enregistré.
+Grabar viajes	Gravar viagens	Enregistrer des trajets
+Gracias a Gasolinera+ llevas ahorrados unos	Graças ao Gasolinera+ já poupou cerca de	Grâce à Gasolinera+, vous avez économisé environ
+Guarda en este dispositivo tu gasto, litros, consumo y dónde repostas más como imagen o PDF, o compártelo.	Guarde neste dispositivo o seu gasto, litros, consumo e onde abastece mais como imagem ou PDF, ou partilhe-o.	Enregistrez sur cet appareil vos dépenses, litres, consommation et stations habituelles en image ou en PDF, ou partagez-les.
+Guardando el viaje…	A guardar a viagem…	Enregistrement du trajet…
+Guardar	Guardar	Enregistrer
+Guardar PDF	Guardar PDF	Enregistrer le PDF
+Guardar imagen	Guardar imagem	Enregistrer l'image
+Guardar la copia	Guardar a cópia	Enregistrer la sauvegarde
+Guardar o compartir el resumen	Guardar ou partilhar o resumo	Enregistrer ou partager le bilan
+Guía de uso	Guia de utilização	Guide d'utilisation
+Guía de uso en PDF	Guia de utilização em PDF	Guide d'utilisation en PDF
+Has bloqueado las notificaciones de Gasolinera+. Actívalas en los ajustes del móvil.	Bloqueou as notificações do Gasolinera+. Ative-as nas definições do telemóvel.	Vous avez bloqué les notifications de Gasolinera+. Activez-les dans les réglages du téléphone.
+Has bloqueado las notificaciones. Actívalas en los ajustes del navegador para recibir avisos.	Bloqueou as notificações. Ative-as nas definições do navegador para receber alertas.	Vous avez bloqué les notifications. Activez-les dans les réglages du navigateur pour recevoir des alertes.
+Has gastado	Gastou	Vous avez dépensé
+Has quitado	Retirou	Vous avez retiré
+Hasta	Até	Jusqu'au
+Hay un parche nuevo de Gasolinera+ (	Há uma atualização nova do Gasolinera+ (	Une nouvelle version de Gasolinera+ est disponible (
+He llenado el depósito	Atestei o depósito	J'ai fait le plein complet
+Hecho con Gasolinera+	Feito com o Gasolinera+	Fait avec Gasolinera+
+Hecho por Yeray Garrido	Feito por Yeray Garrido	Réalisé par Yeray Garrido
+Historial	Histórico	Historique
+Homologado	Homologado	Homologuée
+Horario	Horário	Horaires
+Horario no disponible	Horário não disponível	Horaires non disponibles
+Identidad del responsable:	Identidade do responsável:	Identité du responsable :
+Idioma	Idioma	Langue
+Igual que el mes pasado	Igual ao mês passado	Comme le mois dernier
+Importar copia	Importar cópia	Importer une sauvegarde
+Importar una copia	Importar uma cópia	Importer une sauvegarde
+Incluir datos técnicos	Incluir dados técnicos	Inclure les données techniques
+Incluir los recorridos de los viajes	Incluir os percursos das viagens	Inclure le tracé des trajets
+Indica cuánto combustible tiene tu coche (al editarlo) o anota un llenado completo para estimar lo que te queda.	Indique quanto combustível tem o seu carro (ao editá-lo) ou registe um abastecimento completo para estimar o que lhe resta.	Indiquez le carburant dans votre voiture (en la modifiant) ou notez un plein complet pour estimer ce qui reste.
+Indica el origen y el destino.	Indique a origem e o destino.	Indiquez le départ et l'arrivée.
+Indica el precio por litro.	Indique o preço por litro.	Indiquez le prix au litre.
+Indica el total pagado.	Indique o total pago.	Indiquez le total payé.
+Indica la fecha y la hora.	Indique a data e a hora.	Indiquez la date et l'heure.
+Indica los kilómetros del cuentakilómetros.	Indique os quilómetros do conta-quilómetros.	Indiquez les kilomètres du compteur.
+Indica los litros.	Indique os litros.	Indiquez les litres.
+Info	Info	Infos
+Información	Informação	Informations
+Iniciar en Google Maps	Iniciar no Google Maps	Démarrer dans Google Maps
+Instalar Gasolinera+	Instalar o Gasolinera+	Installer Gasolinera+
+Instalar en el ordenador	Instalar no computador	Installer sur l'ordinateur
+Instalar en iPhone	Instalar no iPhone	Installer sur iPhone
+Instalar este sitio como una aplicación	Instalar este site como uma aplicação	Installer ce site en tant qu'application
+Instálala para usarla sin navegador, con rutas, tu garaje y tus viajes.	Instale-a para a usar sem navegador, com rotas, a sua garagem e as suas viagens.	Installez-la pour l'utiliser sans navigateur, avec itinéraires, garage et trajets.
+Intercambiar origen y destino	Trocar origem e destino	Inverser départ et arrivée
+Ir a Coche	Ir para Carro	Aller à Voiture
+Justo en la media	Mesmo na média	Pile dans la moyenne
+Kilos	Quilos	Kilos
+Kilos repostados	Quilos abastecidos	Kilos achetés
+Kilómetros	Quilómetros	Kilomètres
+Kilómetros actuales	Quilómetros atuais	Kilométrage actuel
+Kilómetros del cuentakilómetros	Quilómetros do conta-quilómetros	Kilomètres au compteur
+Kilómetros recorridos	Quilómetros percorridos	Kilomètres parcourus
+La app	A app	L'appli
+La app completa, con todas las funciones de la lista.	A app completa, com todas as funções da lista.	L'appli complète, avec toutes les fonctions de la liste.
+La comparación por semanas y meses usa el histórico que guarda la app instalada.	A comparação por semanas e meses usa o histórico que a app instalada guarda.	La comparaison par semaines et par mois utilise l'historique conservé par l'appli installée.
+La copia es de una versión más nueva de la app: actualízala primero	A cópia é de uma versão mais recente da app: atualize-a primeiro	La sauvegarde vient d'une version plus récente de l'appli : mettez-la d'abord à jour
+La descarga no se completó	A descarga não ficou concluída	Le téléchargement n'a pas abouti
+La detección automática necesita la ubicación "Permitir todo el tiempo" y el permiso de actividad física.	A deteção automática precisa da localização "Permitir sempre" e da permissão de atividade física.	La détection automatique a besoin de la position « Toujours autoriser » et de l'autorisation d'activité physique.
+La ficha, favoritas y comparador	A ficha, favoritos e comparador	La fiche, les favoris et le comparateur
+La ruta incluye tramos de peaje.	A rota inclui troços com portagem.	L'itinéraire comporte des tronçons à péage.
+Las estadísticas necesitan conexión. Cuando vuelvas a tener internet se activarán solas.	As estatísticas precisam de ligação. Quando voltar a ter internet ativam-se sozinhas.	Les statistiques ont besoin d'une connexion. Elles reviendront seules dès que vous aurez internet.
+Las más baratas de España	Os mais baratos de {pais}	Les moins chères du pays
+Las notificaciones están bloqueadas en el navegador.	As notificações estão bloqueadas no navegador.	Les notifications sont bloquées dans le navigateur.
+Lento	Lento	Lent
+Listado	Lista	Liste
+Listado/Mapa	Lista/Mapa	Liste/Carte
+Listo	Pronto	Prêt
+Litros	Litros	Litres
+Litros repostados	Litros abastecidos	Litres achetés
+Lleno	Cheio	Plein
+Llevas ahorrados unos	Já poupou cerca de	Vous avez économisé environ
+Lo esencial de cada pantalla. La guía completa, con imágenes y ejemplos, está en PDF.	O essencial de cada ecrã. O guia completo, com imagens e exemplos, está em PDF.	L'essentiel de chaque écran. Le guide complet, avec images et exemples, est en PDF.
+Lo que pagas frente a la media	O que paga face à média	Ce que vous payez par rapport à la moyenne
+Lo que pagaste	O que pagou	Ce que vous avez payé
+Los avisos cuando bajan de precio están en la app del móvil.	Os alertas de descida de preço estão na app do telemóvel.	Les alertes de baisse de prix sont dans l'appli mobile.
+Los viajes empezarán al conectarte a	As viagens começarão ao ligar-se a	Les trajets démarreront à la connexion à
+Los viajes se graban con la app del móvil. Aquí ves los que traigas con una copia de seguridad.	As viagens gravam-se com a app do telemóvel. Aqui vê as que trouxer numa cópia de segurança.	Les trajets s'enregistrent avec l'appli mobile. Ici, vous voyez ceux importés depuis une sauvegarde.
+Mapa de	Mapa de	Carte de
+Mapa de calor de precio	Mapa de calor de preço	Carte de chaleur des prix
+Mapas sin conexión	Mapas offline	Cartes hors ligne
+Me salté anotar algún repostaje antes de este	Esqueci-me de registar algum abastecimento antes deste	J'ai oublié de noter un plein avant celui-ci
+Media de España	Média de {pais}	Moyenne nationale
+Media nacional	Média nacional	Moyenne nationale
+Mensaje copiado. Pégalo en un correo a	Mensagem copiada. Cole-a num e-mail para	Message copié. Collez-le dans un e-mail à
+Mi resumen de Gasolinera+	O meu resumo do Gasolinera+	Mon bilan Gasolinera+
+Mi ubicación	A minha localização	Ma position
+Mira el cuentakilómetros del coche. Sirve para estimar cuánto queda en el depósito.	Veja o conta-quilómetros do carro. Serve para estimar quanto resta no depósito.	Regardez le compteur de la voiture. Il sert à estimer ce qui reste dans le réservoir.
+Modo sin conexión:	Modo offline:	Mode hors ligne :
+Mostrar mapa	Mostrar mapa	Afficher la carte
+Municipio, calle o marca	Concelho, rua ou marca	Commune, rue ou marque
+Más barata	Mais barato	Moins chère
+Más cercana	Mais perto	La plus proche
+Necesita la ubicación «todo el tiempo» y la actividad física. Se activa o desactiva en la sección Coche.	Precisa da localização «sempre» e da atividade física. Ativa-se ou desativa-se na secção Carro.	Il faut la position « toujours » et l'activité physique. Cela s'active ou se désactive dans la section Voiture.
+Necesitas al menos dos repostajes con el depósito lleno para ver tu consumo real.	Precisa de pelo menos dois abastecimentos com o depósito cheio para ver o seu consumo real.	Il faut au moins deux pleins complets pour voir votre consommation réelle.
+No hay conexión por carretera entre esos puntos (¿una isla?).	Não há ligação por estrada entre esses pontos (uma ilha?).	Pas de liaison routière entre ces points (une île ?).
+No hay dispositivos Bluetooth emparejados. Empareja tu coche en los ajustes de Bluetooth del móvil y vuelve aquí.	Não há dispositivos Bluetooth emparelhados. Emparelhe o seu carro nas definições de Bluetooth do telemóvel e volte aqui.	Aucun appareil Bluetooth associé. Associez votre voiture dans les réglages Bluetooth du téléphone et revenez ici.
+No hay gasolineras con ese carburante a esa distancia de la ruta. Prueba con un desvío mayor.	Não há postos com esse combustível a essa distância da rota. Experimente um desvio maior.	Aucune station avec ce carburant à cette distance de l'itinéraire. Essayez un détour plus grand.
+No hay gasolineras que coincidan con la búsqueda.	Não há postos que correspondam à pesquisa.	Aucune station ne correspond à la recherche.
+No hay ninguna ruta sin peajes entre esos puntos. Desmarca «Evitar peajes» para ver la más rápida.	Não há nenhuma rota sem portagens entre esses pontos. Desmarque «Evitar portagens» para ver a mais rápida.	Aucun itinéraire sans péage entre ces points. Décochez « Éviter les péages » pour voir le plus rapide.
+No hay ningún coche conectado. Conéctate al Bluetooth del coche o a CarPlay y vuelve a abrir esta opción.	Não há nenhum carro ligado. Ligue-se ao Bluetooth do carro ou ao CarPlay e volte a abrir esta opção.	Aucune voiture connectée. Connectez-vous au Bluetooth de la voiture ou à CarPlay et rouvrez cette option.
+No hemos podido acceder a tu ubicación. Puedes buscar por municipio o dirección arriba, o	Não conseguimos aceder à sua localização. Pode procurar por localidade ou morada acima, ou	Impossible d'accéder à votre position. Vous pouvez chercher par commune ou adresse ci-dessus, ou
+No llegó ninguna posición del GPS: el viaje no se ha guardado.	Não chegou nenhuma posição do GPS: a viagem não foi guardada.	Aucune position GPS reçue : le trajet n'a pas été enregistré.
+No se ha activado: faltan permisos. Puedes darlos desde los ajustes de la app.	Não foi ativado: faltam permissões. Pode dá-las nas definições da app.	Non activé : il manque des autorisations. Vous pouvez les accorder dans les réglages de l'appli.
+No se ha podido crear el archivo. Inténtalo otra vez.	Não foi possível criar o ficheiro. Tente outra vez.	Impossible de créer le fichier. Réessayez.
+No se pudieron cargar las gasolineras	Não foi possível carregar os postos	Impossible de charger les stations
+No se pudieron cargar las gasolineras del mapa	Não foi possível carregar os postos do mapa	Impossible de charger les stations de la carte
+No se pudo abrir el correo	Não foi possível abrir o e-mail	Impossible d'ouvrir la messagerie
+No se pudo abrir la gasolinera	Não foi possível abrir o posto	Impossible d'ouvrir la station
+No se pudo abrir tu garaje en este navegador	Não foi possível abrir a sua garagem neste navegador	Impossible d'ouvrir votre garage dans ce navigateur
+No se pudo actualizar la lista. Inténtalo de nuevo.	Não foi possível atualizar a lista. Tente de novo.	Impossible de mettre la liste à jour. Réessayez.
+No se pudo calcular la ruta	Não foi possível calcular a rota	Impossible de calculer l'itinéraire
+No se pudo cargar el histórico de la gasolinera	Não foi possível carregar o histórico do posto	Impossible de charger l'historique de la station
+No se pudo cargar la lista de mapas. Comprueba la conexión e inténtalo de nuevo.	Não foi possível carregar a lista de mapas. Verifique a ligação e tente de novo.	Impossible de charger la liste des cartes. Vérifiez la connexion et réessayez.
+No se pudo copiar. Escríbenos a	Não foi possível copiar. Escreva-nos para	Copie impossible. Écrivez-nous à
+No se pudo crear la copia	Não foi possível criar a cópia	Impossible de créer la sauvegarde
+No se pudo descargar	Não foi possível descarregar	Téléchargement impossible
+No se pudo guardar el carburante elegido	Não foi possível guardar o combustível escolhido	Impossible d'enregistrer le carburant choisi
+No se pudo importar	Não foi possível importar	Import impossible
+No se pudo leer el historial	Não foi possível ler o histórico	Impossible de lire l'historique
+No se pudo obtener tu ubicación. Escribe el origen.	Não foi possível obter a sua localização. Escreva a origem.	Impossible d'obtenir votre position. Saisissez le départ.
+No tenemos el precio de ese día: indícalo tú.	Não temos o preço desse dia: indique-o.	Nous n'avons pas le prix de ce jour : indiquez-le.
+No, editar	Não, editar	Non, modifier
+Nombre	Nome	Nom
+Ocultar el gráfico de provincias	Ocultar o gráfico de distritos	Masquer le graphique des départements
+Ocultar mapa	Ocultar mapa	Masquer la carte
+Orden	Ordem	Tri
+Ordenar	Ordenar	Trier
+Ordenar por	Ordenar por	Trier par
+Otro	Outro	Autre
+Otro comentario	Outro comentário	Autre commentaire
+Pagas	Paga	Vous payez
+Paginación de resultados	Paginação de resultados	Pagination des résultats
+Para detectar tus viajes con la app cerrada,	Para detetar as suas viagens com a app fechada,	Pour détecter vos trajets appli fermée,
+Para empezar el viaje al conectarte al coche con la app cerrada, el móvil te pedirá permitir la ubicación "Siempre" o "Todo el tiempo". Gasolinera+ solo la usa mientras vas en coche y los recorridos se quedan en tu móvil. ¿Continuar?	Para começar a viagem ao ligar-se ao carro com a app fechada, o telemóvel vai pedir para permitir a localização "Sempre". O Gasolinera+ só a usa enquanto vai de carro e os percursos ficam no seu telemóvel. Continuar?	Pour démarrer le trajet à la connexion à la voiture appli fermée, le téléphone vous demandera d'autoriser la position « Toujours ». Gasolinera+ ne l'utilise qu'en voiture et les trajets restent sur votre téléphone. Continuer ?
+Para enseñarte las gasolineras más cercanas necesitamos tu ubicación. No se guarda en ningún servidor, solo se usa en tu navegador para calcular distancias.	Para lhe mostrar os postos mais perto precisamos da sua localização. Não fica guardada em nenhum servidor, só é usada no seu navegador para calcular distâncias.	Pour vous montrer les stations les plus proches, nous avons besoin de votre position. Elle n'est enregistrée sur aucun serveur et ne sert qu'à calculer les distances dans votre navigateur.
+Para que los viajes se graben con la app cerrada, desactiva el ahorro de batería para Gasolinera+ en los ajustes del móvil.	Para as viagens se gravarem com a app fechada, desative a poupança de bateria para o Gasolinera+ nas definições do telemóvel.	Pour que les trajets s'enregistrent appli fermée, désactivez l'économie de batterie pour Gasolinera+ dans les réglages du téléphone.
+Parar aquí	Parar aqui	S'arrêter ici
+Parar en esta gasolinera	Parar neste posto	S'arrêter à cette station
+Pausar	Pausar	Pause
+Periodo de la comparación	Período da comparação	Période de comparaison
+Periodo del resumen	Período do resumo	Période du bilan
+Periodos rápidos	Períodos rápidos	Périodes rapides
+Permisos y privacidad	Permissões e privacidade	Autorisations et confidentialité
+Permisos, viajes, sin conexión y copia de seguridad	Permissões, viagens, modo offline e cópia de segurança	Autorisations, trajets, hors ligne et sauvegarde
+Planificar una ruta	Planear uma rota	Planifier un itinéraire
+Política de privacidad completa	Política de privacidade completa	Politique de confidentialité complète
+Ponle un nombre al coche.	Dê um nome ao carro.	Donnez un nom à la voiture.
+Por ejemplo, el Golf de casa	Por exemplo, o Golf lá de casa	Par exemple, la Clio de la maison
+Por el camino	Pelo caminho	En chemin
+Por gasolinera	Por posto	Par station
+Por mes	Por mês	Par mois
+Por repostaje	Por abastecimento	Par plein
+Por semana	Por semana	Par semaine
+Portugal	Portugal	Portugal
+Precio	Preço	Prix
+Precio (€/L)	Preço (€/L)	Prix (€/L)
+Precio medio	Preço médio	Prix moyen
+Precio medio de ese día en España.	Preço médio desse dia em {pais}.	Prix moyen national ce jour-là.
+Precio medio de ese día en la zona de la gasolinera.	Preço médio desse dia na zona do posto.	Prix moyen ce jour-là autour de la station.
+Precio medio por provincia hoy	Preço médio por distrito hoje	Prix moyen par département aujourd'hui
+Precios de gasolina y diésel de toda España, actualizados cada día. Proyecto independiente y sin ánimo de lucro, hecho por Yeray Garrido.	Preços de gasolina e gasóleo de todo o país, atualizados todos os dias. Projeto independente e sem fins lucrativos, feito por Yeray Garrido.	Prix de l'essence et du gazole dans tout le pays, mis à jour chaque jour. Projet indépendant et à but non lucratif, réalisé par Yeray Garrido.
+Precios de gasolina y diésel hoy en España	Preços de gasolina e gasóleo hoje em {pais}	Prix de l'essence et du gazole aujourd'hui · {pais}
+Precios de gasolineras en España	Preços dos postos em Espanha	Prix des stations en Espagne
+Precios de gasolineras en Francia	Preços dos postos em França	Prix des stations en France
+Precios de gasolineras en Portugal	Preços dos postos em Portugal	Prix des stations au Portugal
+Precios medios en España	Preços médios em {pais}	Prix moyens nationaux
+Precios reales de gasolineras	Preços reais dos postos de combustível	Prix réels des stations-service
+Precios: Ministerio para la Transición Ecológica · Mapas: © OpenStreetMap	Preços: {fuente} · Mapas: © OpenStreetMap	Prix : {fuente} · Cartes : © OpenStreetMap
+Preparando el mapa de carreteras en tu móvil… puede tardar unos segundos.	A preparar o mapa de estradas no seu telemóvel… pode demorar uns segundos.	Préparation de la carte routière sur votre téléphone… cela peut prendre quelques secondes.
+Primero añade tu coche	Primeiro adicione o seu carro	Ajoutez d'abord votre voiture
+Primero añade tu coche.	Primeiro adicione o seu carro.	Ajoutez d'abord votre voiture.
+Privacidad y ubicación:	Privacidade e localização:	Confidentialité et position :
+Provincia más barata	Distrito mais barato	Département le moins cher
+Provincia más cara	Distrito mais caro	Département le plus cher
+Provincias más baratas	Distritos mais baratos	Départements les moins chers
+Provincias más caras	Distritos mais caros	Départements les plus chers
+Proyecto	Projeto	Projet
+Proyecto independiente desarrollado sin ánimo de lucro por Yeray Garrido. Gasolinera+ no está afiliado ni respaldado por el Ministerio para la Transición Ecológica ni por ninguna marca de estaciones de servicio.	Projeto independente desenvolvido sem fins lucrativos por Yeray Garrido. O Gasolinera+ não está afiliado nem é apoiado por {fuente} nem por nenhuma marca de postos de combustível.	Projet indépendant développé à but non lucratif par Yeray Garrido. Gasolinera+ n'est ni affilié ni soutenu par {fuente} ni par aucune marque de stations-service.
+Pueblo, ciudad o calle	Localidade, cidade ou rua	Commune, ville ou rue
+Puedes bloquear el móvil: el viaje sigue grabándose.	Pode bloquear o telemóvel: a viagem continua a ser gravada.	Vous pouvez verrouiller le téléphone : le trajet continue d'être enregistré.
+Puedes cambiarlo.	Pode alterá-lo.	Vous pouvez le modifier.
+Quitar	Retirar	Retirer
+Quitar de comparar	Retirar da comparação	Retirer du comparateur
+Quitar de favoritas	Retirar dos favoritos	Retirer des favoris
+Quitar la gasolinera	Retirar o posto	Retirer la station
+Quitar la parada	Retirar a paragem	Retirer l'arrêt
+Qué quieres ver	O que quer ver	Que voulez-vous voir
+Radio	Raio	Rayon
+Radio de búsqueda	Raio de pesquisa	Rayon de recherche
+Reanudar	Retomar	Reprendre
+Reglamento General de Protección de Datos (RGPD)	Regulamento Geral sobre a Proteção de Dados (RGPD)	Règlement général sur la protection des données (RGPD)
+Repostaje guardado	Abastecimento guardado	Plein enregistré
+Repostajes	Abastecimentos	Pleins
+Repostar aquí	Abastecer aqui	Faire le plein ici
+Reserva	Reserva	Réserve
+Revisa el depósito, el consumo y los kilómetros.	Reveja o depósito, o consumo e os quilómetros.	Vérifiez le réservoir, la consommation et les kilomètres.
+Revisa la fecha, los km y las cantidades.	Reveja a data, os km e as quantidades.	Vérifiez la date, les km et les quantités.
+Revisa los kilómetros	Reveja os quilómetros	Vérifiez les kilomètres
+Ruta	Rota	Itinéraire
+Ruta hasta aquí	Rota até aqui	Itinéraire jusqu'ici
+Rápido	Rápido	Rapide
+Se ha abierto tu aplicación de correo con el mensaje preparado. Pulsa enviar allí. Si no se abre, usa «Copiar mensaje» y escríbenos a	Abriu a sua aplicação de e-mail com a mensagem preparada. Carregue em enviar aí. Se não abrir, use «Copiar mensagem» e escreva-nos para	Votre messagerie s'est ouverte avec le message prêt. Appuyez sur envoyer. Si elle ne s'ouvre pas, utilisez « Copier le message » et écrivez-nous à
+Se ha guardado un viaje que quedó sin terminar	Foi guardada uma viagem que ficou por terminar	Un trajet resté inachevé a été enregistré
+Se usa para mostrar las gasolineras cercanas. Tus coordenadas no se guardan.	Usa-se para mostrar os postos perto. As suas coordenadas não são guardadas.	Elle sert à afficher les stations proches. Vos coordonnées ne sont pas enregistrées.
+Se van a descargar	Vão ser descarregados	Vont être téléchargés
+Secciones	Secções	Sections
+Seguir sin nombre	Continuar sem nome	Continuer sans nom
+Si no te acuerdas, puedes seguir sin nombre. Con el nombre, tu resumen dirá dónde repostas más y a qué precio.	Se não se lembrar, pode continuar sem nome. Com o nome, o seu resumo dirá onde abastece mais e a que preço.	Si vous ne vous en souvenez pas, continuez sans nom. Avec le nom, votre bilan dira où vous faites le plus souvent le plein et à quel prix.
+Siguiente	Seguinte	Suivant
+Siguiente »	Seguinte »	Suivant »
+Sin conexión a internet	Sem ligação à internet	Pas de connexion internet
+Sin conexión: el histórico de precios y la comparación con la zona no están disponibles.	Offline: o histórico de preços e a comparação com a zona não estão disponíveis.	Hors ligne : l'historique des prix et la comparaison avec le secteur ne sont pas disponibles.
+Sin conexión: la ruta usa los datos guardados. Si un lugar no aparece, necesitará conexión para encontrarlo.	Offline: a rota usa os dados guardados. Se um local não aparecer, será precisa ligação para o encontrar.	Hors ligne : l'itinéraire utilise les données enregistrées. Si un lieu n'apparaît pas, il faudra une connexion pour le trouver.
+Sin conexión: usas los datos guardados en tu móvil. El histórico y las estadísticas no están disponibles hasta que vuelvas a conectarte.	Offline: está a usar os dados guardados no telemóvel. O histórico e as estatísticas não estão disponíveis até voltar a ligar-se.	Hors ligne : vous utilisez les données enregistrées sur votre téléphone. L'historique et les statistiques reviendront à la reconnexion.
+Sin dato	Sem dados	Pas de donnée
+Sin datos	Sem dados	Pas de données
+Sin datos de la media nacional para estas fechas.	Sem dados da média nacional para estas datas.	Pas de moyenne nationale pour ces dates.
+Sin ella verás las más baratas de España. Actívala para ver las de tu zona.	Sem ela verá os mais baratos de {pais}. Ative-a para ver os da sua zona.	Sans elle, vous verrez les moins chères du pays. Activez-la pour voir celles de votre secteur.
+Sin indicar	Sem indicação	Non indiqué
+Sin permiso de notificaciones no verás el aviso mientras se graba.	Sem permissão de notificações não verá o aviso enquanto grava.	Sans autorisation de notifications, vous ne verrez pas l'avis pendant l'enregistrement.
+Sin permiso de ubicación no se puede grabar el viaje.	Sem permissão de localização não é possível gravar a viagem.	Sans autorisation de position, impossible d'enregistrer le trajet.
+Sobre el proyecto	Sobre o projeto	À propos du projet
+Sugerencia	Sugestão	Suggestion
+Sugerencias y errores	Sugestões e erros	Suggestions et bugs
+Sí, es correcto	Sim, está correto	Oui, c'est correct
+Sí, son correctos	Sim, estão corretos	Oui, ils sont corrects
+Te avisamos como mucho una vez al día si baja el precio de tus favoritas.	Avisamos no máximo uma vez por dia se o preço dos seus favoritos descer.	Nous vous prévenons au plus une fois par jour si le prix de vos favoris baisse.
+Terminar viaje	Terminar viagem	Terminer le trajet
+Tiempo	Tempo	Durée
+Tiempo estimado	Tempo estimado	Durée estimée
+Tiempo por tramos de velocidad	Tempo por intervalos de velocidade	Temps par tranches de vitesse
+Tipo de mensaje	Tipo de mensagem	Type de message
+Toca el mapa para elegir el destino. Rutas calculadas en tu dispositivo con datos de © OpenStreetMap, sin tráfico en tiempo real.	Toque no mapa para escolher o destino. Rotas calculadas no seu dispositivo com dados do © OpenStreetMap, sem trânsito em tempo real.	Touchez la carte pour choisir la destination. Itinéraires calculés sur votre appareil avec les données © OpenStreetMap, sans trafic en temps réel.
+Toca para mover el mapa	Toque para mover o mapa	Touchez pour déplacer la carte
+Toca una gasolinera en el mapa, abre su ficha y pulsa Repostar aquí.	Toque num posto no mapa, abra a ficha e carregue em Abastecer aqui.	Touchez une station sur la carte, ouvrez sa fiche et appuyez sur Faire le plein ici.
+Todavía no has anotado ningún repostaje. Anota los llenos con los km del cuentakilómetros para calcular tu consumo real.	Ainda não registou nenhum abastecimento. Registe os depósitos cheios com os km do conta-quilómetros para calcular o seu consumo real.	Vous n'avez encore noté aucun plein. Notez les pleins complets avec les km du compteur pour calculer votre consommation réelle.
+Todavía no hay nada anotado. A la espera de tu primer repostaje.	Ainda não há nada registado. À espera do seu primeiro abastecimento.	Rien de noté pour l'instant. En attente de votre premier plein.
+Todavía no hay repostajes en este periodo.	Ainda não há abastecimentos neste período.	Pas encore de plein sur cette période.
+Todavía no hay viajes grabados.	Ainda não há viagens gravadas.	Aucun trajet enregistré pour l'instant.
+Todo	Tudo	Tout
+Total pagado	Total pago	Total payé
+Total pagado (€)	Total pago (€)	Total payé (€)
+Tres cuartos	Três quartos	Trois quarts
+Tu coche	O seu carro	Votre voiture
+Tu coche y tus repostajes	O seu carro e os seus abastecimentos	Votre voiture et vos pleins
+Tu garaje	A sua garagem	Votre garage
+Tu repostaje más barato	O seu abastecimento mais barato	Votre plein le moins cher
+Tu resumen	O seu resumo	Votre bilan
+Tu ubicación, pueblo o calle	A sua localização, localidade ou rua	Votre position, commune ou rue
+Tus coches	Os seus carros	Vos voitures
+Tus coches, repostajes y viajes solo existen en este dispositivo. Guarda una copia de vez en cuando por si cambias de móvil.	Os seus carros, abastecimentos e viagens só existem neste dispositivo. Guarde uma cópia de vez em quando caso mude de telemóvel.	Vos voitures, pleins et trajets n'existent que sur cet appareil. Faites une sauvegarde de temps en temps au cas où vous changeriez de téléphone.
+Tus repostajes y viajes del móvil se pueden ver aquí: exporta una copia en el móvil e impórtala en Coche.	Os abastecimentos e viagens do telemóvel podem ver-se aqui: exporte uma cópia no telemóvel e importe-a em Carro.	Vos pleins et trajets du téléphone peuvent s'afficher ici : exportez une sauvegarde sur le téléphone et importez-la dans Voiture.
+Ubicación	Localização	Position
+Ubicación activada · pulsa para desactivar	Localização ativada · toque para desativar	Position activée · touchez pour désactiver
+Ubicación desactivada · pulsa para activar	Localização desativada · toque para ativar	Position désactivée · touchez pour activer
+Un cuarto	Um quarto	Un quart
+Variación mínima del precio para avisar	Variação mínima do preço para avisar	Variation minimale du prix pour prévenir
+Velocidad	Velocidade	Vitesse
+Velocidad máxima	Velocidade máxima	Vitesse maximale
+Ver comparador	Ver comparador	Voir le comparateur
+Ver estadísticas	Ver estatísticas	Voir les statistiques
+Ver favoritas	Ver favoritos	Voir les favoris
+Ver ficha	Ver ficha	Voir la fiche
+Ver las provincias	Ver os distritos	Voir les départements
+Ver novedades y descargar	Ver novidades e descarregar	Voir les nouveautés et télécharger
+Ver todas	Ver todos	Tout voir
+Ver todas las provincias	Ver todos os distritos	Voir tous les départements
+Ver todo el historial	Ver todo o histórico	Voir tout l'historique
+Versión, sistema y pantalla. Nunca tu ubicación ni tus datos.	Versão, sistema e ecrã. Nunca a sua localização nem os seus dados.	Version, système et écran. Jamais votre position ni vos données.
+Viaje	Viagem	Trajet
+Viaje en curso	Viagem em curso	Trajet en cours
+Viaje en pausa: el tiempo y los kilómetros no cuentan hasta que lo reanudes.	Viagem em pausa: o tempo e os quilómetros não contam até a retomar.	Trajet en pause : le temps et les kilomètres ne comptent pas tant que vous ne reprenez pas.
+Viaje guardado	Viagem guardada	Trajet enregistré
+Viaje guardado.	Viagem guardada.	Trajet enregistré.
+Viaje reanudado.	Viagem retomada.	Trajet repris.
+Viajes	Viagens	Trajets
+Viajes grabados	Viagens gravadas	Trajets enregistrés
+Viajes, avisos y mapas sin conexión, en la	Viagens, alertas e mapas offline, na	Trajets, alertes et cartes hors ligne, dans l'
+Volver al viaje en curso	Voltar à viagem em curso	Revenir au trajet en cours
+Ya hay 5 gasolineras en el comparador	Já há 5 postos no comparador	Le comparateur contient déjà 5 stations
+a mano o de forma automática al subir al coche, con su recorrido, distancia y velocidad.	manualmente ou de forma automática ao entrar no carro, com o percurso, distância e velocidade.	à la main ou automatiquement en montant en voiture, avec le tracé, la distance et la vitesse.
+actualizar los kilómetros	atualizar os quilómetros	mettre à jour les kilomètres
+app para Android	app para Android	appli Android
+automático	automático	automatique
+como imagen directamente desde el móvil.	como imagem diretamente do telemóvel.	en image directement depuis le téléphone.
+consumo raro, revisa los km	consumo estranho, reveja os km	consommation anormale, vérifiez les km
+contándonos lo que ocurre.	contando-nos o que acontece.	en nous racontant ce qui se passe.
+cént. más barato	cênt. mais barato	cts moins cher
+cént. más caro	cênt. mais caro	cts plus cher
+céntimo	cêntimo	centime
+céntimos	cêntimos	centimes
+datos del Ministerio	dados de {fuente}	données de {fuente}
+de tu comunidad para usar el mapa sin datos.	da sua região para usar o mapa sem dados.	de votre région pour utiliser la carte sans données.
+de tus favoritas, aunque la app esté cerrada.	dos seus favoritos, mesmo com a app fechada.	de vos favoris, même appli fermée.
+desde ayer	desde ontem	depuis hier
+desde el principio	desde o início	depuis le début
+desde la ficha de la gasolinera y	a partir da ficha do posto e	depuis la fiche de la station et
+detecte que vas en coche, Gasolinera+ empezará a grabar el viaje y parará al bajarte.	detetar que vai de carro, o Gasolinera+ começará a gravar a viagem e parará quando sair.	détectera que vous êtes en voiture, Gasolinera+ commencera à enregistrer le trajet et s'arrêtera quand vous descendrez.
+días	dias	jours
+el destino	o destino	l'arrivée
+el iPhone	o iPhone	l'iPhone
+el origen	a origem	le départ
+en el surtidor.	na bomba.	à la pompe.
+ha bajado de precio	desceu de preço	a baissé son prix
+ha cambiado de precio	mudou de preço	a changé de prix
+ha subido de precio	subiu de preço	a augmenté son prix
+homologado, hasta tener dos llenos	homologado, até ter dois depósitos cheios	homologuée, jusqu'à deux pleins complets
+la media de España	a média de {pais}	la moyenne nationale
+la parada	a paragem	l'arrêt
+listo. Se ve sin conexión a partir del zoom	pronto. Vê-se offline a partir do zoom	prête. Visible hors ligne à partir du zoom
+los precios se publican tal cual los facilita el Ministerio para la Transición Ecológica, con actualización diaria. Mapa, carreteras y pueblos: © OpenStreetMap contributors, licencia ODbL. Las rutas, tiempos, consumos y costes son estimaciones sin tráfico en tiempo real, y las métricas de los viajes salen del GPS del móvil, no del coche. No garantizamos la exactitud ni la disponibilidad continua de estos datos, que pueden no coincidir con el precio real al repostar: la app es informativa y su uso es responsabilidad de quien la utiliza.	os preços publicam-se tal como os fornece {fuente}, com atualização diária. Mapa, estradas e localidades: © OpenStreetMap contributors, licença ODbL. As rotas, tempos, consumos e custos são estimativas sem trânsito em tempo real, e as métricas das viagens vêm do GPS do telemóvel, não do carro. Não garantimos a exatidão nem a disponibilidade contínua destes dados, que podem não coincidir com o preço real ao abastecer: a app é informativa e o seu uso é responsabilidade de quem a utiliza.	les prix sont publiés tels que fournis par {fuente}, mis à jour chaque jour. Carte, routes et communes : © contributeurs OpenStreetMap, licence ODbL. Les itinéraires, durées, consommations et coûts sont des estimations sans trafic en temps réel, et les mesures des trajets viennent du GPS du téléphone, pas de la voiture. Nous ne garantissons ni l'exactitude ni la disponibilité continue de ces données, qui peuvent différer du prix réel à la pompe : l'appli est informative et son utilisation relève de la responsabilité de l'utilisateur.
+no tiene cuentas ni guarda datos personales en ningún servidor	não tem contas nem guarda dados pessoais em nenhum servidor	n'a pas de comptes et ne stocke aucune donnée personnelle sur un serveur
+no usamos cookies de terceros ni de rastreo. El almacenamiento local (	não usamos cookies de terceiros nem de rastreio. O armazenamento local (	nous n'utilisons ni cookies tiers ni traceurs. Le stockage local (
+política de Vercel	política da Vercel	politique de Vercel
+reintentar la ubicación	tentar de novo a localização	réessayer la position
+sin cambios	sem alterações	sans changement
+sin cambios desde ayer	sem alterações desde ontem	sans changement depuis hier
+sin lugares	sem locais	aucun lieu
+solo en la web usamos Vercel Web Analytics, sin cookies y con estadísticas agregadas y anónimas (	só na web usamos Vercel Web Analytics, sem cookies e com estatísticas agregadas e anónimas (	sur le site uniquement, nous utilisons Vercel Web Analytics, sans cookies, avec des statistiques agrégées et anonymes (
+te ha salido	saiu-lhe	vous revient à
+te pedirá permitir la ubicación	vai pedir para permitir a localização	vous demandera d'autoriser la position
+tiempo agotado	tempo esgotado	délai dépassé
+y después	e depois	puis
+y la	e a	et la
+¡Repostaje guardado!	Abastecimento guardado!	Plein enregistré !
+« Anterior	« Anterior	« Précédent
+« Volver a gasolineras cerca de mí	« Voltar aos postos perto de mim	« Revenir aux stations près de moi
+«Ver ficha» muestra todos los precios con su tendencia, el horario, la media de la zona y el gráfico de 14 días. Desde ahí la guardas en favoritas (con avisos de bajada de precio), la añades al comparador (hasta 5) o abres «Cómo llegar».	«Ver ficha» mostra todos os preços com a sua tendência, o horário, a média da zona e o gráfico de 14 dias. Daí guarda-o nos favoritos (com alertas de descida de preço), adiciona-o ao comparador (até 5) ou abre «Como chegar».	« Voir la fiche » affiche tous les prix avec leur tendance, les horaires, la moyenne du secteur et le graphique sur 14 jours. De là, vous l'ajoutez aux favoris (avec alertes de baisse de prix), au comparateur (jusqu'à 5) ou ouvrez « Itinéraire ».
+¿A dónde vas?	Para onde vai?	Où allez-vous ?
+¿Algo no funciona o se te ocurre una mejora? Cuéntanoslo y lo revisaremos.	Algo não funciona ou tem uma ideia de melhoria? Conte-nos e vamos rever.	Quelque chose ne marche pas ou vous avez une idée ? Dites-le-nous, on regardera.
+¿Borrar este repostaje?	Apagar este abastecimento?	Supprimer ce plein ?
+¿Con qué coche ibas?	Com que carro ia?	Avec quelle voiture rouliez-vous ?
+¿Dejar de empezar los viajes con el Bluetooth y quitar tus coches de la lista?	Deixar de começar as viagens com o Bluetooth e retirar os seus carros da lista?	Arrêter de démarrer les trajets avec le Bluetooth et retirer vos voitures de la liste ?
+¿Nos dejas tu ubicación?	Partilha a sua localização?	Vous nous donnez votre position ?
+¿Seguro que quieres guardarlo así?	Tem a certeza de que quer guardar assim?	Voulez-vous vraiment l'enregistrer ainsi ?
+¿Son correctos los km?	Os km estão corretos?	Les km sont-ils corrects ?
+Ábrela en Safari, pulsa	Abra-a no Safari, toque em	Ouvrez-la dans Safari, touchez
+€ de más	€ a mais	€ en trop
+€ desde ayer	€ desde ontem	€ depuis hier
+"Siempre"	"Sempre"	« Toujours »
+"Todo el tiempo"	"Sempre"	« Tout le temps »
+, informamos de lo siguiente:	, informamos o seguinte:	, nous vous informons de ce qui suit :
+, la	, a	, la
+Media	Média	Moyenne
+Medio	Médio	Moyen
+Mensual	Mensal	Mensuel
+litros	litros	litres
+Minimizar	Minimizar	Réduire
+24h	24h	24h/24
+Zoom in	Aproximar	Zoom avant
+Zoom out	Afastar	Zoom arrière
+Otras gasolinas y gasóleos	Outras gasolinas e gasóleos	Autres essences et gazoles
+Alternativos y renovables	Alternativos e renováveis	Alternatifs et renouvelables
+Descarga tu comunidad para ver el mapa sin datos. Se ven a partir del zoom 12; con conexión se sigue usando el mapa normal.	Descarregue a sua região para ver o mapa sem dados. Veem-se a partir do zoom 12; com ligação continua a usar-se o mapa normal.	Téléchargez votre région pour voir la carte sans données. Elle s'affiche à partir du zoom 12 ; avec connexion, la carte normale reste utilisée.
+Es tu punto de partida para calcular cuánto te queda. Puedes dejarlo sin indicar; se ajusta solo cuando llenes el depósito.	É o seu ponto de partida para calcular quanto lhe resta. Pode deixá-lo sem indicar; ajusta-se sozinho quando atestar o depósito.	C'est votre point de départ pour calculer ce qui reste. Vous pouvez le laisser vide ; il s'ajuste seul au prochain plein complet.
+Al activarlos se te pedirá permiso para enviar notificaciones. Las notificaciones están bloqueadas en el navegador. En el navegador puede que las notificaciones no funcionen con la web cerrada; para recibirlas en segundo plano instala la app.	Ao ativá-los será pedida autorização para enviar notificações. As notificações estão bloqueadas no navegador. No navegador as notificações podem não funcionar com a página fechada; para as receber em segundo plano instale a app.	En les activant, l'autorisation d'envoyer des notifications vous sera demandée. Les notifications sont bloquées dans le navigateur. Dans le navigateur, elles peuvent ne pas fonctionner site fermé ; pour les recevoir en arrière-plan, installez l'appli.
+. Si activas la ubicación, tus coordenadas se envían de forma puntual a nuestro servidor solo para buscar las gasolineras cercanas, sin guardarse; sin conexión, el cálculo se hace en tu dispositivo.	. Se ativar a localização, as suas coordenadas são enviadas pontualmente ao nosso servidor só para procurar os postos perto, sem ficarem guardadas; offline, o cálculo faz-se no seu dispositivo.	. Si vous activez la position, vos coordonnées sont envoyées ponctuellement à notre serveur uniquement pour chercher les stations proches, sans être enregistrées ; hors ligne, le calcul se fait sur votre appareil.
+sin internet siguen funcionando la búsqueda con la última copia de precios, el garaje, los viajes y las rutas; el histórico, las tendencias y la comparación con la zona necesitan conexión.	sem internet continuam a funcionar a pesquisa com a última cópia de preços, a garagem, as viagens e as rotas; o histórico, as tendências e a comparação com a zona precisam de ligação.	sans internet, la recherche avec la dernière copie des prix, le garage, les trajets et les itinéraires continuent de fonctionner ; l'historique, les tendances et la comparaison avec le secteur nécessitent une connexion.
+tus coches, repostajes y viajes se guardan solo en tu dispositivo. En las apps de Android e iPhone, los viajes se graban con el GPS aunque bloquees el móvil (con una notificación en Android y el indicador de ubicación en iPhone mientras graba) y, si activas la detección automática, con los permisos de actividad física y ubicación «todo el tiempo»; esos recorridos nunca salen del móvil. Las rutas se calculan en tu dispositivo; solo las direcciones que no están en la lista de pueblos se buscan en Nominatim a través de nuestro servidor.	os seus carros, abastecimentos e viagens guardam-se só no seu dispositivo. Nas apps para Android e iPhone, as viagens gravam-se com o GPS mesmo com o telemóvel bloqueado (com uma notificação no Android e o indicador de localização no iPhone enquanto grava) e, se ativar a deteção automática, com as permissões de atividade física e localização «sempre»; esses percursos nunca saem do telemóvel. As rotas calculam-se no seu dispositivo; só as moradas que não estão na lista de localidades se procuram no Nominatim através do nosso servidor.	vos voitures, pleins et trajets ne sont enregistrés que sur votre appareil. Dans les applis Android et iPhone, les trajets s'enregistrent au GPS même téléphone verrouillé (avec une notification sur Android et l'indicateur de position sur iPhone pendant l'enregistrement) et, si vous activez la détection automatique, avec les autorisations d'activité physique et de position « toujours » ; ces tracés ne quittent jamais le téléphone. Les itinéraires se calculent sur votre appareil ; seules les adresses absentes de la liste des communes sont cherchées dans Nominatim via notre serveur.
+e	e	et

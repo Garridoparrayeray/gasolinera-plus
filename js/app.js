@@ -16,7 +16,6 @@
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyChartTheme);
 
     const fuelLabel = AlertsStore.labelFor;
-    const SHORT_FUEL_NAMES = { gasoleo_a: 'Gasóleo A', gasolina_95_e5: 'Gasolina 95' };
     const HEART_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20.5S3.5 15.4 3.5 9.5c0-3 2.3-5 5-5 1.6 0 2.8.8 3.5 2 .7-1.2 1.9-2 3.5-2 2.7 0 5 2 5 5 0 5.9-8.5 11-8.5 11z"/></svg>';
     const COMPARE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="10" width="6" height="11"/><rect x="15" y="4" width="6" height="17"/></svg>';
     const priceText = AlertsStore.priceText;
@@ -423,7 +422,7 @@
             const tile = document.createElement('span');
             const label = document.createElement('small');
             const value = document.createElement('strong');
-            label.textContent = SHORT_FUEL_NAMES[slug] || fuelLabel(slug);
+            label.textContent = GPCountry.fuelShort(slug);
             value.textContent = priceText(station.combustibles[slug].precio, slug);
             tile.append(label, value);
             container.append(tile);
@@ -610,7 +609,7 @@
             return;
         }
         const parts = fecha.split('-').map(Number);
-        const label = new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+        const label = new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString(GPCountry.uiLocale, { day: 'numeric', month: 'long' });
         el.nationalDate.classList.remove('is-stale');
         let text = `Precios de hoy, ${label}`;
         if (fecha !== todayIso()) {
@@ -657,7 +656,7 @@
 
     function priceDayLabel(fecha) {
         const parts = fecha.split('-').map(Number);
-        const label = new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+        const label = new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString(GPCountry.uiLocale, { day: 'numeric', month: 'long' });
         if (fecha === todayIso()) {
             return { text: `Hoy, ${label}`, stale: false };
         }
@@ -703,7 +702,7 @@
         const source = document.createElement('span');
         source.className = 'national-line__delta';
         source.textContent = 'datos del Ministerio';
-        line.append(nationalKpi('Gasolineras con precio', gasoleoA.hoy.estaciones.toLocaleString('es-ES'), source));
+        line.append(nationalKpi('Gasolineras con precio', gasoleoA.hoy.estaciones.toLocaleString(GPCountry.uiLocale), source));
         const link = document.createElement('button');
         link.type = 'button';
         link.className = 'national-line__stats';
@@ -873,7 +872,7 @@
             },
         });
         const last = data.serie[data.serie.length - 1];
-        el.nationalNote.textContent = `Media de ${last.estaciones.toLocaleString('es-ES')} gasolineras el ${last.fecha}. Datos del Ministerio para la Transición Ecológica.`;
+        el.nationalNote.textContent = `Media de ${last.estaciones.toLocaleString(GPCountry.uiLocale)} gasolineras el ${last.fecha}. Datos: ${GPCountry.config.source}.`;
     }
 
     
@@ -944,7 +943,7 @@
         } else if (state.stationsTotal === 0) {
             el.stationsStatus.textContent = `${placeSummary()}: no hay gasolineras con estos filtros. Prueba con más kilómetros u otro carburante.`;
         } else {
-            el.stationsStatus.textContent = `${placeSummary()}: ${state.stationsTotal.toLocaleString('es-ES')} gasolineras · ${filterSummary()}`;
+            el.stationsStatus.textContent = `${placeSummary()}: ${state.stationsTotal.toLocaleString(GPCountry.uiLocale)} gasolineras · ${filterSummary()}`;
             if (state.stationsMode === 'cheapest') {
                 el.stationsStatus.textContent += '. Activa tu ubicación para ver las de tu zona.';
             }
@@ -1108,7 +1107,7 @@
             if (isDesktop() && state.stationsTotal > 0) {
                 const first = (state.stationsPage - 1) * PAGE_SIZE + 1;
                 const last = Math.min(state.stationsPage * PAGE_SIZE, state.stationsTotal);
-                el.paginationStatus.textContent = `${first}–${last} de ${state.stationsTotal.toLocaleString('es-ES')}`;
+                el.paginationStatus.textContent = `${first}–${last} de ${state.stationsTotal.toLocaleString(GPCountry.uiLocale)}`;
             }
         }
     }
@@ -1263,8 +1262,8 @@
         if (!priceSlugs.includes(filterFuel)) {
             priceSlugs.push(filterFuel);
         }
-        el.stationsHeadPrimary.textContent = SHORT_FUEL_NAMES[filterFuel] || fuelLabel(filterFuel);
-        el.stationsHeadSecondary.textContent = SHORT_FUEL_NAMES[secondaryFuel];
+        el.stationsHeadPrimary.textContent = GPCountry.fuelShort(filterFuel);
+        el.stationsHeadSecondary.textContent = GPCountry.fuelShort(secondaryFuel);
         for (const station of stations) {
             const li = document.createElement('li');
             li.className = 'station-card';
@@ -1291,7 +1290,7 @@
                     role = ' is-secondary';
                 }
                 if (text) {
-                    pricesHtml += `<span class="price${role}"><span class="price__label">${escapeHtml(SHORT_FUEL_NAMES[slug] || fuelLabel(slug))}: </span>${text}</span>`;
+                    pricesHtml += `<span class="price${role}"><span class="price__label">${escapeHtml(GPCountry.fuelShort(slug))}: </span>${text}</span>`;
                 } else if (role) {
                     pricesHtml += `<span class="price${role} price--empty">—</span>`;
                 }
@@ -1432,7 +1431,7 @@
         state.bboxController = null;
         renderMapStations(data.stations);
         if (data.truncated) {
-            el.mapNote.textContent = `Se muestran ${data.stations.length.toLocaleString('es-ES')} de ${data.total.toLocaleString('es-ES')} gasolineras. Acerca el mapa para verlas todas.`;
+            el.mapNote.textContent = `Se muestran ${data.stations.length.toLocaleString(GPCountry.uiLocale)} de ${data.total.toLocaleString(GPCountry.uiLocale)} gasolineras. Acerca el mapa para verlas todas.`;
             el.mapNote.hidden = false;
         } else {
             el.mapNote.hidden = true;
@@ -1919,7 +1918,7 @@
             return;
         }
         const total = data.buckets.reduce((sum, b) => sum + b.estaciones, 0);
-        el.statsDistributionNote.textContent = `${total.toLocaleString('es-ES')} gasolineras con precio de ${fuelLabel(fuel)} hoy.`;
+        el.statsDistributionNote.textContent = `${total.toLocaleString(GPCountry.uiLocale)} gasolineras con precio de ${fuelLabel(fuel)} hoy.`;
         if (state.statsDistributionChart) {
             state.statsDistributionChart.destroy();
             state.statsDistributionChart = null;

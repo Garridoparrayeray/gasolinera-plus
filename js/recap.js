@@ -8,7 +8,7 @@ const GPRecap = (() => {
     const MONTH_NAMES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
     function fmt(value, digits) {
-        return value.toLocaleString('es-ES', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+        return value.toLocaleString(GPCountry.uiLocale, { minimumFractionDigits: digits, maximumFractionDigits: digits });
     }
 
     function periodPrefix(period) {

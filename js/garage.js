@@ -135,7 +135,7 @@ const GPGarage = (() => {
     const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
     function number(value, digits) {
-        return value.toLocaleString('es-ES', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+        return value.toLocaleString(GPCountry.uiLocale, { minimumFractionDigits: digits, maximumFractionDigits: digits });
     }
 
     function money(value) {
@@ -355,7 +355,7 @@ const GPGarage = (() => {
             el.refuels.appendChild(refuelItem(refuel, unit, intervalsByEnd));
         }
         el.refuelHistoryOpen.hidden = list.length <= RECENT_REFUELS;
-        el.refuelHistoryOpen.textContent = `Ver todo el historial (${list.length.toLocaleString('es-ES')} repostajes)`;
+        el.refuelHistoryOpen.textContent = `Ver todo el historial (${list.length.toLocaleString(GPCountry.uiLocale)} repostajes)`;
         document.dispatchEvent(new CustomEvent('gp:history-refresh'));
     }
 
@@ -1204,7 +1204,7 @@ const GPGarage = (() => {
         }
         const rows = [
             ['Gasolinera', where],
-            ['Fecha', `${shortDate(date.toISOString())} ${date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`],
+            ['Fecha', `${shortDate(date.toISOString())} ${date.toLocaleTimeString(GPCountry.uiLocale, { hour: '2-digit', minute: '2-digit' })}`],
             [unitWord(unit), `${number(Number(el.refuelLiters.value), 2)} ${unit}`],
             ['Precio', `${number(Number(el.refuelPrice.value), 3)} €/${unit}`],
             ['Total pagado', money(Number(el.refuelTotal.value))],
