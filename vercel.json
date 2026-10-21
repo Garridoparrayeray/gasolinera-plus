@@ -112,7 +112,7 @@
   ],
   "redirects": [
     {
-      "source": "/data/gasolinera.sqlite",
+      "source": "/data/(.*).sqlite",
       "destination": "/",
       "permanent": false
     },

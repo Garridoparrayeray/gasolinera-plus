@@ -2,8 +2,9 @@
 
 $uri = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 
-if ($uri === '/api/shell.php') {
+if ($uri === '/api/shell.php' || preg_match('#\.(sqlite|sqlite3|db|env|log)$#i', $uri) || str_contains($uri, '/.')) {
     http_response_code(404);
+    echo 'Not found';
     return true;
 }
 
