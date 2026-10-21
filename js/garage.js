@@ -494,8 +494,8 @@ const GPGarage = (() => {
             refs.zone = refuel.zoneAvg;
         }
         const needsZone = refs.zone === null && hasCoords(refuel);
-        if (country === 'es' && (refs.national === null || needsZone) && GPPriceIndex.available()) {
-            const ref = await GPPriceIndex.dayReference({ fuel: vehicle.fuel, date, lat: refuel.stationLat, lon: refuel.stationLon });
+        if ((refs.national === null || needsZone) && GPPriceIndex.available()) {
+            const ref = await GPPriceIndex.dayReference({ fuel: vehicle.fuel, date, lat: refuel.stationLat, lon: refuel.stationLon, country });
             if (ref && refs.national === null && ref.national) {
                 refs.national = ref.national.avg;
             }
@@ -513,7 +513,7 @@ const GPGarage = (() => {
         const nationalMaps = {};
         for (const refuel of sortedRefuels) {
             const country = refuelCountry(refuel);
-            const needsMap = country !== 'es' || !GPPriceIndex.available();
+            const needsMap = !GPPriceIndex.available();
             if (needsMap && !nationalMaps[country] && typeof refuel.nationalAvg !== 'number') {
                 const first = sortedRefuels.find((item) => refuelCountry(item) === country);
                 nationalMaps[country] = await nationalByDate(vehicle.fuel, GPFuel.madridDate(first.date), country);
@@ -544,44 +544,61 @@ const GPGarage = (() => {
         for (const group of groupByPeriod(sortedRefuels, kind)) {
             let liters = 0;
             let spent = 0;
-            let spainLiters = 0;
-            const points = [];
+            const byCountry = {};
             const countries = new Set();
-            const abroad = { national: 0, nationalLiters: 0, zone: 0, zoneLiters: 0 };
             for (const refuel of group.refuels) {
                 liters += refuel.liters;
                 spent += refuel.pricePerUnit * refuel.liters;
                 const country = refuelCountry(refuel);
                 countries.add(country);
-                if (country !== 'es') {
-                    if (typeof refuel.nationalAvg === 'number') {
-                        abroad.national += refuel.nationalAvg * refuel.liters;
-                        abroad.nationalLiters += refuel.liters;
-                    }
-                    if (typeof refuel.zoneAvg === 'number') {
-                        abroad.zone += refuel.zoneAvg * refuel.liters;
-                        abroad.zoneLiters += refuel.liters;
-                    }
-                    continue;
+                if (!byCountry[country]) {
+                    byCountry[country] = { liters: 0, points: [], fallbackNational: 0, fallbackNationalLiters: 0, fallbackZone: 0, fallbackZoneLiters: 0 };
                 }
-                spainLiters += refuel.liters;
+                const cData = byCountry[country];
+                cData.liters += refuel.liters;
                 if (hasCoords(refuel)) {
-                    points.push({ lat: refuel.stationLat, lon: refuel.stationLon, liters: refuel.liters });
+                    cData.points.push({ lat: refuel.stationLat, lon: refuel.stationLon, liters: refuel.liters });
+                }
+                if (typeof refuel.nationalAvg === 'number') {
+                    cData.fallbackNational += refuel.nationalAvg * refuel.liters;
+                    cData.fallbackNationalLiters += refuel.liters;
+                }
+                if (typeof refuel.zoneAvg === 'number') {
+                    cData.fallbackZone += refuel.zoneAvg * refuel.liters;
+                    cData.fallbackZoneLiters += refuel.liters;
                 }
             }
-            let nationalSum = abroad.national;
-            let nationalLiters = abroad.nationalLiters;
-            let zoneSum = abroad.zone;
-            let zoneLiters = abroad.zoneLiters;
-            if (spainLiters > 0) {
-                const ref = await GPPriceIndex.periodReference({ fuel: vehicle.fuel, from: group.period.from, to: group.period.to, points });
-                for (const entry of ref.zones) {
-                    zoneSum += entry.avg * entry.liters;
-                    zoneLiters += entry.liters;
+            let nationalSum = 0;
+            let nationalLiters = 0;
+            let zoneSum = 0;
+            let zoneLiters = 0;
+            for (const [code, cData] of Object.entries(byCountry)) {
+                let gotNational = false;
+                let gotZone = false;
+                if (GPPriceIndex.available()) {
+                    const ref = await GPPriceIndex.periodReference({ fuel: vehicle.fuel, from: group.period.from, to: group.period.to, points: cData.points, country: code });
+                    if (ref) {
+                        if (ref.zones && ref.zones.length) {
+                            for (const entry of ref.zones) {
+                                zoneSum += entry.avg * entry.liters;
+                                zoneLiters += entry.liters;
+                            }
+                            gotZone = true;
+                        }
+                        if (ref.national) {
+                            nationalSum += ref.national.avg * cData.liters;
+                            nationalLiters += cData.liters;
+                            gotNational = true;
+                        }
+                    }
                 }
-                if (ref.national) {
-                    nationalSum += ref.national.avg * spainLiters;
-                    nationalLiters += spainLiters;
+                if (!gotNational && cData.fallbackNationalLiters > 0) {
+                    nationalSum += cData.fallbackNational;
+                    nationalLiters += cData.fallbackNationalLiters;
+                }
+                if (!gotZone && cData.fallbackZoneLiters > 0) {
+                    zoneSum += cData.fallbackZone;
+                    zoneLiters += cData.fallbackZoneLiters;
                 }
             }
             let zone = null;
@@ -744,8 +761,8 @@ const GPGarage = (() => {
     async function loadReferences(refuel, fuel) {
         const date = GPFuel.madridDate(refuel.date);
         const country = refuelCountry(refuel);
-        if (country === 'es' && GPPriceIndex.available()) {
-            const ref = await GPPriceIndex.dayReference({ fuel, date, lat: refuel.stationLat, lon: refuel.stationLon });
+        if (GPPriceIndex.available()) {
+            const ref = await GPPriceIndex.dayReference({ fuel, date, lat: refuel.stationLat, lon: refuel.stationLon, country });
             if (ref && ref.national) {
                 refuel.nationalAvg = ref.national.avg;
             }
@@ -1398,13 +1415,17 @@ const GPGarage = (() => {
                     lat = station.lat;
                     lon = station.lon;
                 }
-                const ref = await GPPriceIndex.dayReference({ fuel: vehicle.fuel, date: day, lat, lon });
+                let refuelCountryCode = GPCountry.code;
+                if (station && station.pais) {
+                    refuelCountryCode = station.pais;
+                }
+                const ref = await GPPriceIndex.dayReference({ fuel: vehicle.fuel, date: day, lat, lon, country: refuelCountryCode });
                 if (ref && ref.zone) {
                     price = ref.zone.avg;
                     note = 'Precio medio de ese día en la zona de la gasolinera.';
                 } else if (ref && ref.national) {
                     price = ref.national.avg;
-                    note = 'Precio medio de ese día en España.';
+                    note = GPCountry.tr('Precio medio de ese día en {0}.').replace('{0}', countryLabel(refuelCountryCode));
                 }
             } catch (error) {
                 price = null;

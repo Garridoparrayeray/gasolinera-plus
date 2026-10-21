@@ -614,7 +614,8 @@
   "En {pais}: {importe} más que la media ({n} {periodo}).": "{pais} : {importe} de plus que la moyenne ({n} {periodo}).",
   "repostajes": "pleins",
   "semanas": "semaines",
-  "meses": "mois"
+  "meses": "mois",
+  "Precio medio de ese día en {0}.": "Prix moyen ce jour-là en {0}."
  },
  "patterns": {
   "(+{0} min, +{1} km por la parada)": "(+{0} min, +{1} km pour l'arrêt)",

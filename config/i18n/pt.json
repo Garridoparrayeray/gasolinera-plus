@@ -614,7 +614,8 @@
   "En {pais}: {importe} más que la media ({n} {periodo}).": "Em {pais}: {importe} acima da média ({n} {periodo}).",
   "repostajes": "abastecimentos",
   "semanas": "semanas",
-  "meses": "meses"
+  "meses": "meses",
+  "Precio medio de ese día en {0}.": "Preço médio desse dia em {0}."
  },
  "patterns": {
   "(+{0} min, +{1} km por la parada)": "(+{0} min, +{1} km pela paragem)",

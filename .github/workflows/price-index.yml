@@ -11,6 +11,8 @@ on:
       - 'feat/**'
     paths:
       - 'scripts/build-price-index.php'
+      - 'scripts/build-price-index-pt.php'
+      - 'scripts/build-price-index-fr.php'
       - '.github/workflows/price-index.yml'
   workflow_dispatch:
     inputs:
@@ -31,15 +33,34 @@ jobs:
     if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'push')
     runs-on: ubuntu-latest
     timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - country: es
+            tag: price-index
+            script: scripts/build-price-index.php
+            title: "Indice de precios Espana (historico agregado)"
+            notes: "Medias diarias de carburantes por pais, provincia y cuadricula de 0,1 grados, un fichero por mes. La app las descarga y las guarda en el dispositivo. Fuente: Ministerio para la Transicion Ecologica."
+          - country: pt
+            tag: price-index-pt
+            script: scripts/build-price-index-pt.php
+            title: "Indice de precios Portugal (historico agregado)"
+            notes: "Medias diarias de carburantes por pais, un fichero por mes. La app las descarga y las guarda en el dispositivo. Fuente: DGEG (PMD)."
+          - country: fr
+            tag: price-index-fr
+            script: scripts/build-price-index-fr.php
+            title: "Indice de precios Francia (historico agregado)"
+            notes: "Medias diarias de carburantes por pais, departamento y cuadricula de 0,1 grados, un fichero por mes. La app las descarga y las guarda en el dispositivo. Fuente: Ministere de l'Economie (prix-carburants.gouv.fr)."
     env:
-      TAG: price-index
+      TAG: ${{ matrix.tag }}
     steps:
       - uses: actions/checkout@v7
 
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: curl, mbstring
+          extensions: curl, mbstring, zip
 
       - name: Download the published index
         env:
@@ -52,7 +73,7 @@ jobs:
           ls -la "$RUNNER_TEMP/price-index"
 
       - name: Add the missing days
-        run: php scripts/build-price-index.php --out="$RUNNER_TEMP/price-index" --days="${{ inputs.days || '400' }}"
+        run: php ${{ matrix.script }} --out="$RUNNER_TEMP/price-index" --days="${{ inputs.days || '400' }}"
 
       - name: Publish release assets
         env:
@@ -62,8 +83,8 @@ jobs:
           DIR="$RUNNER_TEMP/price-index"
           if ! gh release view "$TAG" > /dev/null 2>&1; then
             gh release create "$TAG" --target "$GITHUB_SHA" --latest=false \
-              --title "Indice de precios (historico agregado)" \
-              --notes "Medias diarias de carburantes por pais, provincia y cuadricula de 0,1 grados, un fichero por mes. La app las descarga y las guarda en el dispositivo. Fuente: Ministerio para la Transicion Ecologica."
+              --title "${{ matrix.title }}" \
+              --notes "${{ matrix.notes }}"
           fi
           for file in "$DIR"/*.json; do
             gh release upload "$TAG" "$file" --clobber
