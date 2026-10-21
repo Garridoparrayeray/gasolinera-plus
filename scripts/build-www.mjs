@@ -67,6 +67,9 @@ for (const entry of copies) {
 const graphSource = join(root, 'data', 'road-graph');
 if (existsSync(join(graphSource, 'manifest.json'))) {
     const manifest = JSON.parse(readFileSync(join(graphSource, 'manifest.json'), 'utf8'));
+    if (!manifest.parts) {
+        throw new Error('data/road-graph tiene el formato antiguo (un solo main.bin). Descarga uno con paquetes por país.');
+    }
     const home = manifest.countries[0];
     manifest.bundled = [home];
     const graphTarget = join(out, 'data', 'road-graph');
