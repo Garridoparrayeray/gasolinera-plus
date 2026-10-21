@@ -33,7 +33,11 @@ const OfflineEngine = (() => {
         if (!stationsCache) {
             let payload = await GPNative.cachedOfflineStations();
             if (!payload) {
-                const res = await fetch(GPCountry.liteUrl());
+                let liteUrl = '/data/stations-lite.json';
+                if (typeof GPCountry !== 'undefined' && GPCountry.liteUrl) {
+                    liteUrl = GPCountry.liteUrl();
+                }
+                const res = await fetch(liteUrl);
                 payload = await res.json();
             }
             if (Array.isArray(payload)) {

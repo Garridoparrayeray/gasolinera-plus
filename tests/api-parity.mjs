@@ -6,6 +6,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const BASE = (process.env.BASE_URL || 'http://localhost:8021').replace(/\/$/, '');
 
 const GPNative = { cachedOfflineStations: async () => null };
+globalThis.GPCountry = { liteUrl: () => '/data/stations-lite.json' };
 const createEngine = new Function('GPNative', 'fetch', readFileSync(join(root, 'js', 'api.js'), 'utf8') + '\nreturn OfflineEngine;');
 const engine = createEngine(GPNative, (url) => fetch(new URL(url, BASE)));
 const runParity = new Function(readFileSync(join(root, 'tests', 'parity-lib.js'), 'utf8') + '\nreturn globalThis.runParity;')();
