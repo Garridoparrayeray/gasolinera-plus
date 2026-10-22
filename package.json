@@ -12,7 +12,7 @@
     "sync:ios": "npm run build:www && cap sync ios"
   },
   "dependencies": {
-    "@capacitor/android": "8.5.2",
+    "@capacitor/android": "8.5.3",
     "@capacitor/app": "8.1.1",
     "@capacitor/app-launcher": "^8.0.0",
     "@capacitor/background-runner": "3.0.0",
