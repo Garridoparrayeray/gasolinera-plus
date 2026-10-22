@@ -2,6 +2,9 @@ import { launch, sleep } from './cdp.mjs';
 
 const BASE_URL = (process.env.BASE_URL || 'http://localhost:8021').replace(/\/$/, '');
 const graph = await fetch(BASE_URL + '/data/road-graph/manifest.json').catch(() => null);
+if (graph) {
+    await graph.arrayBuffer().catch(() => null);
+}
 if (!graph || !graph.ok) {
     console.log('RESULTADO RUTA: SKIP (no hay grafo de carreteras en este servidor)');
     process.exit(0);
