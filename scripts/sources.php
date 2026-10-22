@@ -314,10 +314,10 @@ function frenchHours(array $record): string
     if (!is_array($hours) || !isset($hours['jour']) || !is_array($hours['jour'])) {
         return '';
     }
-    $codes = ['1' => 'L', '2' => 'M', '3' => 'X', '4' => 'J', '5' => 'V', '6' => 'S', '7' => 'D'];
-    $blocks = [];
+    $perDay = array_fill(1, 7, '');
     foreach ($hours['jour'] as $day) {
-        if (!isset($codes[fieldStr($day, '@id')]) || fieldStr($day, '@ferme') === '1' || !isset($day['horaire'])) {
+        $number = (int)fieldStr($day, '@id');
+        if ($number < 1 || $number > 7 || fieldStr($day, '@ferme') === '1' || !isset($day['horaire'])) {
             continue;
         }
         $spans = $day['horaire'];
@@ -329,12 +329,38 @@ function frenchHours(array $record): string
             $from = str_replace('.', ':', fieldStr($span, '@ouverture'));
             $to = str_replace('.', ':', fieldStr($span, '@fermeture'));
             if (preg_match('/^\d{1,2}:\d{2}$/', $from) && preg_match('/^\d{1,2}:\d{2}$/', $to)) {
-                $parts[] = $from . '-' . $to;
+                $start = sprintf('%02d:%s', (int)$from, substr($from, -2));
+                $end = sprintf('%02d:%s', (int)$to, substr($to, -2));
+                if ($start !== $end) {
+                    $parts[] = $start . '-' . $end;
+                }
             }
         }
-        if ($parts) {
-            $blocks[] = $codes[$day['@id']] . ': ' . implode(' Y ', $parts);
+        $perDay[$number] = implode(' Y ', $parts);
+    }
+    return groupedHours($perDay);
+}
+
+function groupedHours(array $perDay): string
+{
+    $codes = [1 => 'L', 2 => 'M', 3 => 'X', 4 => 'J', 5 => 'V', 6 => 'S', 7 => 'D'];
+    $blocks = [];
+    $day = 1;
+    while ($day <= 7) {
+        if ($perDay[$day] === '') {
+            $day++;
+            continue;
         }
+        $last = $day;
+        while ($last < 7 && $perDay[$last + 1] === $perDay[$day]) {
+            $last++;
+        }
+        $name = $codes[$day];
+        if ($last > $day) {
+            $name = $codes[$day] . '-' . $codes[$last];
+        }
+        $blocks[] = $name . ': ' . $perDay[$day];
+        $day = $last + 1;
     }
     return implode('; ', $blocks);
 }

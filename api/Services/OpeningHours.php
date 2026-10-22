@@ -80,6 +80,32 @@ class OpeningHours
         return ['estado' => 'cerrado', 'texto' => 'Cerrado, abre ' . self::DAY_NAMES[$next['weekday']] . ' a las ' . $time, 'raw' => $horarioRaw];
     }
 
+    public static function specification(string $horarioRaw): array
+    {
+        $names = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
+        if (self::isAlwaysOpen($horarioRaw)) {
+            return [['@type' => 'OpeningHoursSpecification', 'dayOfWeek' => array_values($names), 'opens' => '00:00', 'closes' => '23:59']];
+        }
+        $ranges = self::parseRanges(self::normalize($horarioRaw));
+        if ($ranges === null) {
+            return [];
+        }
+        $specification = [];
+        foreach ($ranges as $range) {
+            $closes = self::formatMinutes($range['toMinutes']);
+            if ($range['toMinutes'] >= 1439) {
+                $closes = '23:59';
+            }
+            $specification[] = [
+                '@type' => 'OpeningHoursSpecification',
+                'dayOfWeek' => array_map(fn($day) => $names[$day], $range['days']),
+                'opens' => self::formatMinutes($range['fromMinutes']),
+                'closes' => $closes,
+            ];
+        }
+        return $specification;
+    }
+
     private static function normalize(string $raw): string
     {
         return mb_strtoupper(trim($raw), 'UTF-8');

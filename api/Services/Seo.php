@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Services;
 
+require_once __DIR__ . '/OpeningHours.php';
+
 class Seo
 {
     public const PROFILES = [
@@ -319,7 +321,10 @@ class Seo
             ],
             'dateModified' => $updated,
         ];
-        if ((int)$station['is_24h'] === 1) {
+        $specification = OpeningHours::specification((string)$station['horario_raw']);
+        if ($specification !== []) {
+            $data['openingHoursSpecification'] = $specification;
+        } elseif ((int)$station['is_24h'] === 1) {
             $data['openingHours'] = 'Mo-Su 00:00-23:59';
         }
         $offers = [];
