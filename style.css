@@ -132,6 +132,7 @@ header {
 }
 #home-link:focus-visible { outline: 2px solid var(--highlight); outline-offset: 4px; border-radius: 8px; }
 .lockup-text { min-width: 0; }
+#app-title { white-space: nowrap; }
 .lockup-chevron { width: 18px; height: 18px; flex-shrink: 0; color: var(--lockup-subtitle); transition: transform 0.2s ease; }
 #home-link[aria-expanded="true"] .lockup-chevron { transform: rotate(180deg); }
 #app-title-country {
@@ -1479,11 +1480,13 @@ html.desktop { font-size: 100%; }
 }
 /* El logo y la banda de precios forman una sola barra superior con la misma altura. El menú empieza justo debajo, sin hueco: el margen negativo cancela el espacio entre elementos del menú. */
 .desktop .home-link-wrap { order: 0; flex: none; display: flex; align-items: center; box-sizing: border-box; height: var(--topbar-h); margin: 0 0 -4px; padding: 0 16px; }
-.desktop #home-link { gap: 12px; }
-.desktop #country-switcher { left: 8px; top: calc(100% + 4px); }
+.desktop #home-link { gap: 10px; width: 100%; }
+.desktop .lockup-text { flex: 1 1 auto; }
+.desktop .lockup-chevron { width: 16px; height: 16px; margin-left: auto; }
+.desktop #country-switcher { position: fixed; top: calc(var(--topbar-h) - 6px); left: 8px; width: 320px; max-height: calc(100vh - var(--topbar-h)); overflow-y: auto; }
 .desktop .country-card__text strong { font-size: 1rem; }
 .desktop #app-logomark svg { width: 40px; height: 40px; border-radius: 10px; }
-.desktop .home-link-wrap strong { font-size: 20px; }
+.desktop .home-link-wrap strong { font-size: 18px; }
 .desktop .home-link-wrap #app-subtitle { display: none; }
 
 .desktop #view-toggle { display: contents; }

@@ -657,8 +657,9 @@
         if (delta === null) {
             return span;
         }
+        const tail = GPCountry.tr(suffix.trim());
         if (Math.abs(delta) < 0.0005) {
-            span.textContent = 'sin cambios' + suffix;
+            span.textContent = GPCountry.tr('sin cambios') + ' ' + tail;
             return span;
         }
         let arrow = '▲';
@@ -668,7 +669,7 @@
         } else {
             span.classList.add('is-up');
         }
-        span.textContent = `${arrow} ${Math.abs(delta).toFixed(3)}${suffix}`;
+        span.textContent = `${arrow} ${Math.abs(delta).toFixed(3)} ${tail}`;
         return span;
     }
 

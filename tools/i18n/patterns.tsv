@@ -102,3 +102,5 @@ Abierto, cierra a las {0}	Aberto, fecha às {0}	Ouvert, ferme à {0}
 Cerrado, abre a las {0}	Fechado, abre às {0}	Fermé, ouvre à {0}
 Cerrado, abre mañana a las {0}	Fechado, abre amanhã às {0}	Fermé, ouvre demain à {0}
 Cerrado, abre {0} a las {1}	Fechado, abre {0} às {1}	Fermé, ouvre {0} à {1}
+({0} €) entre {1} y {2} · {3} días con dato.	({0} €) entre {1} e {2} · {3} dias com dados.	({0} €) entre {1} et {2} · {3} jours de données.
+({0} €) entre {1} y {2} · {3} meses con dato.	({0} €) entre {1} e {2} · {3} meses com dados.	({0} €) entre {1} et {2} · {3} mois de données.
