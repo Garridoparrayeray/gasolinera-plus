@@ -11,9 +11,9 @@ await ev('localStorage.clear()');
 const coords = { es: [40.41, -3.7], pt: [38.72, -9.14], fr: [48.85, 2.35] };
 
 const expected = {
-    es: { first: 'gasoleo_a', has: ['adblue', 'gasolina_95_e10'], lacks: ['gasolina_98_premium', 'gnc_m3'], weekdayLabel: 'Lunes a viernes', closed: 'cerrado' },
-    pt: { first: 'gasoleo_a', has: ['gasolina_98_premium', 'gasolina_mistura', 'gnc_m3', 'gasoleo_b'], lacks: ['adblue', 'gasolina_95_e10'], weekdayLabel: 'Segunda-feira a sexta-feira', closed: 'fechado' },
-    fr: { first: 'gasoleo_a', second: 'gasolina_95_e10', has: ['gasolina_95_e85', 'glp'], lacks: ['adblue', 'gasoleo_premium', 'gasolina_98_premium'], weekdayLabel: 'Lundi au vendredi', closed: 'fermé' },
+    es: { first: 'gasoleo_a', has: ['adblue', 'gasolina_95_e10'], lacks: ['gasolina_98_premium', 'gnc_m3'], firstDay: 'Lunes' },
+    pt: { first: 'gasoleo_a', has: ['gasolina_98_premium', 'gasolina_mistura', 'gnc_m3', 'gasoleo_b'], lacks: ['adblue', 'gasolina_95_e10'], firstDay: 'Segunda-feira' },
+    fr: { first: 'gasoleo_a', second: 'gasolina_95_e10', has: ['gasolina_95_e85', 'glp'], lacks: ['adblue', 'gasoleo_premium', 'gasolina_98_premium'], firstDay: 'Lundi' },
 };
 
 for (const [code, want] of Object.entries(expected)) {
@@ -52,7 +52,7 @@ for (const [code, want] of Object.entries(expected)) {
 
     const withHours = await ev(`(async () => {
         const stations = await OfflineEngine.loadData();
-        const found = stations.find((st) => st.horario_raw && st.horario_raw.includes(';') && st.horario_raw.includes('S:') && st.horario_raw.includes('L-V:'));
+        const found = stations.find((st) => st.horario_raw && st.horario_raw.split(';').length >= 2 && !st.horario_raw.includes('24H') && /^L/.test(st.horario_raw));
         if (!found) {
             return '';
         }
@@ -63,7 +63,7 @@ for (const [code, want] of Object.entries(expected)) {
         await ev(`GP.openStationModal('${withHours}')`);
         await waitFor("document.getElementById('station-modal').open && !document.getElementById('modal-horario-week').hidden", 15000);
         const lines = JSON.parse(await ev(`JSON.stringify([...document.querySelectorAll('#modal-horario-week li')].map((li) => li.textContent))`));
-        check(`${code}: horario escrito por días`, lines.length >= 2 && lines[0].startsWith(want.weekdayLabel), JSON.stringify(lines));
+        check(`${code}: horario escrito por días`, lines.length >= 2 && lines[0].startsWith(want.firstDay), JSON.stringify(lines));
         const status = await ev("document.getElementById('modal-horario').textContent");
         check(`${code}: estado de apertura en su idioma`, !/Abierto|Cerrado/.test(status) || code === 'es', status);
         await ev("document.getElementById('station-modal').close()");

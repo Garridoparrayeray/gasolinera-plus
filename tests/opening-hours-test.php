@@ -43,6 +43,17 @@ expectSame('24h solo entre semana', false, OpeningHours::isAlwaysOpen('L-V: 00:0
 expectSame('vacio', null, OpeningHours::isOpenAt('', at("$monday 12:00")));
 expectSame('ilegible', 'desconocido', OpeningHours::describe('SEGÚN TEMPORADA', at("$monday 12:00"))['estado']);
 
+$spec = OpeningHours::specification('L-V: 07:00-21:00; S: 08:00-14:00 Y 16:00-20:00');
+expectSame('especificacion bloques', 3, count($spec));
+expectSame('especificacion dias', ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], $spec[0]['dayOfWeek']);
+expectSame('especificacion abre', '07:00', $spec[0]['opens']);
+expectSame('especificacion cierra', '21:00', $spec[0]['closes']);
+expectSame('especificacion sabado tarde', '16:00', $spec[2]['opens']);
+expectSame('especificacion 24h', 7, count(OpeningHours::specification('L-D: 24H')[0]['dayOfWeek']));
+expectSame('especificacion 24h cierra', '23:59', OpeningHours::specification('L-D: 24H')[0]['closes']);
+expectSame('especificacion ilegible', [], OpeningHours::specification('SEGÚN TEMPORADA'));
+expectSame('especificacion vacio', [], OpeningHours::specification(''));
+
 if ($failures > 0) {
     echo "horarios: $failures fallos\n";
     exit(1);

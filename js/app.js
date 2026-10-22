@@ -2312,7 +2312,7 @@
 
     el.filterFuel.addEventListener('change', () => {
         try {
-            localStorage.setItem(FUEL_PREF_KEY, el.filterFuel.value);
+            localStorage.setItem(GPCountry.storageKey(FUEL_PREF_KEY), el.filterFuel.value);
         } catch (e) {
             showToast('No se pudo guardar el carburante elegido');
         }
@@ -2665,7 +2665,7 @@
     function restoreFuelPreference() {
         let saved = null;
         try {
-            saved = localStorage.getItem(FUEL_PREF_KEY);
+            saved = localStorage.getItem(GPCountry.storageKey(FUEL_PREF_KEY));
         } catch (e) {
             saved = null;
         }
