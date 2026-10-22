@@ -269,11 +269,19 @@ function fetchPortugal(?\PDO $pdo = null): array
         }
         $page++;
     }
+    $osm = osmData('pt');
     $previous = previousHours($pdo);
     $day = (int)date('z') % PT_HOURS_REFRESH_DAYS;
     $refresh = [];
     foreach ($rows as $id => $row) {
-        if (isset($previous[$id]) && $previous[$id] !== '') {
+        $keep = isset($previous[$id]) && $previous[$id] !== '';
+        if ($keep && isset($osm['hours'][$id]) && $osm['hours'][$id] === $previous[$id]) {
+            $keep = false;
+        }
+        if ($keep && $previous[$id] === 'L-D: 24H' && strcasecmp($row['Tipo Venta'], 'Auto-estrada') === 0) {
+            $keep = false;
+        }
+        if ($keep) {
             $rows[$id]['Horario'] = $previous[$id];
             if ((int)$id % PT_HOURS_REFRESH_DAYS !== $day) {
                 continue;
@@ -287,12 +295,8 @@ function fetchPortugal(?\PDO $pdo = null): array
         $rows[$id]['Horario'] = $hours;
     }
     echo 'Horarios de Portugal: ' . count($fetched['hours']) . ' con horario, ' . count($fetched['missing']) . " sin poder descargar\n";
-    $osm = osmData('pt');
     foreach ($rows as $id => $row) {
         $rows[$id]['Horario'] = hoursOrOsm($rows[$id]['Horario'], $osm['hours'], (string)$id);
-        if ($rows[$id]['Horario'] === '' && strcasecmp($row['Tipo Venta'], 'Auto-estrada') === 0) {
-            $rows[$id]['Horario'] = 'L-D: 24H';
-        }
     }
     return ['fecha' => snapshotNow(), 'estaciones' => array_values($rows)];
 }
