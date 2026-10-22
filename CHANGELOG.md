@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.9.2
+
+### Cambios
+- La cabecera muestra «GASOLINERA+» siempre en una línea y el selector de país flota sobre el contenido en escritorio, sin cortarse.
+- Se traducen las notas de estadísticas y los textos «desde ayer» en portugués y francés.
+
 ## 1.9.1
 
 ### Novedades
