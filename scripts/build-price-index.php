@@ -12,6 +12,14 @@ const INDEX_FUELS = ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina
 const INDEX_DEFAULT_DAYS = 400;
 const INDEX_DEFAULT_OUT = __DIR__ . '/../data/price-index';
 
+function indexFuels(): array
+{
+    if (isset($GLOBALS['gp_index_fuels'])) {
+        return $GLOBALS['gp_index_fuels'];
+    }
+    return INDEX_FUELS;
+}
+
 function indexCellKey(float $lat, float $lon): string
 {
     return (int)floor($lat / INDEX_CELL_DEG) . '_' . (int)floor($lon / INDEX_CELL_DEG);
@@ -19,7 +27,7 @@ function indexCellKey(float $lat, float $lon): string
 
 function emptyBucket(): array
 {
-    return array_fill(0, count(INDEX_FUELS) * 2, 0);
+    return array_fill(0, count(indexFuels()) * 2, 0);
 }
 
 function addSample(array &$bucket, int $fuelIndex, int $millis): void
@@ -44,7 +52,7 @@ function aggregateSnapshot(array $estaciones): array
         $prices = loadFuelPrices($row);
         $province = fieldStr($row, 'IDProvincia');
 
-        foreach (INDEX_FUELS as $fuelIndex => $slug) {
+        foreach (indexFuels() as $fuelIndex => $slug) {
             if (!isset($prices[$slug])) {
                 continue;
             }
@@ -73,7 +81,7 @@ function newMonthFile(string $month): array
         'version' => INDEX_VERSION,
         'month' => $month,
         'cellDeg' => INDEX_CELL_DEG,
-        'fuels' => INDEX_FUELS,
+        'fuels' => indexFuels(),
         'days' => [],
     ];
 }
@@ -84,7 +92,10 @@ function readMonthFile(string $path, string $month): array
         return newMonthFile($month);
     }
     $data = json_decode((string)file_get_contents($path), true);
-    if (!is_array($data) || !isset($data['days']) || ($data['version'] ?? 0) !== INDEX_VERSION) {
+    if (!is_array($data) || !isset($data['days']) || !isset($data['version']) || $data['version'] !== INDEX_VERSION) {
+        return newMonthFile($month);
+    }
+    if (!isset($data['fuels']) || $data['fuels'] !== indexFuels()) {
         return newMonthFile($month);
     }
     return $data;
@@ -128,7 +139,7 @@ function writeManifest(string $dir): void
         'version' => INDEX_VERSION,
         'generatedAt' => gmdate('c'),
         'cellDeg' => INDEX_CELL_DEG,
-        'fuels' => INDEX_FUELS,
+        'fuels' => indexFuels(),
         'firstDate' => $first,
         'lastDate' => $last,
         'months' => $months,

@@ -10,11 +10,15 @@ const INDEX_FR_ANNUAL_URL = 'https://donnees.roulez-eco.fr/opendata/annee/%d';
 const INDEX_FR_DEFAULT_OUT = __DIR__ . '/../data/price-index-fr';
 const FR_PRICE_MAX_AGE_DAYS = 30;
 
+const FR_INDEX_FUELS = ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_e5', 'glp', 'gasolina_95_e10', 'gasolina_95_e85'];
+
 const FR_FUEL_MAP = [
     'gazole' => 0, // gasoleo_a
     'sp95'   => 1, // gasolina_95_e5
     'sp98'   => 3, // gasolina_98_e5
     'gplc'   => 4, // glp
+    'e10'    => 5, // gasolina_95_e10 (la gasolina mas repostada en Francia)
+    'e85'    => 6, // gasolina_95_e85
 ];
 
 function downloadAndExtractFrenchAnnualXml(int $year): ?string
@@ -170,6 +174,7 @@ function processFrenchAnnualXml(string $xmlPath, array $datesNeeded, array &$mon
 
 function indexFrMain(array $argv): void
 {
+    $GLOBALS['gp_index_fuels'] = FR_INDEX_FUELS;
     $opts = parseIndexArgs($argv);
     $dir = $opts['out'];
     if ($dir === INDEX_DEFAULT_OUT) {
