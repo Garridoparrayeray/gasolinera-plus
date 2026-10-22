@@ -33,6 +33,9 @@ function priceText(value, slug) {
     if (KG_FUELS.indexOf(slug) !== -1) {
         text += '/kg';
     }
+    if (slug === 'gnc_m3') {
+        text += '/m³';
+    }
     return text;
 }
 

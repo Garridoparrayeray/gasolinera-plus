@@ -1043,6 +1043,7 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
         <p id="modal-direccion" class="modal-address"></p>
         <p id="modal-municipio"></p>
         <p id="modal-horario"></p>
+        <ul id="modal-horario-week" class="hours-week" hidden></ul>
         <ul id="modal-fuels"></ul>
         <p class="offline-only garage-note" role="status">Sin conexión: el histórico de precios y la comparación con la zona no están disponibles.</p>
         <div id="modal-zone-comparison"></div>

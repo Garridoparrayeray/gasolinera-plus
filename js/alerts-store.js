@@ -56,6 +56,9 @@ const AlertsStore = (() => {
         if (unitFor(slug) === 'kg') {
             text += '/kg';
         }
+        if (unitFor(slug) === 'm3') {
+            text += '/m³';
+        }
         return text;
     }
 

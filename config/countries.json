@@ -43,6 +43,21 @@
     "headline": [
       "gasoleo_a",
       "gasolina_95_e5"
+    ],
+    "mainFuels": [
+      "gasoleo_a",
+      "gasolina_95_e5",
+      "gasoleo_premium",
+      "gasolina_98_e5",
+      "adblue",
+      "glp"
+    ],
+    "timezone": "Europe/Madrid",
+    "zones": [
+      {
+        "lonMax": -13.0,
+        "timezone": "Atlantic/Canary"
+      }
     ]
   },
   "pt": {
@@ -89,6 +104,20 @@
     "headline": [
       "gasoleo_a",
       "gasolina_95_e5"
+    ],
+    "mainFuels": [
+      "gasoleo_a",
+      "gasolina_95_e5",
+      "gasoleo_premium",
+      "gasolina_98_e5",
+      "glp"
+    ],
+    "timezone": "Europe/Lisbon",
+    "zones": [
+      {
+        "lonMax": -24.0,
+        "timezone": "Atlantic/Azores"
+      }
     ]
   },
   "fr": {
@@ -135,6 +164,16 @@
     "headline": [
       "gasoleo_a",
       "gasolina_95_e10"
-    ]
+    ],
+    "mainFuels": [
+      "gasoleo_a",
+      "gasolina_95_e10",
+      "gasolina_95_e5",
+      "gasolina_98_e5",
+      "gasolina_95_e85",
+      "glp"
+    ],
+    "timezone": "Europe/Paris",
+    "zones": []
   }
 }

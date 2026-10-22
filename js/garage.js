@@ -831,12 +831,7 @@ const GPGarage = (() => {
         if (el.vehicleFuelInput.options.length) {
             return;
         }
-        el.vehicleFuelInput.innerHTML = el.filterFuel.innerHTML;
-        for (const option of [...el.vehicleFuelInput.querySelectorAll('option')]) {
-            if (option.value === 'adblue') {
-                option.remove();
-            }
-        }
+        GPCountry.fillFuelSelect(el.vehicleFuelInput, 'all', ['adblue', 'gnc_m3']);
     }
 
     function updateVehicleUnits() {

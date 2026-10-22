@@ -149,15 +149,16 @@ function previousHours(?\PDO $pdo): array
     return $rows;
 }
 
-function fetchPortugueseHours(array $ids): array
+function fetchPortugueseHoursOnce(array $ids, int $parallel): array
 {
     $hours = [];
-    foreach (array_chunk($ids, 8) as $batch) {
+    $failed = [];
+    foreach (array_chunk($ids, $parallel) as $batch) {
         $multi = curl_multi_init();
         $handles = [];
         foreach ($batch as $id) {
             $handle = curl_init(sprintf(SOURCE_PT_STATION, rawurlencode((string)$id)));
-            curl_setopt_array($handle, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20, CURLOPT_ENCODING => '']);
+            curl_setopt_array($handle, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 25, CURLOPT_ENCODING => '']);
             curl_multi_add_handle($multi, $handle);
             $handles[$id] = $handle;
         }
@@ -169,24 +170,49 @@ function fetchPortugueseHours(array $ids): array
         } while ($running && $status === CURLM_OK);
         foreach ($handles as $id => $handle) {
             $data = json_decode((string)curl_multi_getcontent($handle), true);
-            $h = '';
-            if (is_array($data) && isset($data['resultado']) && is_array($data['resultado'])) {
-                if (isset($data['resultado']['HorarioPosto']) && is_array($data['resultado']['HorarioPosto'])) {
-                    $h = portugueseHours($data['resultado']['HorarioPosto']);
-                }
-                if ($h === '' && isset($data['resultado']['Observacoes'])) {
-                    $h = portugueseObservationsHours(fieldStr($data['resultado'], 'Observacoes'));
-                }
-            }
-            if ($h !== '') {
-                $hours[$id] = $h;
-            }
             curl_multi_remove_handle($multi, $handle);
             curl_close($handle);
+            if (!is_array($data) || !isset($data['resultado']) || !is_array($data['resultado'])) {
+                $failed[] = $id;
+                continue;
+            }
+            $h = '';
+            if (isset($data['resultado']['HorarioPosto']) && is_array($data['resultado']['HorarioPosto'])) {
+                $h = portugueseHours($data['resultado']['HorarioPosto']);
+            }
+            if ($h === '' && isset($data['resultado']['Observacoes'])) {
+                $h = portugueseObservationsHours(fieldStr($data['resultado'], 'Observacoes'));
+            }
+            $hours[$id] = $h;
         }
         curl_multi_close($multi);
     }
-    return $hours;
+    return ['hours' => $hours, 'failed' => $failed];
+}
+
+function fetchPortugueseHours(array $ids): array
+{
+    $hours = [];
+    $pending = $ids;
+    $parallel = 6;
+    for ($round = 1; $round <= 4 && $pending !== []; $round++) {
+        $result = fetchPortugueseHoursOnce($pending, $parallel);
+        foreach ($result['hours'] as $id => $h) {
+            $hours[$id] = $h;
+        }
+        $pending = $result['failed'];
+        if ($pending !== []) {
+            fwrite(STDERR, 'Horarios de Portugal: ' . count($pending) . " fichas sin respuesta en la ronda $round\n");
+            $parallel = max(1, intdiv($parallel, 2));
+            sleep(3 * $round);
+        }
+    }
+    foreach ($hours as $id => $h) {
+        if ($h === '') {
+            unset($hours[$id]);
+        }
+    }
+    return ['hours' => $hours, 'missing' => $pending];
 }
 
 function fetchPortugal(?\PDO $pdo = null): array
@@ -256,12 +282,14 @@ function fetchPortugal(?\PDO $pdo = null): array
         $refresh[] = $id;
     }
     echo 'Horarios de Portugal: ' . count($refresh) . " fichas a consultar\n";
-    foreach (fetchPortugueseHours($refresh) as $id => $hours) {
-        if ($hours !== '' || !isset($previous[$id])) {
-            $rows[$id]['Horario'] = $hours;
-        }
+    $fetched = fetchPortugueseHours($refresh);
+    foreach ($fetched['hours'] as $id => $hours) {
+        $rows[$id]['Horario'] = $hours;
     }
+    echo 'Horarios de Portugal: ' . count($fetched['hours']) . ' con horario, ' . count($fetched['missing']) . " sin poder descargar\n";
+    $osm = osmData('pt');
     foreach ($rows as $id => $row) {
+        $rows[$id]['Horario'] = hoursOrOsm($rows[$id]['Horario'], $osm['hours'], (string)$id);
         if ($rows[$id]['Horario'] === '' && strcasecmp($row['Tipo Venta'], 'Auto-estrada') === 0) {
             $rows[$id]['Horario'] = 'L-D: 24H';
         }
@@ -311,23 +339,42 @@ function frenchHours(array $record): string
     return implode('; ', $blocks);
 }
 
-function frenchBrands(): array
+function osmData(string $country): array
 {
-    $path = __DIR__ . '/../data/brands-fr.json';
+    $empty = ['brands' => [], 'hours' => []];
+    $path = __DIR__ . '/../data/osm-' . $country . '.json';
     if (!is_file($path)) {
-        return [];
+        return $empty;
     }
     $data = json_decode((string)file_get_contents($path), true);
-    if (!is_array($data) || !isset($data['brands']) || !is_array($data['brands'])) {
-        return [];
+    if (!is_array($data)) {
+        return $empty;
     }
-    return $data['brands'];
+    foreach (['brands', 'hours'] as $key) {
+        if (!isset($data[$key]) || !is_array($data[$key])) {
+            $data[$key] = [];
+        }
+    }
+    return $data;
+}
+
+function hoursOrOsm(string $official, array $osmHours, string $id): string
+{
+    if ($official !== '') {
+        return $official;
+    }
+    if (isset($osmHours[$id]) && is_string($osmHours[$id])) {
+        return $osmHours[$id];
+    }
+    return '';
 }
 
 function fetchFrance(): array
 {
     $map = fuelSourceMap('fr');
-    $brands = frenchBrands();
+    $osm = osmData('fr');
+    $brands = $osm['brands'];
+    $osmHours = array_filter($osm['hours'], fn($hours) => $hours !== 'L-D: 24H');
     $records = json_decode(httpGetWithRetries(SOURCE_FR . '?select=' . SOURCE_FR_FIELDS, 180), true);
     if (!is_array($records)) {
         throw new \RuntimeException('respuesta inesperada de data.economie.gouv.fr');
@@ -370,7 +417,7 @@ function fetchFrance(): array
             'C.P.' => fieldStr($record, 'cp'),
             'Margen' => $margin,
             'Tipo Venta' => '',
-            'Horario' => frenchHours($record),
+            'Horario' => hoursOrOsm(frenchHours($record), $osmHours, (string)$record['id']),
             'Latitud' => (string)((float)$record['latitude'] / 100000),
             'Longitud (WGS84)' => (string)((float)$record['longitude'] / 100000),
             'prices' => $prices,
