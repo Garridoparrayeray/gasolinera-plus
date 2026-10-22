@@ -729,7 +729,9 @@
   "Abierto, cierra a las {0}": "Ouvert, ferme à {0}",
   "Cerrado, abre a las {0}": "Fermé, ouvre à {0}",
   "Cerrado, abre mañana a las {0}": "Fermé, ouvre demain à {0}",
-  "Cerrado, abre {0} a las {1}": "Fermé, ouvre {0} à {1}"
+  "Cerrado, abre {0} a las {1}": "Fermé, ouvre {0} à {1}",
+  "({0} €) entre {1} y {2} · {3} días con dato.": "({0} €) entre {1} et {2} · {3} jours de données.",
+  "({0} €) entre {1} y {2} · {3} meses con dato.": "({0} €) entre {1} et {2} · {3} mois de données."
  },
  "seo.section": "Stations-service",
  "seo.areaIndex": "Stations par département",
