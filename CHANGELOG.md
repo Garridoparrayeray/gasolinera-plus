@@ -1,5 +1,19 @@
 # Cambios
 
+## 1.9.1
+
+### Novedades
+- Cada país ofrece todos sus carburantes. Portugal suma la gasolina especial 98, la gasolina de mezcla para motores de 2 tiempos y el GNC en €/m³; Francia pone el SP95-E10 como segunda opción y su gráfica por carburante usa un color distinto para cada uno.
+- El coche puede usar cualquier carburante de los tres países.
+- En la ficha de cada gasolinera aparece el horario escrito día por día, en el idioma del país.
+- Más horarios: Portugal llega al 85 % de las gasolineras y Francia al 67 %. Donde la fuente oficial no trae horario se completa con OpenStreetMap, y nunca se contradice un dato oficial.
+
+### Cambios
+- «Abierto ahora» usa la hora local de cada gasolinera: en Portugal y en Canarias salía una hora desfasada.
+- Arreglado: en Portugal, elegir «Gasolina especial 98» daba un error de carburante no válido.
+- La lista de resultados y las estadísticas de cada país usan sus propios carburantes principales.
+- El histórico de 400 días de Francia incluye el SP95-E10 y el E85.
+
 ## 1.9.0
 
 ### Novedades
