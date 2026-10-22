@@ -100,6 +100,7 @@
         modalDireccion: document.getElementById('modal-direccion'),
         modalMunicipio: document.getElementById('modal-municipio'),
         modalHorario: document.getElementById('modal-horario'),
+        modalHorarioWeek: document.getElementById('modal-horario-week'),
         modalFuels: document.getElementById('modal-fuels'),
         modalZoneComparison: document.getElementById('modal-zone-comparison'),
         modalChart: document.getElementById('modal-chart'),
@@ -1799,14 +1800,6 @@
         el.statsRangeNote.textContent = note.trim();
     }
 
-    const FUEL_CHART_COLORS = {
-        gasoleo_a: '#E8710A',
-        gasolina_95_e5: '#1D4E89',
-        gasoleo_premium: '#8A3A00',
-        gasolina_98_e5: '#4A90D9',
-        adblue: '#5B8C5A',
-        glp: '#B3261E',
-    };
 
     function renderStatsByFuelChart() {
         return GPSectionLoading.track('stats', renderStatsByFuelChartNow());
@@ -1839,7 +1832,7 @@
                         }
                         return null;
                     }),
-                    borderColor: FUEL_CHART_COLORS[slug] || '#8A8A8A',
+                    borderColor: GPCountry.fuelColor(slug),
                     backgroundColor: 'transparent',
                     tension: 0.15,
                     spanGaps: true,
@@ -1999,6 +1992,21 @@
         target.appendChild(el.stationModal);
     }
 
+    function renderWeekHours(raw) {
+        const lines = GPCountry.weeklyHours(raw);
+        el.modalHorarioWeek.innerHTML = '';
+        el.modalHorarioWeek.hidden = lines.length === 0;
+        for (const line of lines) {
+            const item = document.createElement('li');
+            const day = document.createElement('span');
+            day.textContent = line.label;
+            const hours = document.createElement('strong');
+            hours.textContent = line.value;
+            item.append(day, hours);
+            el.modalHorarioWeek.appendChild(item);
+        }
+    }
+
     async function openStationModal(ideess, country) {
         if (state.modalLoadingId === String(ideess)) {
             return;
@@ -2025,6 +2033,7 @@
         }
         el.modalMunicipio.textContent = `${localidadPrefix}${station.municipio} (${station.provincia})`;
         el.modalHorario.textContent = station.horario.texto;
+        renderWeekHours(station.horario.raw);
 
         el.modalFuels.innerHTML = '';
         const fuelSlugs = Object.keys(station.combustibles);

@@ -7,22 +7,11 @@ use Core\Database;
 use Core\Request;
 use Core\Response;
 use Models\Station;
+use Core\Fuels;
 use Services\PlaceGeocoder;
 
 class StationsController
 {
-    private const MAIN_FUELS = [
-        'gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium',
-        'gasolina_98_e5', 'adblue', 'glp',
-    ];
-
-    private const KNOWN_FUELS = [
-        'gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_e5', 'adblue', 'glp',
-        'gasoleo_b', 'gasolina_95_e5_premium', 'gasolina_95_e10', 'gasolina_98_e10',
-        'gasolina_95_e25', 'gasolina_95_e85', 'diesel_renovable', 'gasolina_renovable',
-        'biodiesel', 'bioetanol', 'gnc', 'gnl', 'biogas_natural_comprimido',
-        'biogas_natural_licuado', 'hidrogeno', 'amoniaco', 'metanol',
-    ];
 
     
     public function near(Request $request): void
@@ -326,7 +315,7 @@ class StationsController
         }
         [$from, $to] = $this->parseDateRange($request, 30, $maxDays);
 
-        $placeholders = implode(',', array_fill(0, count(self::MAIN_FUELS), '?'));
+        $placeholders = implode(',', array_fill(0, count(Fuels::main()), '?'));
         $periodoExpr = 'fecha';
         if ($group === 'month') {
             $periodoExpr = 'strftime(\'%Y-%m\', fecha)';
@@ -339,11 +328,11 @@ class StationsController
             GROUP BY periodo, carburante
             ORDER BY periodo ASC
         ");
-        $stmt->execute([...self::MAIN_FUELS, $from, $to]);
+        $stmt->execute([...Fuels::main(), $from, $to]);
         $rows = $stmt->fetchAll();
 
         $series = [];
-        foreach (self::MAIN_FUELS as $slug) {
+        foreach (Fuels::main() as $slug) {
             $series[$slug] = [];
         }
         foreach ($rows as $row) {
@@ -507,7 +496,7 @@ class StationsController
         if ($fuel === null || $fuel === '') {
             return null;
         }
-        if (!in_array($fuel, self::KNOWN_FUELS, true)) {
+        if (!in_array($fuel, Fuels::known(), true)) {
             return null;
         }
         return $fuel;
@@ -518,7 +507,7 @@ class StationsController
         if ($fuel === null || $fuel === '') {
             return false;
         }
-        return !in_array($fuel, self::KNOWN_FUELS, true);
+        return !in_array($fuel, Fuels::known(), true);
     }
 
     private function parseCoordinates(?string $lat, ?string $lon): ?array

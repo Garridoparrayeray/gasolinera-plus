@@ -60,6 +60,17 @@ class Country
         return $codes;
     }
 
+    public static function timezoneFor(float $lat, float $lon): string
+    {
+        $country = self::current();
+        foreach ($country['zones'] as $zone) {
+            if ($lon < $zone['lonMax']) {
+                return $zone['timezone'];
+            }
+        }
+        return $country['timezone'];
+    }
+
     public static function prefix(string $code): string
     {
         if ($code === self::DEFAULT) {

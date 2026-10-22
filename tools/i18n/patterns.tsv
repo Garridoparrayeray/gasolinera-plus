@@ -98,3 +98,7 @@ real, medido en {0} km · margen ±{1}	real, medido em {0} km · margem ±{1}	r�
 ¿Es correcto este número de {0}: {1} {2}? Sale de {3} € a {4} €/{5}.	Está correto este número de {0}: {1} {2}? Resulta de {3} € a {4} €/{5}.	Ce nombre de {0} est-il correct : {1} {2} ? Il vient de {3} € à {4} €/{5}.
 Cerca de ti: {0} gasolineras · {1}	Perto de si: {0} postos · {1}	Près de vous : {0} stations · {1}
 {0} km de radio	{0} km de raio	{0} km de rayon
+Abierto, cierra a las {0}	Aberto, fecha às {0}	Ouvert, ferme à {0}
+Cerrado, abre a las {0}	Fechado, abre às {0}	Fermé, ouvre à {0}
+Cerrado, abre mañana a las {0}	Fechado, abre amanhã às {0}	Fermé, ouvre demain à {0}
+Cerrado, abre {0} a las {1}	Fechado, abre {0} às {1}	Fermé, ouvre {0} à {1}

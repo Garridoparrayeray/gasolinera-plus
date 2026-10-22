@@ -32,7 +32,7 @@ class Station
             if ($distanceKm > $radiusKm) {
                 continue;
             }
-            if ($openNow && $this->isOpenNow($row['horario_raw']) !== true) {
+            if ($openNow && $this->isOpenNow($row) !== true) {
                 continue;
             }
             $candidates[] = ['row' => $row, 'distanceKm' => $distanceKm];
@@ -103,7 +103,7 @@ class Station
             if ($lat !== null && $lon !== null) {
                 $distanceKm = self::haversineKm($lat, $lon, (float)$row['lat'], (float)$row['lon']);
             }
-            if ($openNow && $this->isOpenNow($row['horario_raw']) !== true) {
+            if ($openNow && $this->isOpenNow($row) !== true) {
                 continue;
             }
             $relevance = $this->relevanceScore($row, $normalized, $rawQuery);
@@ -136,7 +136,7 @@ class Station
                 if ($placeDistanceKm > $mergeRadiusKm) {
                     continue;
                 }
-                if ($openNow && $this->isOpenNow($row['horario_raw']) !== true) {
+                if ($openNow && $this->isOpenNow($row) !== true) {
                     continue;
                 }
                 $distanceKm = null;
@@ -362,7 +362,7 @@ class Station
             'lat' => (float)$row['lat'],
             'lon' => (float)$row['lon'],
             'is24h' => (bool)$row['is_24h'],
-            'horario' => OpeningHours::describe($row['horario_raw'], new \DateTime('now', new \DateTimeZone('Europe/Madrid'))),
+            'horario' => OpeningHours::describe($row['horario_raw'], self::localNow($row)),
             'combustibles' => $fuels,
             'lastSeenDate' => $row['last_seen_date'],
         ];
@@ -619,9 +619,14 @@ class Station
         return 0;
     }
 
-    private function isOpenNow(string $horarioRaw): ?bool
+    private static function localNow(array $row): \DateTime
     {
-        return OpeningHours::isOpenAt($horarioRaw, new \DateTime('now', new \DateTimeZone('Europe/Madrid')));
+        return new \DateTime('now', new \DateTimeZone(\Core\Country::timezoneFor((float)$row['lat'], (float)$row['lon'])));
+    }
+
+    private function isOpenNow(array $row): ?bool
+    {
+        return OpeningHours::isOpenAt($row['horario_raw'], self::localNow($row));
     }
 
     
@@ -686,7 +691,7 @@ class Station
         $total = count($candidates);
         $page = array_slice($candidates, $offset, $limit);
 
-        $showFuels = ['gasoleo_a', 'gasolina_95_e5'];
+        $showFuels = \Core\Fuels::headline();
         if ($fuel !== null && !in_array($fuel, $showFuels, true)) {
             $showFuels[] = $fuel;
         }
@@ -733,9 +738,10 @@ class Station
             return $result;
         }
 
+        $fallbackFuel = \Core\Fuels::headline()[1];
         $fuels = [$sortFuel];
-        if ($sortFuel !== 'gasolina_95_e5') {
-            $fuels[] = 'gasolina_95_e5';
+        if ($sortFuel !== $fallbackFuel) {
+            $fuels[] = $fallbackFuel;
         }
         $fuelPlaceholders = implode(',', array_fill(0, count($fuels), '?'));
 
@@ -758,8 +764,8 @@ class Station
                 }
                 if (isset($prices[$sortFuel])) {
                     $result[$ideess] = $prices[$sortFuel];
-                } elseif (isset($prices['gasolina_95_e5'])) {
-                    $result[$ideess] = $prices['gasolina_95_e5'];
+                } elseif (isset($prices[$fallbackFuel])) {
+                    $result[$ideess] = $prices[$fallbackFuel];
                 }
             }
         }

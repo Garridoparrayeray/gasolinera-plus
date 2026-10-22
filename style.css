@@ -540,6 +540,10 @@ dialog {
 }
 dialog::backdrop { background: rgba(34, 29, 18, 0.5); }
 
+.hours-week { list-style: none; margin: 0 0 10px; padding: 0; font-size: 0.85rem; color: var(--text-secondary); }
+.hours-week li { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border-bottom: 1px solid var(--border); }
+.hours-week li:last-child { border-bottom: 0; }
+.hours-week strong { font-weight: 600; color: var(--text); text-align: right; }
 #station-modal .modal-address { font-family: var(--font-display); margin: 10px 0 4px; font-size: 1.2rem; font-weight: 700; color: var(--text); }
 #modal-municipio, #modal-horario { color: var(--text-secondary); font-size: 0.85rem; margin: 2px 0; }
 

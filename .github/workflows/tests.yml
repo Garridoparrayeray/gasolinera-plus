@@ -13,7 +13,7 @@ permissions:
 jobs:
   tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     env:
       CI: 'true'
       BASE_URL: http://localhost:8021
@@ -49,8 +49,26 @@ jobs:
           cat "$RUNNER_TEMP/php-server.log"
           exit 1
 
+      - name: Download the data of Portugal and France
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for C in pt fr; do
+            mkdir -p "$RUNNER_TEMP/$C"
+            gh release download "data-$C" -p "gasolinera-$C.sqlite.gz" -D "$RUNNER_TEMP/$C"
+            gunzip -c "$RUNNER_TEMP/$C/gasolinera-$C.sqlite.gz" > "data/gasolinera-$C.sqlite"
+            gh release download "data-$C" -p "stations-lite-$C.json" -D data --clobber
+          done
+          ls -la data
+
       - name: Static checks
         run: python tests/static-checks.py
+
+      - name: Unit tests (hours, time zones)
+        run: |
+          node tests/osm-hours.test.mjs
+          php tests/timezone-test.php
+          php tests/opening-hours-test.php
 
       - name: API smoke tests
         run: python tests/api-smoke.py
@@ -73,6 +91,15 @@ jobs:
         env:
           CHROME_PATH: google-chrome
         run: node tests/ui-garage.mjs
+
+      - name: UI paises, carburantes y horarios
+        env:
+          CHROME_PATH: google-chrome
+        run: |
+          node tests/ui-countries.mjs
+          node tests/ui-countries-deep.mjs
+          node tests/ui-fuels-hours.mjs
+          node tests/ui-garage-countries.mjs
 
       - name: UI Bluetooth
         env:

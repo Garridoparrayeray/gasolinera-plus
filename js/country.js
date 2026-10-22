@@ -426,38 +426,167 @@ const GPCountry = (() => {
         });
     }
 
+    const HOURS_TEXT = {
+        es: { to: ' a ', and: ' y ', h24: '24 horas', closed: 'cerrado', every: 'Todos los días', days: ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'] },
+        pt: { to: ' a ', and: ' e ', h24: '24 horas', closed: 'fechado', every: 'Todos os dias', days: ['segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado', 'domingo'] },
+        fr: { to: ' au ', and: ' et ', h24: '24 h/24', closed: 'fermé', every: 'Tous les jours', days: ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] },
+    };
+
+    function pad(value) {
+        return String(value).padStart(2, '0');
+    }
+
+    function parseHours(raw) {
+        const text = String(raw || '').toUpperCase().trim();
+        if (!text) {
+            return null;
+        }
+        const codes = 'LMXJVSD';
+        const perDay = [null, null, null, null, null, null, null];
+        for (const block of text.split(';')) {
+            const part = block.trim();
+            if (!part) {
+                continue;
+            }
+            const match = /^([LMXJVSD])(-([LMXJVSD]))?\s*[:]\s*(.+)$/.exec(part);
+            if (!match) {
+                return null;
+            }
+            const from = codes.indexOf(match[1]);
+            let to = from;
+            if (match[3]) {
+                to = codes.indexOf(match[3]);
+            }
+            const spans = [];
+            for (const span of match[4].split(/\s+Y\s+/)) {
+                const trimmed = span.trim();
+                if (trimmed === '24H' || trimmed === '24 H') {
+                    spans.push('24H');
+                    continue;
+                }
+                const range = /^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/.exec(trimmed);
+                if (!range) {
+                    return null;
+                }
+                spans.push(pad(range[1]) + ':' + range[2] + '–' + pad(range[3]) + ':' + range[4]);
+            }
+            let day = from;
+            for (let step = 0; step < 7; step++) {
+                perDay[day] = spans;
+                if (day === to) {
+                    break;
+                }
+                day = (day + 1) % 7;
+            }
+        }
+        return perDay;
+    }
+
+    function capitalize(text) {
+        return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    function weeklyHours(raw) {
+        const perDay = parseHours(raw);
+        if (!perDay || perDay.every((spans) => spans === null)) {
+            return [];
+        }
+        if (perDay.every((spans) => spans !== null && spans.length === 1 && spans[0] === '24H')) {
+            return [];
+        }
+        const words = HOURS_TEXT[lang];
+        const keyOf = (spans) => {
+            if (spans === null) {
+                return 'closed';
+            }
+            return spans.join('|');
+        };
+        const lines = [];
+        let day = 0;
+        while (day < 7) {
+            let last = day;
+            while (last + 1 < 7 && keyOf(perDay[last + 1]) === keyOf(perDay[day])) {
+                last++;
+            }
+            let label = capitalize(words.days[day]);
+            if (day === 0 && last === 6) {
+                label = words.every;
+            } else if (last === day + 1) {
+                label = capitalize(words.days[day]) + words.and + words.days[last];
+            } else if (last > day + 1) {
+                label = capitalize(words.days[day]) + words.to + words.days[last];
+            }
+            let value = words.closed;
+            if (perDay[day] !== null) {
+                value = perDay[day].map((span) => {
+                    if (span === '24H') {
+                        return words.h24;
+                    }
+                    return span;
+                }).join(words.and);
+            }
+            lines.push({ label, value });
+            day = last + 1;
+        }
+        return lines;
+    }
+
+    function fuelColor(slug) {
+        const fuel = fuelBySlug[slug];
+        if (fuel && fuel.color) {
+            return fuel.color;
+        }
+        return '#8A8A8A';
+    }
+
+    function fillFuelSelect(select, scope, exclude) {
+        const previous = select.value;
+        const available = fuels.filter((fuel) => {
+            if (exclude.includes(fuel.slug)) {
+                return false;
+            }
+            if (scope === 'all') {
+                return true;
+            }
+            return Boolean(fuel.sources[code]);
+        });
+        let mainSlugs = available.filter((fuel) => fuel.group === 'main').map((fuel) => fuel.slug);
+        if (scope === 'country') {
+            mainSlugs = config.mainFuels.filter((slug) => available.some((fuel) => fuel.slug === slug));
+        }
+        select.innerHTML = '';
+        const add = (parent, fuel) => {
+            const option = document.createElement('option');
+            option.value = fuel.slug;
+            option.textContent = fuel.label[lang];
+            parent.appendChild(option);
+        };
+        mainSlugs.forEach((slug) => add(select, fuelBySlug[slug]));
+        const groups = [
+            ['other', 'Otras gasolinas y gasóleos'],
+            ['alt', 'Alternativos y renovables'],
+        ];
+        groups.forEach(([name, title]) => {
+            const members = available.filter((fuel) => !mainSlugs.includes(fuel.slug) && (fuel.group === name || (name === 'other' && fuel.group === 'main')));
+            if (!members.length) {
+                return;
+            }
+            const group = document.createElement('optgroup');
+            group.label = tr(title);
+            members.forEach((fuel) => add(group, fuel));
+            select.appendChild(group);
+        });
+        if (previous && [...select.options].some((option) => option.value === previous)) {
+            select.value = previous;
+        }
+    }
+
     function fillFuelSelects() {
-        document.querySelectorAll('select').forEach((select) => {
-            if (select.id === 'vehicle-fuel') {
-                return;
+        ['filter-fuel', 'stats-fuel'].forEach((id) => {
+            const select = document.getElementById(id);
+            if (select) {
+                fillFuelSelect(select, 'country', []);
             }
-            const options = [...select.options].filter((option) => fuelBySlug[option.value]);
-            if (options.length < 3) {
-                return;
-            }
-            const present = new Set();
-            options.forEach((option) => {
-                const fuel = fuelBySlug[option.value];
-                if (!fuel.sources[code]) {
-                    option.remove();
-                    return;
-                }
-                option.textContent = fuel.label[lang];
-                present.add(fuel.slug);
-            });
-            fuels.forEach((fuel) => {
-                if (fuel.sources[code] && !present.has(fuel.slug)) {
-                    const option = document.createElement('option');
-                    option.value = fuel.slug;
-                    option.textContent = fuel.label[lang];
-                    select.appendChild(option);
-                }
-            });
-            select.querySelectorAll('optgroup').forEach((group) => {
-                if (!group.children.length) {
-                    group.remove();
-                }
-            });
         });
     }
 
@@ -483,6 +612,9 @@ const GPCountry = (() => {
         fuelLabel,
         fuelShort,
         fuelUnit,
+        fuelColor,
+        fillFuelSelect,
+        weeklyHours,
         countryName,
         label,
         apiQuery,
