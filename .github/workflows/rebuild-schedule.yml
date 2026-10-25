@@ -192,6 +192,7 @@ jobs:
         run: npm install --global vercel@latest
 
       - name: Deploy preview
+        id: preview
         if: steps.check.outputs.deploy == 'true' && (inputs.preview || github.ref != 'refs/heads/main')
         env:
           VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
@@ -200,13 +201,41 @@ jobs:
           URL=$(vercel deploy --yes --token="${{ secrets.TOKEN_GASOLINERA }}")
           echo "Preview: $URL"
           echo "### Preview: $URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
 
       - name: Deploy to production
+        id: production
         if: steps.check.outputs.deploy == 'true' && !inputs.preview && github.ref == 'refs/heads/main'
         env:
           VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
-        run: vercel deploy --prod --yes --token="${{ secrets.TOKEN_GASOLINERA }}"
+        run: |
+          URL=$(vercel deploy --prod --yes --token="${{ secrets.TOKEN_GASOLINERA }}")
+          echo "Production: $URL"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Check that the deployed API answers
+        id: smoke
+        if: steps.check.outputs.deploy == 'true'
+        env:
+          VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          DEPLOYED: ${{ steps.production.outputs.url || steps.preview.outputs.url }}
+        run: |
+          FAILED=0
+          for P in "/api/stats/national" "/api/stations/near?lat=43.33&lon=-3.0&radius=5&fuel=gasolina_95"; do
+            CODE=$(vercel curl "$P" --deployment "$DEPLOYED" --token="${{ secrets.TOKEN_GASOLINERA }}" -- --silent --output /tmp/answer.txt --write-out '%{http_code}' || true)
+            echo "$P -> $CODE"
+            head -c 300 /tmp/answer.txt; echo
+            if [ "$CODE" != "200" ]; then
+              FAILED=1
+            fi
+          done
+          if [ "$FAILED" = "1" ]; then
+            echo "::error::La API desplegada no responde; se muestran los logs de la función"
+            timeout 90 vercel logs "$DEPLOYED" --token="${{ secrets.TOKEN_GASOLINERA }}" || true
+            exit 1
+          fi
 
       - name: Clean up old deployments to save Vercel storage
         if: steps.check.outputs.deploy == 'true' && !inputs.preview && github.ref == 'refs/heads/main'
