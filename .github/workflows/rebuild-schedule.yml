@@ -220,11 +220,12 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.TOKEN_GASOLINERA }}
           DEPLOYED: ${{ steps.production.outputs.url || steps.preview.outputs.url }}
         run: |
           FAILED=0
           for P in "/api/stats/national" "/api/stations/near?lat=43.33&lon=-3.0&radius=5&fuel=gasolina_95"; do
-            CODE=$(vercel curl "$P" --deployment "$DEPLOYED" --token="${{ secrets.TOKEN_GASOLINERA }}" -- --silent --output /tmp/answer.txt --write-out '%{http_code}' || true)
+            CODE=$(vercel curl "$P" --deployment "$DEPLOYED" -- --silent --output /tmp/answer.txt --write-out '%{http_code}' || true)
             echo "$P -> $CODE"
             head -c 300 /tmp/answer.txt; echo
             if [ "$CODE" != "200" ]; then
@@ -233,7 +234,7 @@ jobs:
           done
           if [ "$FAILED" = "1" ]; then
             echo "::error::La API desplegada no responde; se muestran los logs de la función"
-            timeout 90 vercel logs "$DEPLOYED" --token="${{ secrets.TOKEN_GASOLINERA }}" || true
+            timeout 90 vercel logs "$DEPLOYED" || true
             exit 1
           fi
 
