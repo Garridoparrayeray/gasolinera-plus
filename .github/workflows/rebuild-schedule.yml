@@ -224,6 +224,12 @@ jobs:
           DEPLOYED: ${{ steps.production.outputs.url || steps.preview.outputs.url }}
         run: |
           FAILED=0
+          echo "::group::Funciones del despliegue"
+          vercel inspect "$DEPLOYED" || true
+          echo "::endgroup::"
+          echo "::group::Despliegues recientes de produccion"
+          vercel ls --prod || true
+          echo "::endgroup::"
           for P in "/api/stats/national" "/api/stations/near?lat=43.33&lon=-3.0&radius=5&fuel=gasolina_95"; do
             CODE=$(vercel curl "$P" --deployment "$DEPLOYED" -- --silent --output /tmp/answer.txt --write-out '%{http_code}' || true)
             echo "$P -> $CODE"
