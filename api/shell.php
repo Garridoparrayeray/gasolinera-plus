@@ -850,10 +850,10 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
         <section id="view-about" hidden>
 <?php if (!$isNative && !empty($provinceLinks)): ?>
             <div class="garage-card province-card">
-                <h3>Gasolineras por provincia</h3>
+                <h3><?= htmlspecialchars(\Services\Seo::t('seo.areaIndex')) ?></h3>
                 <ul class="province-links">
 <?php foreach ($provinceLinks as $item): ?>
-                    <li><a href="/gasolineras/<?= htmlspecialchars($item['slug']) ?>"><?= htmlspecialchars($item['name']) ?></a></li>
+                    <li><a href="<?= htmlspecialchars(\Services\Seo::sectionUrl()) ?>/<?= htmlspecialchars($item['slug']) ?>"><?= htmlspecialchars($item['name']) ?></a></li>
 <?php endforeach; ?>
                 </ul>
             </div>
