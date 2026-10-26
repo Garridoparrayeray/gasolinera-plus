@@ -159,6 +159,10 @@ jobs:
             fi
           done
 
+      - name: Slim the databases to fit in the function
+        if: steps.check.outputs.deploy == 'true'
+        run: python3 scripts/slim-database.py data/gasolinera.sqlite data/gasolinera-pt.sqlite data/gasolinera-fr.sqlite
+
       - name: Warn about old data
         if: steps.check.outputs.deploy == 'true'
         run: |
@@ -207,6 +211,30 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
         run: vercel deploy --prod --yes --token="${{ secrets.TOKEN_GASOLINERA }}"
+
+      - name: Check that production answers
+        if: steps.check.outputs.deploy == 'true' && !inputs.preview && github.ref == 'refs/heads/main'
+        run: |
+          FAILED=0
+          for P in "/api/stats/national" "/api/stations/near?lat=43.33&lon=-3.0&radius=5&fuel=gasolina_95_e5" "/api/stats/national?pais=pt" "/api/stats/national?pais=fr" "/" "/gasolineras"; do
+            CODE=000
+            for TRY in 1 2 3; do
+              CODE=$(curl -s -o /tmp/answer.txt -w '%{http_code}' "https://gasolineraplus.vercel.app$P" || true)
+              if [ "$CODE" = "200" ]; then
+                break
+              fi
+              sleep 15
+            done
+            echo "$P -> $CODE"
+            head -c 200 /tmp/answer.txt; echo
+            if [ "$CODE" != "200" ]; then
+              FAILED=1
+            fi
+          done
+          if [ "$FAILED" = "1" ]; then
+            echo "::error::Produccion no responde tras el despliegue"
+            exit 1
+          fi
 
       - name: Clean up old deployments to save Vercel storage
         if: steps.check.outputs.deploy == 'true' && !inputs.preview && github.ref == 'refs/heads/main'
