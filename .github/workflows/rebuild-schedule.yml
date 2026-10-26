@@ -167,6 +167,10 @@ jobs:
             fi
           done
 
+      - name: Slim the databases to fit in the function
+        if: steps.check.outputs.deploy == 'true'
+        run: python3 scripts/slim-database.py data/gasolinera.sqlite data/gasolinera-pt.sqlite data/gasolinera-fr.sqlite
+
       - name: Warn about old data
         if: steps.check.outputs.deploy == 'true'
         run: |
