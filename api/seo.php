@@ -123,7 +123,7 @@ function seoHead(string $title, string $description, string $canonical, string $
         . '<meta name="twitter:card" content="summary">'
         . '<meta name="twitter:title" content="' . Seo::escape($title) . '">'
         . '<meta name="twitter:description" content="' . Seo::escape($description) . '">'
-        . '<link rel="icon" href="/icons/icon-192.png">'
+        . '<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" type="image/png" sizes="48x48" href="/icons/favicon-48.png"><link rel="icon" type="image/png" sizes="96x96" href="/icons/favicon-96.png"><link rel="icon" type="image/png" sizes="192x192" href="/icons/favicon-192.png">'
         . seoStyles() . $jsonLd . '</head><body>'
         . '<div class="top"><a href="' . Seo::escape(Country::prefix(Country::code()) . '/') . '">Gasolinera+</a>' . seoCountryNav() . '</div><div class="wrap">';
 }
