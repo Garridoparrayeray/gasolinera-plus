@@ -22,6 +22,7 @@ const copies = [
     'style.css',
     'sw.js',
     'manifest.json',
+    'favicon.ico',
     'privacidad.html',
     'data/stations-lite.json',
     'data/stations-lite-pt.json',

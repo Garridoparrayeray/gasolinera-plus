@@ -64,6 +64,9 @@ jobs:
 
           status, headers, body = get('/sitemap.xml')
           check('/sitemap.xml', status == 200 and body.count(b'<sitemap>') == 3, f'{status} {body.count(b"<sitemap>")} sitemaps')
+          for path in ('/favicon.ico', '/icons/favicon-48.png', '/icons/favicon-96.png', '/icons/favicon-192.png'):
+              status, headers, body = get(path)
+              check(path, status == 200 and headers.get('Content-Type', '').startswith('image/'), f"{status} {headers.get('Content-Type', '')} {len(body)} bytes")
           status, headers, body = get('/robots.txt')
           check('/robots.txt', status == 200 and b'Sitemap:' in body, str(status))
 

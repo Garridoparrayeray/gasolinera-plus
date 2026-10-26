@@ -215,7 +215,10 @@ function headlineDelta(array $headline, string $fuel): string
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#111111">
     <link rel="apple-touch-icon" href="/icons/icon-maskable-192.png">
-    <link rel="icon" href="/icons/icon-192.png">
+    <link rel="icon" href="/favicon.ico" sizes="48x48">
+    <link rel="icon" type="image/png" sizes="48x48" href="/icons/favicon-48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/icons/favicon-96.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/favicon-192.png">
     <link rel="stylesheet" href="/vendor/fonts/fonts.css">
     <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
     <link rel="stylesheet" href="/vendor/markercluster/MarkerCluster.css">
