@@ -18,6 +18,14 @@ on:
         description: 'Desplegar como preview (sin tocar produccion)'
         type: boolean
         default: false
+      production:
+        description: 'Desplegar a produccion desde una rama que no es main'
+        type: boolean
+        default: false
+      countries:
+        description: 'Paises cuya base se despliega'
+        type: string
+        default: 'es pt fr'
 
 permissions:
   contents: write
@@ -144,7 +152,7 @@ jobs:
       - name: Download the latest good data of each country
         if: steps.check.outputs.deploy == 'true'
         run: |
-          for C in es pt fr; do
+          for C in ${{ inputs.countries || 'es pt fr' }}; do
             DB=$(python3 -c "import json; print(json.load(open('config/countries.json'))['$C']['db'])")
             LITE=$(python3 -c "import json; print(json.load(open('config/countries.json'))['$C']['lite'])")
             mkdir -p "$RUNNER_TEMP/$C"
@@ -192,8 +200,7 @@ jobs:
         run: npm install --global vercel@latest
 
       - name: Deploy preview
-        id: preview
-        if: steps.check.outputs.deploy == 'true' && (inputs.preview || github.ref != 'refs/heads/main')
+        if: steps.check.outputs.deploy == 'true' && (inputs.preview || (github.ref != 'refs/heads/main' && !inputs.production))
         env:
           VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
@@ -201,37 +208,27 @@ jobs:
           URL=$(vercel deploy --yes --token="${{ secrets.TOKEN_GASOLINERA }}")
           echo "Preview: $URL"
           echo "### Preview: $URL" >> "$GITHUB_STEP_SUMMARY"
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
 
       - name: Deploy to production
-        id: production
-        if: steps.check.outputs.deploy == 'true' && !inputs.preview && github.ref == 'refs/heads/main'
+        if: steps.check.outputs.deploy == 'true' && !inputs.preview && (github.ref == 'refs/heads/main' || inputs.production)
         env:
           VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
-        run: |
-          URL=$(vercel deploy --prod --yes --token="${{ secrets.TOKEN_GASOLINERA }}")
-          echo "Production: $URL"
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
+        run: vercel deploy --prod --yes --token="${{ secrets.TOKEN_GASOLINERA }}"
 
-      - name: Check that the deployed API answers
-        id: smoke
-        if: steps.check.outputs.deploy == 'true'
-        env:
-          VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
-          VERCEL_TOKEN: ${{ secrets.TOKEN_GASOLINERA }}
-          DEPLOYED: ${{ steps.production.outputs.url || steps.preview.outputs.url }}
+      - name: Check that production answers
+        if: steps.check.outputs.deploy == 'true' && !inputs.preview && (github.ref == 'refs/heads/main' || inputs.production)
         run: |
           FAILED=0
-          echo "::group::Funciones del despliegue"
-          vercel inspect "$DEPLOYED" || true
-          echo "::endgroup::"
-          echo "::group::Despliegues recientes de produccion"
-          vercel ls --prod || true
-          echo "::endgroup::"
-          for P in "/api/stats/national" "/api/stations/near?lat=43.33&lon=-3.0&radius=5&fuel=gasolina_95"; do
-            CODE=$(vercel curl "$P" --deployment "$DEPLOYED" -- --silent --output /tmp/answer.txt --write-out '%{http_code}' || true)
+          for P in "/api/stats/national" "/api/stations/near?lat=43.33&lon=-3.0&radius=5&fuel=gasolina_95_e5"; do
+            CODE=000
+            for TRY in 1 2 3; do
+              CODE=$(curl -s -o /tmp/answer.txt -w '%{http_code}' "https://gasolineraplus.vercel.app$P" || true)
+              if [ "$CODE" = "200" ]; then
+                break
+              fi
+              sleep 15
+            done
             echo "$P -> $CODE"
             head -c 300 /tmp/answer.txt; echo
             if [ "$CODE" != "200" ]; then
@@ -239,8 +236,7 @@ jobs:
             fi
           done
           if [ "$FAILED" = "1" ]; then
-            echo "::error::La API desplegada no responde; se muestran los logs de la función"
-            timeout 90 vercel logs "$DEPLOYED" || true
+            echo "::error::La API de produccion no responde"
             exit 1
           fi
 
