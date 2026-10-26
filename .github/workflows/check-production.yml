@@ -1,0 +1,91 @@
+name: Check production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the pages, sitemaps and API of production
+        run: |
+          python3 - <<'PY'
+          import re
+          import sys
+          import urllib.error
+          import urllib.request
+          import xml.etree.ElementTree as ET
+
+          BASE = 'https://gasolineraplus.vercel.app'
+          failed = []
+
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, *args, **kwargs):
+                  return None
+
+
+          opener = urllib.request.build_opener(NoRedirect)
+
+
+          def get(path):
+              request = urllib.request.Request(BASE + path, headers={'User-Agent': 'Gasolinera-check/1'})
+              try:
+                  with opener.open(request, timeout=60) as response:
+                      return response.status, dict(response.headers), response.read()
+              except urllib.error.HTTPError as error:
+                  return error.code, dict(error.headers), error.read()
+
+
+          def check(label, ok, detail):
+              print(('OK   ' if ok else 'MAL  ') + label + ' ' + detail)
+              if not ok:
+                  failed.append(label)
+
+
+          for code in ('es', 'pt', 'fr'):
+              path = '/sitemap-' + code + '.xml'
+              status, headers, body = get(path)
+              urls = []
+              try:
+                  root = ET.fromstring(body)
+                  urls = [element.text for element in root.iter() if element.tag.endswith('}loc')]
+                  valid = True
+              except ET.ParseError as error:
+                  valid = False
+                  print('     XML no valido:', error)
+              check(path, status == 200 and valid and len(urls) > 100,
+                    f"{status} {headers.get('Content-Type', '')} {len(body) // 1024} KB {len(urls)} URLs")
+              if urls:
+                  check(path + ' sin duplicados ni URLs ajenas', len(set(urls)) == len(urls) and all(u.startswith(BASE + '/') for u in urls), '')
+
+          status, headers, body = get('/sitemap.xml')
+          check('/sitemap.xml', status == 200 and body.count(b'<sitemap>') == 3, f'{status} {body.count(b"<sitemap>")} sitemaps')
+          status, headers, body = get('/robots.txt')
+          check('/robots.txt', status == 200 and b'Sitemap:' in body, str(status))
+
+          for path in ('/', '/gasolineras', '/pt/postos', '/fr/stations-service', '/gasolineras/albacete', '/fr/stations-service/bas-rhin', '/fr/stations/67360002'):
+              status, headers, body = get(path)
+              text = body.decode('utf8', 'replace')
+              robots = re.search(r'<meta name="robots" content="([^"]+)"', text)
+              canonical = re.search(r'<link rel="canonical" href="([^"]+)"', text)
+              check(path, status == 200 and robots is not None and robots.group(1).startswith('index'),
+                    f"{status} robots={robots.group(1) if robots else '-'} canonical={canonical.group(1).replace(BASE, '') if canonical else '-'}")
+
+          for path, target in (('/gasolineras/bas-rhin', '/fr/stations-service/bas-rhin'), ('/gasolineras/aveiro', '/pt/postos/aveiro')):
+              status, headers, body = get(path)
+              check(path + ' redirige', status == 301 and headers.get('Location') == BASE + target, f"{status} -> {headers.get('Location', '-')}")
+          status, headers, body = get('/gasolineras/no-existe')
+          check('/gasolineras/no-existe', status == 404, str(status))
+
+          for path in ('/api/stats/national', '/api/stations/near?lat=43.33&lon=-3.0&radius=5&fuel=gasolina_95_e5', '/api/stats/national?pais=pt', '/api/stats/national?pais=fr'):
+              status, headers, body = get(path)
+              check(path, status == 200, f'{status} {len(body)} bytes')
+
+          if failed:
+              print('\nFallan:', ', '.join(failed))
+              sys.exit(1)
+          PY
