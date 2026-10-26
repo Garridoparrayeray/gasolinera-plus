@@ -227,6 +227,31 @@ function seoAreaPage(\PDO $pdo, string $provinceSlug, string $municipalitySlug):
 {
     $provinces = Seo::provinces($pdo);
     if (!isset($provinces[$provinceSlug])) {
+        foreach (Country::withData() as $altCountry) {
+            if ($altCountry === Country::code()) {
+                continue;
+            }
+            try {
+                $altPath = Country::dbPathFor($altCountry);
+                if (!is_file($altPath)) {
+                    continue;
+                }
+                $altPdo = new \PDO('sqlite:' . $altPath);
+                $altPdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+                $altPdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
+                $altProvinces = Seo::provinces($altPdo);
+                if (isset($altProvinces[$provinceSlug])) {
+                    $target = Seo::siteUrl() . Country::prefix($altCountry) . '/' . Seo::profile($altCountry)['section'] . '/' . $provinceSlug;
+                    if ($municipalitySlug !== '') {
+                        $target .= '/' . $municipalitySlug;
+                    }
+                    header('Location: ' . $target, true, 301);
+                    exit;
+                }
+            } catch (\Throwable $e) {
+                continue;
+            }
+        }
         seoNotFound();
         return;
     }
