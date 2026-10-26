@@ -18,14 +18,6 @@ on:
         description: 'Desplegar como preview (sin tocar produccion)'
         type: boolean
         default: false
-      production:
-        description: 'Desplegar a produccion desde una rama que no es main'
-        type: boolean
-        default: false
-      countries:
-        description: 'Paises cuya base se despliega'
-        type: string
-        default: 'es pt fr'
 
 permissions:
   contents: write
@@ -152,7 +144,7 @@ jobs:
       - name: Download the latest good data of each country
         if: steps.check.outputs.deploy == 'true'
         run: |
-          for C in ${{ inputs.countries || 'es pt fr' }}; do
+          for C in es pt fr; do
             DB=$(python3 -c "import json; print(json.load(open('config/countries.json'))['$C']['db'])")
             LITE=$(python3 -c "import json; print(json.load(open('config/countries.json'))['$C']['lite'])")
             mkdir -p "$RUNNER_TEMP/$C"
@@ -204,7 +196,7 @@ jobs:
         run: npm install --global vercel@latest
 
       - name: Deploy preview
-        if: steps.check.outputs.deploy == 'true' && (inputs.preview || (github.ref != 'refs/heads/main' && !inputs.production))
+        if: steps.check.outputs.deploy == 'true' && (inputs.preview || github.ref != 'refs/heads/main')
         env:
           VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
@@ -214,17 +206,17 @@ jobs:
           echo "### Preview: $URL" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Deploy to production
-        if: steps.check.outputs.deploy == 'true' && !inputs.preview && (github.ref == 'refs/heads/main' || inputs.production)
+        if: steps.check.outputs.deploy == 'true' && !inputs.preview && github.ref == 'refs/heads/main'
         env:
           VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
         run: vercel deploy --prod --yes --token="${{ secrets.TOKEN_GASOLINERA }}"
 
       - name: Check that production answers
-        if: steps.check.outputs.deploy == 'true' && !inputs.preview && (github.ref == 'refs/heads/main' || inputs.production)
+        if: steps.check.outputs.deploy == 'true' && !inputs.preview && github.ref == 'refs/heads/main'
         run: |
           FAILED=0
-          for P in "/api/stats/national" "/api/stations/near?lat=43.33&lon=-3.0&radius=5&fuel=gasolina_95_e5"; do
+          for P in "/api/stats/national" "/api/stations/near?lat=43.33&lon=-3.0&radius=5&fuel=gasolina_95_e5" "/api/stats/national?pais=pt" "/api/stats/national?pais=fr" "/" "/gasolineras"; do
             CODE=000
             for TRY in 1 2 3; do
               CODE=$(curl -s -o /tmp/answer.txt -w '%{http_code}' "https://gasolineraplus.vercel.app$P" || true)
@@ -234,13 +226,13 @@ jobs:
               sleep 15
             done
             echo "$P -> $CODE"
-            head -c 300 /tmp/answer.txt; echo
+            head -c 200 /tmp/answer.txt; echo
             if [ "$CODE" != "200" ]; then
               FAILED=1
             fi
           done
           if [ "$FAILED" = "1" ]; then
-            echo "::error::La API de produccion no responde"
+            echo "::error::Produccion no responde tras el despliegue"
             exit 1
           fi
 
