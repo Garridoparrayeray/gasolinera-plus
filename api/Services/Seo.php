@@ -199,6 +199,9 @@ class Seo
         $out = [];
         foreach ($rows as $row) {
             $slug = self::slug(self::display($row['provincia']));
+            if ($slug === '') {
+                continue;
+            }
             $out[$slug] = ['raw' => $row['provincia'], 'name' => self::display($row['provincia']), 'slug' => $slug, 'n' => (int)$row['n']];
         }
         return $out;
