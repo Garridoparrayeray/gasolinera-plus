@@ -308,6 +308,9 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `savings` | `refuels, nationalByDate` | Ahorro frente a la media nacional por fecha. |
 | `estimateTank` | `vehicle, list, consumption` | Litros estimados en el depósito. |
 | `summary` | `vehicle, refuels` | Consumo, coste por km, totales, depósito, autonomía y gasto mensual. |
+| `fullTankRangeKm` | `vehicle, refuels` | Km que da un depósito entero: capacidad entre el consumo medido o, si aún no hay, el homologado (7 L/100 km si falta); nulo sin capacidad. |
+| `looksLikeMissedRefuel` | `vehicle, refuels, km` | Indica si los km desde el repostaje anterior superan en un cuarto (×1,25) lo que da un depósito entero, es decir, si parece que falta un repostaje por anotar. |
+| `falseMissedFlags` | `vehicle, refuels` | Repostajes marcados «falta un repostaje» que los km no justifican (marcas puestas antes de comparar con el depósito entero); sirve para quitarlas. |
 
 ### `js/price-index-core.js`
 
@@ -331,17 +334,21 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 |---|---|---|
 | `filesystem` | — | Plugin `Filesystem` o nulo. |
 | `available` | — | Indica si el índice local se puede usar (solo app). |
-| `readSyncInfo` | — | Lee el estado de sincronización guardado. |
-| `writeSyncInfo` | `info` | Guarda el estado de sincronización. |
-| `download` | `name` | Descarga un fichero de la release del índice. |
-| `readJson` | `name` | Lee un fichero JSON guardado. |
-| `seed` | — | La primera vez copia el índice empaquetado en la app al almacenamiento local. |
-| `doSync` | `force` | Descarga el manifiesto y los meses que hayan cambiado (como máximo cada 6 horas). |
-| `sync` | `force` | Ejecuta una sola sincronización a la vez. |
-| `ensureMonth` | `key` | Carga en memoria un mes si está guardado. |
-| `ensure` | `from, to` | Carga los meses de un rango de fechas. |
-| `dayReference` | `{ fuel, date, lat, lon }` | Medias nacional y de zona de un día, con hasta 3 días de retroceso. |
-| `periodReference` | `{ fuel, from, to, points }` | Media nacional y medias de zona de un periodo. |
+| `getCfg` | `country` | Configuración del índice de un país (etiqueta de la release, carpeta, clave de sincronización y si trae índice empaquetado); España si el país no se conoce. |
+| `getState` | `country` | Estado en memoria (meses y manifiesto) del índice de un país. |
+| `releaseUrl` | `country` | URL de la release del índice de un país (`price-index`, `price-index-pt`, `price-index-fr`). |
+| `readSyncInfo` | `country` | Lee el estado de sincronización guardado de un país. |
+| `writeSyncInfo` | `country, info` | Guarda el estado de sincronización de un país. |
+| `download` | `country, name` | Descarga un fichero de la release del índice de un país. |
+| `readJson` | `country, name` | Lee un fichero JSON guardado del índice de un país. |
+| `seed` | `country` | La primera vez copia el índice empaquetado en la app al almacenamiento local (solo España lo trae empaquetado). |
+| `doSync` | `country, force` | Descarga el manifiesto y los meses que hayan cambiado de un país (como máximo cada 6 horas). |
+| `syncCountry` | `country, force` | Ejecuta una sola sincronización a la vez para un país. |
+| `sync` | `force, country` | Sincroniza el índice del país indicado o, sin país, el del país abierto. |
+| `ensureMonth` | `country, key` | Carga en memoria un mes de un país si está guardado. |
+| `ensure` | `country, from, to` | Carga los meses de un rango de fechas de un país. |
+| `dayReference` | `{ fuel, date, lat, lon, country }` | Medias nacional y de zona de un día en el país indicado (España por defecto), con hasta 3 días de retroceso. |
+| `periodReference` | `{ fuel, from, to, points, country }` | Media nacional y medias de zona de un periodo en el país indicado (España por defecto). |
 
 ### `js/garage-store.js`
 
@@ -359,12 +366,16 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `newId` | — | Identificador único. |
 | `setting` | `key, fallback` | Lee un ajuste con valor por defecto. |
 | `saveSetting` | `key, value` | Guarda un ajuste. |
+| `newestInRange` | `store, index, lower, upper, offset, limit` | Registros de un almacén con el índice entre dos límites, del más nuevo al más antiguo, saltando `offset` y devolviendo como mucho `limit` (para el historial paginado de viajes; se expone como `trips.between`). |
+| `countInRange` | `store, index, lower, upper` | Cuenta los registros con el índice entre dos límites (`trips.countBetween`). |
 | `deleteVehicle` | `id` | Borra coche, repostajes y viajes en una transacción. |
 | `exportAll` | `includeTrips, extra` | Vuelca todo a un objeto de copia de seguridad. |
 | `clean` | `value, max` | Convierte a texto y recorta a una longitud máxima. |
 | `finite` | `value` | Número finito o nulo. |
 | `sanitizeVehicle` | `row` | Valida y reconstruye un coche importado; descarta el registro si es inválido. |
-| `sanitizeRefuel` | `row` | Valida y reconstruye un repostaje importado. |
+| `refuelCountry` | `value` | País de un repostaje importado: `pt` o `fr`, y `es` en cualquier otro caso. |
+| `sanitizeRefuel` | `row` | Valida y reconstruye un repostaje importado (incluido su país). |
+| `sanitizePauses` | `raw` | Valida las pausas de un viaje importado: hasta 200 pares `[inicio, fin]` de números con fin posterior al inicio. |
 | `sanitizeMetrics` | `metrics` | Deja solo números, booleanos y nulos en las métricas de un viaje importado. |
 | `sanitizeTrip` | `row` | Valida y reconstruye un viaje importado, con su recorrido limitado. |
 | `sanitizeSetting` | `row` | Acepta solo el ajuste `activeVehicleId` con un identificador válido. |
@@ -385,12 +396,14 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 
 | Función | Parámetros | Qué hace |
 |---|---|---|
-| `fmt` | `value, digits` | Formatea números en español. |
+| `fmt` | `value, digits` | Formatea números con la configuración regional del idioma de la app. |
 | `periodPrefix` | `period` | Prefijo de fecha del periodo (`AAAA-MM`, `AAAA` o vacío). |
 | `periodLabel` | `period` | Texto del periodo («septiembre 2026», «2026», «desde el principio»). |
-| `compute` | `vehicle, refuels, period, trips = []` | Calcula las cifras del resumen de un coche y un periodo. |
+| `odometerAtStart` | `mine, first, prefix` | Cuentakilómetros estimado al empezar el periodo, interpolando por días entre el último repostaje anterior y el primero del periodo; sin repostaje anterior parte del primero. |
+| `compute` | `vehicle, refuels, period, trips = []` | Calcula las cifras del resumen de un coche y un periodo, incluido el ahorro frente a la media desglosado por país (`versusByCountry`). |
 | `fitText` | `ctx, text, maxWidth` | Recorta un texto con puntos suspensivos para que quepa en el lienzo. |
-| `rowsOf` | `stats` | Filas de datos que aparecen en la imagen. |
+| `versusLabel` | `country` | Texto «Frente a la media de {país}» en el idioma de la app. |
+| `rowsOf` | `stats` | Filas de datos que aparecen en la imagen (una fila «Frente a la media de…» por cada país en el que repostaste). |
 | `draw` | `stats` | Dibuja el resumen en un lienzo de 1080×1920. |
 | `bytesOf` | `text` | Convierte texto en bytes. |
 | `pdfFromJpeg` | `dataUrl, width, height` | Construye un PDF de una página con una imagen JPEG. |
@@ -398,7 +411,9 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `object` | `number, body` | Escribe un objeto del PDF y anota su posición. |
 | `canvasBlob` | `canvas, type` | Convierte un lienzo en `Blob`. |
 | `isNative` | — | Indica si es la app. |
-| `deliver` | `blob, name, share` | Comparte el fichero o lo descarga. |
+| `blobBase64` | `blob` | Convierte un `Blob` en texto base64. |
+| `deliverNative` | `blob, name` | En la app, escribe el fichero en la caché y abre el menú de compartir de Android o iPhone; devuelve falso si faltan los plugins. |
+| `deliver` | `blob, name, share` | Entrega el fichero: en la app con `deliverNative`; en la web lo comparte o lo descarga. |
 | `exportImage` | `stats, share` | Genera y entrega la imagen PNG. |
 | `exportPdf` | `stats, share` | Genera y entrega el PDF. |
 
@@ -406,44 +421,52 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 
 | Función | Parámetros | Qué hace |
 |---|---|---|
-| `number` | `value, digits` | Formatea un número con formato español y los decimales indicados. |
+| `number` | `value, digits` | Formatea un número con la configuración regional del idioma de la app y los decimales indicados. |
 | `money` | `value` | Formatea un importe en euros con dos decimales. |
 | `setMetric` | `element, value, unit` | Escribe una cifra y su unidad en pequeño dentro de una tarjeta de datos. |
-| `unitOf` | `fuel` | Unidad de un carburante (`L` o `kg`). |
+| `unitOf` | `fuel` | Unidad de un carburante (`L`, `kg` o `m3`). |
 | `monthLabel` | `key` | Convierte `AAAA-MM` en «mes aaaa» abreviado. |
 | `shortDate` | `iso` | Fecha `DD/MM/AAAA` de un instante en zona de Madrid. |
 | `localInputValue` | `date` | Formato `AAAA-MM-DDTHH:mm` que necesita un campo de fecha y hora. |
 | `activeVehicle` | — | Coche activo o nulo. |
 | `announceActive` | — | Emite `gp:vehicle-active` con el coche activo (la pestaña de precios adapta su carburante). |
 | `load` | — | Lee coches, decide el activo y carga sus repostajes. |
+| `clearFalseMissedFlags` | — | Quita a los repostajes del coche activo las marcas «falta un repostaje» que los km no justifican (`GPFuel.falseMissedFlags`) y las guarda; el consumo se recalcula después. |
 | `refresh` | — | Recarga los datos y repinta la pantalla. |
 | `summary` | — | Resumen de consumo, depósito y gasto del coche activo (`GPFuel.summary`). |
 | `render` | — | Muestra el estado vacío o la ficha del coche con chips, resumen, repostajes y gráficos. |
 | `renderChips` | — | Dibuja los botones de coches y el de añadir otro. |
 | `renderSummary` | `vehicle, s` | Rellena nombre, carburante, barra de depósito, autonomía, consumo, coste por km, gasto mensual y cuentakilómetros. |
+| `refuelIntervals` | — | Mapa fecha final → tramo lleno a lleno (`GPFuel.intervals`) para poner el consumo en cada fila. |
+| `refuelItem` | `refuel, unit, intervalsByEnd` | Construye la fila de un repostaje (fecha, importe, litros, precio, km, tipo, consumo del tramo y gasolinera) como botón que lo abre para editarlo. |
+| `sortedRefuels` | — | Repostajes del coche activo del más reciente al más antiguo. |
 | `renderRefuels` | `vehicle` | Lista de repostajes con fecha, importe, litros, precio, km, tipo (lleno o parcial), consumo del tramo y gasolinera. |
+| `refuelHistory` | `fromIso, toIso` | Para el historial completo: repostajes del coche activo entre dos fechas, su unidad y la función que construye cada fila. Se expone en `GPGarage`. |
 | `replaceChart` | `key, canvas, config` | Destruye el gráfico previo de una clave y crea uno nuevo (Chart.js). |
-| `nationalByDate` | `fuel, from` | Serie nacional del servidor como mapa fecha → media, con caché. |
+| `refuelCountry` | `refuel` | País de un repostaje (`pt`, `fr` o `es`). |
+| `countryLabel` | `code` | Nombre del país en el idioma de la app. |
+| `nationalByDate` | `fuel, from, country` | Serie nacional del servidor para un país (España por defecto) como mapa fecha → media, con caché por país. |
 | `renderCharts` | `vehicle` | Envuelve el dibujo de gráficos del garaje con el aviso de carga. |
 | `renderChartsNow` | `vehicle` | Dibuja consumo, gasto mensual y comparación con la media; muestra el estado vacío si no hay repostajes. |
 | `hasCoords` | `refuel` | Indica si un repostaje guarda las coordenadas de su gasolinera. |
-| `refuelReferences` | `vehicle, refuel, nationalMap` | Obtiene las medias nacional y de zona de un repostaje: guardadas, del índice local o del servidor. |
-| `dayRows` | `vehicle, sortedRefuels` | Filas de la comparación «por repostaje». |
+| `refuelReferences` | `vehicle, refuel, nationalMaps` | Obtiene las medias nacional y de zona de un repostaje en el país del repostaje: guardadas, del índice local de ese país o del servidor. |
+| `dayRows` | `vehicle, sortedRefuels` | Filas de la comparación «por repostaje» (cada una con el país de su repostaje). |
 | `groupByPeriod` | `sortedRefuels, kind` | Agrupa repostajes por semana o mes y se queda con los 12 últimos periodos. |
-| `periodRows` | `vehicle, sortedRefuels, kind` | Filas de la comparación por semana o mes: precio medio ponderado por litros frente a la media del periodo. |
+| `periodRows` | `vehicle, sortedRefuels, kind` | Filas de la comparación por semana o mes: precio medio ponderado por litros frente a la media del periodo, calculada por país y ponderada por los litros de cada país. |
 | `chartLabel` | `label` | Etiqueta corta de un periodo para el eje del gráfico. |
 | `savingsText` | `saving, reference, noun, hook` | Texto de ahorro o sobrecoste frente a una referencia. |
 | `differenceText` | `paid, reference, unit` | Texto «X € por debajo/por encima» de una referencia. |
-| `renderCompareList` | `vehicle, rows` | Lista de detalle por periodo con lo pagado y la diferencia con España y con la zona. |
-| `drawComparison` | `vehicle, rows` | Dibuja la gráfica y los textos de ahorro para las filas calculadas. |
+| `renderCompareList` | `vehicle, rows` | Lista de detalle por periodo con lo pagado y la diferencia con la media del país o países del periodo y con la zona. |
+| `drawComparison` | `vehicle, rows` | Dibuja la gráfica (la línea de referencia se llama «Media de {país}» o «Media del país» si hay varios) y los textos de ahorro; con varios países, el ahorro se desglosa por país. |
 | `updateCompareButtons` | — | Marca el botón de comparación activo (repostaje, semana, mes). |
+| `setCompareMode` | `mode` | Cambia el modo de comparación (`day`, `week`, `month`), actualiza los botones y repinta los gráficos. |
 | `renderComparison` | `vehicle, sortedRefuels` | Elige el cálculo de comparación según el modo; semana y mes exigen el índice local de la app. |
 | `withTimeout` | `promise, ms` | Rechaza una promesa si no termina en el tiempo indicado. |
 | `loadReferences` | `refuel, fuel` | Obtiene y guarda en el repostaje las medias del día (índice local, servidor nacional y de zona). |
 | `attachReferences` | `refuel, fuel` | Llama a `loadReferences` con 5 s de tope; si falla deja las medias a nulo. |
 | `applyStation` | `refuel, station` | Copia en el repostaje los datos de la gasolinera elegida (id, nombre, coordenadas) o los pone a nulo. |
 | `setActive` | `id` | Cambia el coche activo, lo guarda y recarga. |
-| `fillFuelOptions` | — | Rellena el selector de carburante del coche copiando el del filtro, sin AdBlue. |
+| `fillFuelOptions` | — | Rellena el selector de carburante del coche con los carburantes de los tres países (`GPCountry.fillFuelSelect`), sin AdBlue ni GNC en €/m³. |
 | `updateVehicleUnits` | — | Actualiza las etiquetas de depósito y consumo con la unidad del carburante. |
 | `showError` | `node, message` | Muestra u oculta el mensaje de error de un formulario. |
 | `openVehicleDialog` | `vehicle` | Abre el diálogo de coche en modo alta o edición. |
@@ -454,11 +477,13 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `renderStationResults` | `stations` | Dibuja la lista de gasolineras sugeridas (con ★ en favoritas y distancia). |
 | `searchStations` | — | Busca gasolineras por texto para el repostaje (hasta 25, por cercanía si hay ubicación). |
 | `currentLocation` | — | Ubicación del usuario: la de la app, la guardada o una nueva pedida al dispositivo (4 s de espera). |
-| `favoriteStations` | — | Lee las favoritas de `localStorage`. |
+| `favoriteStations` | — | Lee las favoritas del país abierto de `localStorage`. |
 | `showStationSuggestions` | — | Sugerencias sin texto: favoritas cercanas, otras favoritas y cercanas hasta 25 km. |
 | `onStationInput` | — | Con menos de 3 letras muestra sugerencias; con 3 o más busca por texto (con espera de 250 ms). |
 | `clearRefuelStation` | — | Quita la gasolinera elegida del asistente. |
-| `checkFullTank` | — | Desmarca «depósito lleno» si los litros son menos del 25 % de la capacidad y avisa. |
+| `applyFullRule` | — | Desmarca «depósito lleno» si los litros son menos del 25 % de la capacidad y avisa. |
+| `updateFullHint` | — | Si llevas 3 o más repostajes parciales seguidos y este no es lleno, muestra el consejo de llenar hasta el primer clic del surtidor para calcular el consumo exacto del tramo. |
+| `checkFullTank` | — | Aplica `applyFullRule` y `updateFullHint`. |
 | `unitWord` | `unit` | «litros» o «kilos» según la unidad. |
 | `refuelsOfActive` | `vehicle, excludeId` | Repostajes del coche, excluyendo opcionalmente uno. |
 | `usualKmPerDay` | `vehicle` | Ritmo habitual de km al día entre el primer y el último repostaje (mínimo 2 repostajes y 7 días). |
@@ -469,17 +494,19 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `setStep` | `step` | Muestra un paso del asistente y ajusta botones, progreso y preparaciones de cada paso. |
 | `prepareLitersStep` | — | Escribe la pregunta de confirmación de litros con su valor y su origen. |
 | `recomputeLitersFromTotal` | — | Calcula litros = total / precio. |
-| `updateMissedHint` | — | Decide si falta un repostaje comparando los km desde el anterior con 1,25 veces la autonomía; marca la casilla y explica con cifras. |
+| `updateMissedHint` | — | Decide si falta un repostaje con `GPFuel.looksLikeMissedRefuel` (km desde el anterior frente a 1,25 veces lo que da un depósito entero); marca la casilla y explica con cifras. |
 | `renderReview` | — | Dibuja el resumen del paso final. |
 | `stepError` | — | Mensaje de error del paso actual o texto vacío. |
 | `nextStep` | — | Valida y avanza; recalcula litros al salir del paso 3 y abre la revisión de km si hace falta. |
 | `backStep` | — | Retrocede un paso. |
-| `updateDayPrice` | — | Propone el precio del día: actual de la gasolinera si es hoy, media de la zona o de España del índice si no. |
+| `updateDayPrice` | — | Propone el precio del día: actual de la gasolinera si es hoy, media de la zona o del país de la gasolinera (índice local) si no. |
 | `chooseStationOnMap` | — | Cierra el asistente y lleva al mapa para elegir gasolinera (sin uso desde la interfaz). |
-| `exportRecap` | `kind, share` | Genera el resumen del periodo y lo guarda como imagen o PDF, o lo comparte. |
+| `setRecapBusy` | `button, busy` | Bloquea los tres botones del resumen y pone en el pulsado «Generando…» con un círculo girando mientras se prepara el archivo; al terminar lo restaura. |
+| `nextPaint` | — | Promesa que se cumple tras pintar la pantalla, para que se vea «Generando…» antes del trabajo pesado. |
+| `exportRecap` | `kind, share, button` | Genera el resumen del periodo y lo guarda como imagen o PDF, o lo comparte, mostrando «Generando…» en el botón. |
 | `setRecapPeriod` | `period` | Cambia el periodo del resumen (mes, año, todo). |
 | `pickStation` | `station` | Elige una gasolinera: rellena el precio, avanza al paso 2 y propone el precio del día. |
-| `openRefuelDialog` | `refuel, station` | Abre el asistente para un repostaje nuevo (opcionalmente con gasolinera) o edita uno existente. |
+| `openRefuelDialog` | `refuel, station` | Abre el asistente para un repostaje nuevo (opcionalmente con gasolinera) o edita uno existente; fija el país del repostaje (`pais`) según la gasolinera. |
 | `recomputeTotal` | — | Recalcula total = litros × precio. |
 | `recomputeLiters` | — | Recalcula litros = total / precio. |
 | `saveRefuel` | `event` | Valida y guarda el repostaje (ver documento 07), sube el odómetro y muestra el panel de guardado. |
@@ -503,7 +530,11 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `emptyResult` | `raw, total, lowQuality` | Resultado vacío para viajes sin datos suficientes. |
 | `weightedSpeedFactor` | `bandMeters, meters` | Factor de consumo por velocidad ponderado por metros. |
 | `estimateFuel` | `distanceKm, speedFactor, options` | Litros estimados de un viaje. |
-| `compute` | `raw, options = {}` | Todas las métricas de un viaje. |
+| `fuelAndCost` | `distanceKm, speedFactor, options` | Litros estimados y coste (con el último precio) de un viaje; el coste es nulo sin precio. Sirve también para recuperar el coste de viajes guardados sin él. |
+| `crossesPause` | `pauses, from, to` | Indica si un tramo entre dos instantes cruza alguna pausa. |
+| `pausedSecondsBetween` | `pauses, from, to` | Segundos de pausa que caen entre dos instantes. |
+| `validPauses` | `raw` | Deja solo los pares `[inicio, fin]` válidos (fin posterior al inicio). |
+| `compute` | `raw, options = {}` | Todas las métricas de un viaje (descontando las pausas de `options.pauses`). |
 | `thin` | `raw` | Aligera el recorrido conservando giros, cambios de velocidad y un punto cada 5 s. |
 
 ### `js/trips.js`
@@ -511,13 +542,15 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | Función | Parámetros | Qué hace |
 |---|---|---|
 | `recorder` | — | Plugin nativo `TripRecorder` o nulo en la web. |
-| `number` | `value, digits` | Formatea un número en español. |
+| `number` | `value, digits` | Formatea un número con la configuración regional del idioma de la app. |
 | `clock` | `seconds` | Formatea segundos como `m:ss` o `h:mm:ss`. |
 | `minutesText` | `seconds` | Formatea segundos como «N min» o «H h M min». |
 | `note` | `text` | Escribe un mensaje en la zona de avisos de viajes. |
 | `speedLevel` | `kmh` | Nivel de la velocidad (normal, aviso desde 100 km/h, exceso desde 120) para el color. |
 | `driveHintText` | — | Texto de ayuda de la pantalla de viaje según el estado. |
-| `averageKmh` | `live` | Velocidad media en directo (distancia / tiempo). |
+| `elapsedSeconds` | `live` | Segundos de viaje en directo sin contar el tiempo en pausa. |
+| `averageKmh` | `live` | Velocidad media en directo (distancia / tiempo sin pausas). |
+| `paintPause` | `live` | Refleja la pausa en la pantalla de viaje, el chip y los botones (GRABANDO/EN PAUSA, Pausar/Reanudar). |
 | `paintDrive` | `live` | Actualiza la pantalla de viaje: velocidad, tiempo, distancia, máxima y barra. |
 | `paintLiveCard` | `live` | Actualiza la tarjeta del viaje en la pantalla Coche. |
 | `showDrive` | `recording` | Muestra u oculta la pantalla de viaje y el chip «EN CURSO». |
@@ -526,12 +559,15 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `referenceFactorFor` | `vehicleId` | Factor de velocidad medio de los viajes anteriores del coche (mínimo 3 viajes y 30 km); nulo si no hay datos suficientes. |
 | `vehicleOptions` | `referenceFactor` | Opciones para calcular consumo y coste de un viaje: consumo medio, último precio y factor de referencia. |
 | `saveTrip` | `points, info` | Calcula métricas de los puntos, descarta viajes automáticos de menos de 0,5 km, guarda el viaje aligerado y suma sus km al cuentakilómetros. |
+| `cleanPauses` | `raw` | Valida las pausas de un viaje: pares `[inicio, fin]` numéricos con fin posterior al inicio. |
 | `pointsFromNative` | `rows` | Convierte las filas del plugin al formato de puntos de `GPTripMetrics`. |
 | `importPending` | — | Importa a IndexedDB los viajes terminados del plugin nativo y los borra del almacén nativo. |
 | `refreshStatus` | — | Lee el estado del plugin y actualiza casilla de detección, tarjeta, permisos y Bluetooth. |
 | `renderPermissions` | `status` | Calcula y muestra los avisos de permisos y batería. |
 | `start` | — | Empieza un viaje: en app pide permisos y llama al plugin; en web usa el GPS del navegador. |
 | `stop` | — | Termina el viaje y lo importa. |
+| `togglePause` | — | Pausa o reanuda la grabación: con el plugin nativo llama a `pause`/`resume`; en la web guarda el intervalo de pausa. |
+| `saveWebProgress` | — | Guarda en el almacén local los puntos y las pausas del viaje web en curso, para poder recuperarlo. |
 | `requestWakeLock` | — | Pide al navegador mantener la pantalla encendida durante un viaje web. |
 | `onVisibility` | — | Vuelve a pedir el bloqueo de pantalla cuando la pestaña vuelve a verse. |
 | `onWebPosition` | `position` | Procesa una posición del GPS del navegador: acumula puntos, distancia y velocidad y guarda copia de seguridad cada 10 puntos. |
@@ -547,6 +583,9 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `removeBluetoothCar` | `car` | Quita un coche de la lista. |
 | `setAuto` | `enabled` | Activa o desactiva la detección automática pidiendo los permisos necesarios. |
 | `speedColor` | `kmh` | Color HSL de un tramo del recorrido según su velocidad. |
+| `vehicleNames` | — | Mapa id de coche → nombre. |
+| `tripItem` | `trip, names` | Construye la fila de un viaje (fecha, distancia, duración, medias, coste y coche) como botón que abre su detalle. Se expone para el historial. |
+| `fillMissingCosts` | `trips` | Calcula y guarda el consumo y el coste de los viajes guardados sin ellos (cuando el garaje no estaba cargado) con el coche activo. |
 | `renderList` | — | Lista de viajes guardados con fecha, distancia, duración y coche. |
 | `escapeText` | `value` | Escapa un texto para insertarlo como HTML. |
 | `tile` | `label, value` | Crea una tarjeta de cifra (etiqueta y valor). |
