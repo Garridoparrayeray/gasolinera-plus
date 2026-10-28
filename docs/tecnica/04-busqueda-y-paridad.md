@@ -5,7 +5,27 @@ Hay **dos implementaciones** de la misma lógica de búsqueda:
 - **Servidor:** `Models\Station::search` y `::near` (PHP, sobre SQLite).
 - **Cliente sin conexión:** `OfflineEngine.search` y `.near` en `js/api.js` (JavaScript, sobre el lite JSON).
 
-Deben dar los mismos resultados. `tests/api-parity.mjs` y `tests/parity-lib.js` lo comprueban en CI comparando ambas para una batería de consultas. **Cualquier cambio en una debe hacerse también en la otra.**
+Deben dar los mismos resultados, **para cada país**: el servidor consulta la base del país de la petición (`?pais=`) y el cliente el lite JSON de ese mismo país (ver [Varios países](#varios-países)). `tests/api-parity.mjs` y `tests/parity-lib.js` lo comprueban en CI comparando ambas para una batería de consultas. **Cualquier cambio en una debe hacerse también en la otra.**
+
+## Varios países
+
+Cada país tiene su propia base SQLite en el servidor y su propio lite JSON en el cliente, y las dos implementaciones de búsqueda trabajan siempre dentro de **un** país. No hay búsquedas que mezclen países, salvo el cálculo de rutas (más abajo).
+
+| Aspecto | Servidor | Cliente (`js/api.js`) |
+|---|---|---|
+| Datos | Base del país: `Country::dbPath` según `?pais=` | Lite del país: `GPCountry.liteUrl()` (`data/stations-lite.json`, `-pt.json`, `-fr.json`). En la app nativa se usa antes la copia descargada y guardada en el móvil, con clave por país (`GPCountry.storageKey('offlineStations')`) |
+| Petición a la API | — | `request` añade `?pais=` con `GPCountry.apiQuery`; sin sufijo para España |
+| Carburante por defecto de una lista | `Fuels::headline` del país (segundo valor como carburante de reserva al ordenar por precio) | El carburante lo elige la pantalla; los desplegables se rellenan con los del país (`GPCountry.fillFuelSelect`) |
+| Hora de «abierto ahora» | Hora local de la gasolinera (`Station::localNow`) | No existe (el lite no trae horarios interpretados) |
+| Normalización de texto | Igual en los tres países: `á→a`, `ñ→n`, `ç→c`, y para el cliente `NFD` sin marcas diacríticas, de modo que «Évora» y «evora», «São» y «sao» o «Île» e «ile» coinciden | Igual |
+
+`OfflineEngine` guarda el lite del país actual en `stationsCache` (`loadData`). Para otros países mantiene un `otherCountries` con una promesa por país (`loadCountry`), que descarga `GPCountry.liteUrlFor(país)` a demanda y anota cada gasolinera con `pais`. Si la descarga falla devuelve una lista vacía y lo reintenta la siguiente vez. `loadCountries(lista)` junta varios países.
+
+**Rutas entre países.** Una ruta Bilbao–Lisboa o Madrid–Burdeos pasa por varios países. El router informa de los países que atraviesa (`result.countries`, calculado con `countriesFor` sobre el manifiesto del grafo) y `refreshCorridor` en `js/route.js` llama a `OfflineEngine.loadCountries(países)`: busca en el corredor las gasolineras de todos ellos, cada una con su país. Para esto el lite de Portugal y de Francia se descarga cuando una ruta lo necesita aunque el usuario esté en otro país. Los mapas de carreteras de Portugal y Francia se descargan la primera vez que una ruta pasa por allí (ver [05 · Cálculo de ruta](05-ruta.md)).
+
+**Identificadores.** Dentro de un país el `ideess` es único; entre países puede repetirse. Por eso el cliente guarda las favoritas y el comparador con `GPCountry.stationKey` (`pt:123`) y pide la ficha de una gasolinera de otro país con `Api.station(ideess, país)`, que añade el `?pais=` correspondiente.
+
+**Fuera del país.** Si la ubicación del usuario cae fuera del país elegido (`insideCountry` en `app.js`: ninguna gasolinera de ese país a menos de 25 km) no se busca «cerca de ti»: se usa `cheapest`. Abrir Portugal estando en España enseña las más baratas de Portugal.
 
 ## Normalización
 
@@ -25,7 +45,7 @@ En la base, las columnas `municipio_normalizado`, `direccion_normalizada`, `rotu
 
 Servidor: primero una **caja envolvente** (`boundingBox`: ±`radio/111` grados de latitud y ±`radio/(111·cos(lat))` de longitud) para que SQLite use los índices de `lat` y `lon`, y después el filtro exacto por Haversine.
 
-`open=now` (abierto ahora) solo existe en el servidor: el lite JSON no incluye horarios interpretados. En la app nativa, `canUseLocal` devuelve `false` si `open` es `now`, y entonces se va al servidor.
+`open=now` (abierto ahora) solo existe en el servidor: el lite JSON no incluye horarios interpretados. En la app nativa, `canUseLocal` devuelve `false` si `open` es `now`, y entonces se va al servidor. El servidor evalúa el horario con la **hora local de cada gasolinera** (`Station::localNow`: la zona del país y, donde la hay, la de la isla, como Canarias o Azores), no con la de Madrid; una gasolinera de Lisboa a las 22:30 hora peninsular española está abierta o cerrada según la hora de Lisboa.
 
 ## Búsqueda por texto (`search`)
 
@@ -65,7 +85,7 @@ Si `total = 0` y **ninguna gasolinera coincidió por texto** (`textMatched` es f
 
 ## Lista por defecto sin ubicación (`cheapest`)
 
-Si el usuario no da su ubicación (o la rechaza), la pantalla de precios no queda vacía: muestra **las gasolineras más baratas de España** para el carburante y el horario elegidos (`OfflineEngine.cheapest`, sobre el lite JSON, ordenadas por precio y paginadas). La línea de estado lo dice y sugiere activar la ubicación. Es el modo `stationsMode = 'cheapest'` de `app.js`; el radio no se aplica. En cuanto llega la ubicación se pasa a `nearby`. También se muestra mientras se espera la respuesta del GPS.
+Si el usuario no da su ubicación (o la rechaza, o está fuera del país elegido), la pantalla de precios no queda vacía: muestra **las gasolineras más baratas del país abierto** (España, Portugal o Francia) para el carburante y el horario elegidos (`OfflineEngine.cheapest`, sobre el lite JSON, ordenadas por precio y paginadas). La línea de estado lo dice y sugiere activar la ubicación. Es el modo `stationsMode = 'cheapest'` de `app.js`; el radio no se aplica. En cuanto llega la ubicación se pasa a `nearby`. También se muestra mientras se espera la respuesta del GPS.
 
 ## Sugerencias de lugares
 
@@ -73,7 +93,7 @@ Si el usuario no da su ubicación (o la rechaza), la pantalla de precios no qued
 
 ## Ficha de gasolinera (`station`)
 
-Servidor: `Station::find` con todos los precios y tendencias e `OpeningHours::describe`. Cliente sin conexión: los datos del lite JSON con `horario.estado = 'desconocido'` y el horario en bruto como texto.
+Servidor: `Station::find` con todos los precios y tendencias e `OpeningHours::describe` con la hora local de la gasolinera. Cliente sin conexión: los datos del lite JSON con `horario.estado = 'desconocido'` y el horario en bruto como texto. En ambos casos la pantalla compone además el horario escrito día por día con `GPCountry.weeklyHours(horarioRaw)`, en el idioma elegido; ese trozo no cambia entre servidor y móvil porque sale del texto en bruto.
 
 ## Tendencias
 
@@ -84,6 +104,8 @@ Servidor: para cada gasolinera y carburante de la página, compara el precio act
 Devuelve `ideess, rotulo, lat, lon, is24h, precio` de todas las gasolineras dentro de la caja. Tope de 4000 puntos con muestreo uniforme (`capForMap` en el cliente, `withinBounds` en el servidor). En la app nativa se resuelve siempre en local.
 
 ## Dónde se decide servidor o local (`Api`)
+
+Todas las llamadas al servidor llevan `?pais=` (salvo España); `station`, `history`, `zoneAverage`, `zoneComparison` y `nationalStats` admiten un país explícito.
 
 | Método | App nativa | Web |
 |---|---|---|
@@ -100,6 +122,7 @@ Una petición «sin red» se detecta como un `fetch` que falla: el error se marc
 ## Evitar cargas repetidas
 
 - Una sola carga de lista a la vez (`state.stationsLoading`). Si llega otra idéntica (misma clave) mientras carga, se ignora; si es distinta, queda **una** pendiente que se lanza al terminar.
+- Cambiar de país o de idioma recarga la página (`GPCountry.go`): no hay estado de un país que sobreviva en otro, y las cachés del cliente (`stationsCache`, `otherCountries`) empiezan de cero.
 - Un solo cálculo de ruta a la vez (`calculating`).
 - La ficha de una gasolinera ignora pulsaciones repetidas sobre la misma mientras se abre (`state.modalLoadingId`).
 - El mapa aplaza 300 ms (`scheduleBboxLoad`) y cancela la petición anterior con `AbortController`.

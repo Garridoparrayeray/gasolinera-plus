@@ -10,36 +10,50 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 
 | Función | Parámetros | Qué hace |
 |---|---|---|
-| `applyChartTheme` | — | Ajusta los colores, la tipografía y el tamaño de letra por defecto de Chart.js según el tema claro u oscuro del sistema. Se vuelve a llamar al cambiar el tema. |
+| `applyChartTheme` | — | Ajusta los colores, la tipografía (Bricolage Grotesque) y el tamaño de letra por defecto de Chart.js según el tema claro u oscuro del sistema. Se vuelve a llamar al cambiar el tema. |
+| `isDesktop` | — | Indica si la página está en modo escritorio (clase `desktop` en `<html>`). |
+| `fitChartCanvas` | `canvas, desktopHeight` | En escritorio, ajusta el ancho del lienzo de un gráfico al de su contenedor y le da la altura indicada; en móvil no hace nada. |
 | `localIso` | `date` | Convierte una fecha a texto `AAAA-MM-DD` en hora local del dispositivo. |
 | `todayIso` | — | Fecha de hoy en formato `AAAA-MM-DD`. |
 | `daysAgoIso` | `n` | Fecha de hace `n` días en formato `AAAA-MM-DD`. |
-| `loadCompareList` | — | Lee del `localStorage` (`gasolinera_compare`) la lista de gasolineras a comparar; devuelve `[]` si está vacía o dañada. |
+| `loadCompareList` | — | Lee del `localStorage` (`gasolinera_compare`, con sufijo `_pt`/`_fr` según el país: `GPCountry.storageKey`) la lista de gasolineras a comparar; devuelve `[]` si está vacía o dañada. |
 | `saveCompareList` | — | Guarda la lista del comparador en `localStorage` y actualiza el contador. |
 | `isInCompareList` | `ideess` | Indica si una gasolinera ya está en el comparador. |
 | `compareToggleLabel` | `ideess` | Texto del botón de la ficha: «Quitar de comparar» o «Añadir a comparar». |
 | `addToCompare` | `ideess, rotulo, direccion` | Añade una gasolinera al comparador (máximo 5, sin duplicados). |
 | `removeFromCompare` | `ideess` | Quita una gasolinera del comparador y guarda. |
 | `updateCompareCount` | — | Muestra u oculta el contador del botón del comparador. |
-| `loadFavorites` | — | Lee las favoritas de `localStorage` (`gasolinera_favorites`). |
-| `saveFavorites` | — | Guarda las favoritas, actualiza el contador y las sincroniza con los avisos de precio (`AlertsStore` y ejecutor en segundo plano). |
+| `loadFavorites` | — | Lee las favoritas del país abierto de `localStorage` (`gasolinera_favorites`, con sufijo `_pt`/`_fr` según el país). |
+| `allFavorites` | — | Favoritas de los tres países juntas, cada una con su campo `pais` (las del país abierto vienen del estado; las otras se leen de `localStorage`). Es lo que se envía a los avisos de precio. |
+| `saveFavorites` | — | Guarda las favoritas, actualiza el contador y las sincroniza con los avisos de precio (`AlertsStore` y ejecutor en segundo plano) usando las de todos los países (`allFavorites`). |
 | `isFavorite` | `ideess` | Indica si una gasolinera es favorita. |
 | `favoriteToggleLabel` | `ideess` | Texto accesible del botón de favorita según su estado. |
-| `addToFavorites` | `ideess, rotulo, direccion, municipio` | Añade una gasolinera a favoritas (sin duplicados). |
+| `addToFavorites` | `ideess, rotulo, direccion, municipio` | Añade una gasolinera a favoritas del país abierto (sin duplicados; guarda `pais`). |
 | `removeFromFavorites` | `ideess` | Quita una gasolinera de favoritas. |
 | `updateFavoritesCount` | — | Muestra u oculta el contador del botón de favoritas. |
 | `openFavoritesPanel` | — | Pinta y abre el panel de favoritas. |
-| `renderFavoritesPanel` | — | Dibuja la lista de favoritas con un botón para abrir la ficha y otro para quitar. |
+| `renderFavoritesPanel` | — | Dibuja la lista de favoritas con un botón para abrir la ficha y otro para quitar; en escritorio añade los precios de cada una. |
+| `syncRowActions` | — | Actualiza en las tarjetas de la lista el estado y el texto accesible de los botones de favorita y comparar. |
+| `toggleRowFavorite` | `station` | Añade o quita de favoritas desde una tarjeta de la lista y avisa con un mensaje breve. |
+| `toggleRowCompare` | `station` | Añade o quita del comparador desde una tarjeta (avisa si ya hay 5). |
+| `fillFavoritePrices` | `ideess, container` | Pide la ficha de una favorita y escribe en su fila los precios de gasóleo A, del segundo carburante de cabecera del país y de AdBlue (solo escritorio). |
 | `showToast` | `message` | Muestra un aviso breve (1,6 s) en la parte baja de la pantalla. |
 | `closeGeoAsk` | — | Cierra el diálogo de permiso de ubicación si está abierto. |
-| `requestGeolocation` | — | Pide la posición al dispositivo (10 s de espera, caché de 5 min). Si va bien guarda las coordenadas, emite `gp:location`, recuerda la preferencia «activada» y lanza la búsqueda; si falla muestra el aviso de reintento. |
-| `showSearchPrompt` | — | Estado «sin ubicación»: pasa al modo `cheapest` y carga la lista por defecto con las gasolineras más baratas de España para el carburante elegido. |
+| `requestGeolocation` | — | Pide la posición al dispositivo (10 s de espera, caché de 5 min). Si la posición cae fuera del país abierto (`insideCountry`), avisa con un mensaje y muestra las más baratas del país. Si va bien guarda las coordenadas, emite `gp:location`, recuerda la preferencia «activada» y lanza la búsqueda; si falla muestra el aviso de reintento. |
+| `insideCountry` | `lat, lon` | Indica si la posición está a menos de 25 km de alguna gasolinera del país abierto (con los datos locales); si no se pueden leer, da por buena la posición. |
+| `showSearchPrompt` | — | Estado «sin ubicación»: pasa al modo `cheapest` y carga la lista por defecto con las gasolineras más baratas del país abierto para el carburante elegido. |
 | `initGeolocationFlow` | — | Decide al arrancar qué hacer con la ubicación según la preferencia guardada y el permiso del sistema: pedirla, respetar «no», o mostrar el diálogo de permiso tras la pantalla de carga. |
 | `loadLocationPref` | — | Lee la preferencia de ubicación (`on`, `off` o nula). |
 | `saveLocationPref` | `value` | Guarda esa preferencia. |
 | `updateGeoToggle` | — | Actualiza el botón de ubicación (estado pulsado y texto accesible). |
 | `toggleLocation` | — | Desactiva la ubicación (borrando la lista de cercanas) o la vuelve a pedir. |
-| `loadNationalHeadline` | — | Carga los precios medios de hoy de gasóleo A y gasolina 95 para el resumen superior. |
+| `loadNationalHeadline` | — | Carga los precios medios de hoy de gasóleo A y del segundo carburante de cabecera del país (`GPCountry.config.headline[1]`: gasolina 95 en España y Portugal, SP95-E10 en Francia) para el resumen superior. |
+| `showPriceDate` | `fecha` | Escribe en `national-date` si los precios son de hoy, de ayer o más antiguos (en gris), con la fecha en el idioma de la app. |
+| `seriesDelta` | `data` | Diferencia entre las dos últimas medias de una serie nacional, o nulo si no hay dos puntos. |
+| `deltaElement` | `delta, suffix` | Crea el texto de variación («▲/▼ importe desde ayer» o «sin cambios»), traducido. |
+| `priceDayLabel` | `fecha` | Etiqueta del día de los precios («Hoy, …», «Ayer, …» o «Precios del …») y si está desfasada. |
+| `nationalKpi` | `label, value, note` | Crea una cifra de la banda de precios medios. |
+| `renderNationalLine` | `gasoleoA, gasolina95` | Dibuja la banda de cifras del día: fecha, precio medio de cada carburante de cabecera, variación y número de gasolineras con precio. |
 | `toggleNationalDetail` | — | Despliega u oculta el detalle del resumen nacional y dibuja su gráfico la primera vez. |
 | `renderNationalChart` | — | Dibuja el gráfico de 14 días de la media nacional del carburante seleccionado. |
 | `currentFilters` | — | Devuelve los filtros de las búsquedas: carburante, radio, orden y apertura. |
@@ -48,7 +62,7 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `placeSummary` | — | Texto del lugar de la búsqueda («Cerca de ti» o «texto buscado»). |
 | `flashStatus` | — | Reinicia la animación de destello de la línea de estado. |
 | `setStationsStatus` | `kind` | Actualiza la línea de estado y el botón de buscar según el estado de la carga (`loading`, `done`, `error`, `needs-location`). |
-| `loadNearby` | — | Carga la primera página de gasolineras cercanas al usuario; sin ubicación muestra las más baratas de España. |
+| `loadNearby` | — | Carga la primera página de gasolineras cercanas al usuario; sin ubicación muestra las más baratas del país abierto. |
 | `backToNearby` | — | Limpia la búsqueda por texto y vuelve a las gasolineras cercanas. |
 | `performSearch` | `query` | Inicia una búsqueda por texto (mínimo 2 letras) y carga la primera página. |
 | `hideSearchSuggestions` | — | Oculta y vacía la lista de sugerencias de lugares. |
@@ -69,7 +83,7 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `renderList` | `stations` | Dibuja las tarjetas de resultados, el aviso de «sin resultados» con su ayuda de radio y la nota de lugar geocodificado. |
 | `escapeHtml` | `text` | Escapa un texto para insertarlo como HTML sin riesgo. |
 | `stationHeaderCell` | `d` | Celda de cabecera del comparador con rótulo, dirección y municipio. |
-| `ensureMap` | — | Crea el mapa de precios una sola vez: centrado en tu ubicación (zoom 13) o en Madrid (zoom 6), capas base, agrupación de puntos y carga al mover el mapa. |
+| `ensureMap` | — | Crea el mapa de precios una sola vez: centrado en tu ubicación (zoom 13) o en el centro y zoom del país abierto (`GPCountry.config.center` y `zoom`), capas base, agrupación de puntos y carga al mover el mapa. |
 | `scheduleBboxLoad` | — | Aplaza 300 ms la carga de puntos al mover el mapa. |
 | `priceColor` | `precio, min, max` | Color de un punto según su precio entre el mínimo y el máximo visibles (verde barato a rojo caro, gris sin precio). |
 | `loadBboxForMap` | — | Pide los puntos de la zona visible (cancelando la petición anterior) y los dibuja; avisa si se muestrean por haber demasiados. |
@@ -97,12 +111,21 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `renderStatsProvinceChartNow` | — | Dibuja las provincias de más barata a más cara para el carburante elegido. |
 | `renderStatsDistributionChart` | — | Envuelve el histograma con el aviso de carga. |
 | `renderStatsDistributionChartNow` | — | Dibuja el histograma de distribución de precios actuales. |
+| `setStatsKpi` | `id, value, note, delta` | Escribe una cifra clave de Estadísticas (valor y, debajo, variación o nombre). |
+| `renderStatsNationalKpis` | — | Rellena las cifras clave de gasóleo A y del segundo carburante de cabecera con la media de hoy y su variación. |
+| `provinceName` | `raw` | Pasa un nombre de provincia a mayúscula inicial por palabra, dejando en minúscula las partículas («de», «la», «y»…). |
+| `rankItem` | `position, province` | Fila de las listas de provincias más baratas y más caras. |
+| `renderProvinceRanks` | `provinces, fuel` | Dibuja las cinco provincias más baratas y las cinco más caras, y sus cifras clave. |
+| `toggleProvinceChart` | — | Despliega u oculta el gráfico completo de provincias (solo escritorio). |
 | `setStatsGroup` | `group` | Cambia la agrupación (día o mes) y repinta las series. |
-| `openStationModal` | `ideess` | Abre la ficha: pide la gasolinera, rellena datos, precios y botones, espera al gráfico y a la comparación con la zona (con «Cargando…») y entonces muestra el diálogo. Ignora pulsaciones repetidas. |
-| `loadZoneComparison` | `ideess, fuel` | Escribe la comparación con la media de la zona (municipio) en la ficha. |
-| `loadHistoryChart` | `ideess, fuel` | Dibuja el gráfico de precios de los últimos 14 días en la ficha. |
+| `placeStationsStatus` | — | Coloca la línea de estado de la lista: en escritorio al principio de la vista de lista y en móvil en su sitio original. |
+| `placeStationModal` | — | Coloca el diálogo de la ficha: en escritorio dentro de la vista de mapa (junto al mapa) y en móvil en el `body`; si estaba abierto lo cierra al moverlo. |
+| `renderWeekHours` | `raw` | Escribe en `modal-horario-week` el horario día por día (`GPCountry.weeklyHours`); lo oculta si no hay horario o es 24 h todos los días. |
+| `openStationModal` | `ideess, country` | Abre la ficha (de la gasolinera de `country`, o del país abierto si no se indica): pide la gasolinera, rellena datos, precios, horario por días y botones (sin el botón de favorita si es de otro país), espera al gráfico y a la comparación con la zona (con «Cargando…») y entonces muestra el diálogo. Ignora pulsaciones repetidas. |
+| `loadZoneComparison` | `ideess, fuel` | Escribe la comparación con la media de la zona (municipio) en la ficha, pidiéndola al país de la gasolinera abierta. |
+| `loadHistoryChart` | `ideess, fuel` | Dibuja el gráfico de precios de los últimos 14 días en la ficha, pidiéndolo al país de la gasolinera abierta. |
 | `openComparePanel` | — | Pinta y abre el comparador. |
-| `renderComparePanel` | — | Pide la ficha de cada gasolinera guardada y dibuja la tabla lado a lado con botones «Quitar». |
+| `renderComparePanel` | — | Pide la ficha de cada gasolinera guardada y dibuja la tabla lado a lado con botones «Quitar» y resalta el precio más bajo de cada carburante. |
 | `syncOfflineBanner` | — | Muestra u oculta el aviso de sin conexión y alterna la clase `is-offline` de la página. |
 | `showAlertsNote` | `message` | Muestra un mensaje bajo el interruptor de avisos de precio. |
 | `enableNativeAlerts` | — | Activa los avisos en la app: pide permiso de notificaciones, guarda el estado y sincroniza las favoritas con el ejecutor en segundo plano. |
@@ -110,8 +133,12 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `checkAndNotifyDrops` | — | Comprueba bajadas de precio de favoritas ahora y muestra notificaciones. |
 | `disableAlerts` | — | Desactiva los avisos y anula la sincronización periódica. |
 | `changeAlerts` | `enabled` | Activa o desactiva los avisos de bajada de precio desde el interruptor o desde Permisos; devuelve el problema o la advertencia para mostrarlo. |
-| `restoreFuelPreference` | — | Restaura el carburante guardado en el selector al arrancar. |
-| `handleDeepLink` | — | Interpreta `?station=` y `?view=` de la URL para abrir una ficha o una vista. |
+| `alertsSummary` | — | Frase que resume la configuración de los avisos («Te avisaremos, como mucho una vez al día, cuando… baje/cambie N céntimos o más»). |
+| `loadAlertOptions` | — | Lee de `AlertsStore.getSettings` el umbral y la casilla de subidas y los pone en los controles. |
+| `saveAlertOptions` | — | Guarda el umbral (`alertThreshold`) y las subidas (`alertRises`), los envía al ejecutor nativo y muestra el resumen. |
+| `showAlertOptions` | — | Muestra las opciones de avisos solo cuando el interruptor está activo. |
+| `restoreFuelPreference` | — | Restaura el carburante guardado del país abierto en el selector al arrancar. |
+| `handleDeepLink` | — | Interpreta `?station=`, `?view=`, `?panel=favorites` y `?q=` de la URL para abrir una ficha, una vista, las favoritas o una búsqueda. (La ficha por ruta, `/stations/<id>`, `/pt/stations/<id>` o `/fr/stations/<id>`, se abre al arrancar con `openStationModal`.) |
 | `showUpdateBanner` | `version, url` | Muestra el aviso de versión nueva con su enlace de descarga. |
 | `useVehicleFuel` | `fuel` | Cambia el filtro de carburante al del coche activo y relanza la búsqueda. |
 | `applyOpenRequest` | `request` | Abre la vista pedida por un enlace o por la notificación del viaje y, si procede, la pantalla del viaje en curso. |
