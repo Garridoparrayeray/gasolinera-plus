@@ -147,7 +147,9 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 
 | Función | Parámetros | Qué hace |
 |---|---|---|
-| `loadData` | — | Carga las gasolineras locales (descargadas o empaquetadas) una sola vez. |
+| `loadCountry` | `country` | Gasolineras locales de un país, cada una con su campo `pais`. Las del país abierto salen de `loadData`; las de otro país se descargan de su fichero `lite` y se guardan en memoria (si falla, devuelve una lista vacía y permite reintentar). |
+| `loadCountries` | `countries` | Junta las gasolineras locales de varios países (para las rutas entre países). Se expone en `OfflineEngine`. |
+| `loadData` | — | Carga las gasolineras locales del país abierto (descargadas o empaquetadas; `stations-lite.json` o el fichero `lite` de su país) una sola vez. |
 | `haversine` | `lat1, lon1, lat2, lon2` | Distancia en km entre dos puntos. |
 | `normalize` | `text` | Minúsculas y sin tildes. |
 | `isOpen24h` | `station` | Indica si una gasolinera abre 24 horas. |
@@ -158,7 +160,9 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `listItem` | `station, distanciaKm` | Da forma de respuesta de API a una gasolinera local. |
 | `page` | `items, offset, limit` | Corta una página de resultados y calcula `hasMore`. |
 | `relevance` | `s` | Relevancia de una gasolinera para un texto (0 a 5), igual que el servidor. |
-| `request` | `path, signal` | Petición a la API con manejo de errores; marca `status = 0` sin red. |
+| `outside` | `entry` | Dentro de `search`: indica si un resultado cae fuera del radio elegido (al ordenar por precio, lo de fuera va después). |
+| `byLabel` | `a, b` | Dentro de `suggestPlaces`: ordena las sugerencias por nombre. |
+| `request` | `path, signal, country` | Petición a la API con manejo de errores; marca `status = 0` sin red. Añade `?pais=` (`GPCountry.apiQuery`) salvo para España; con `country` consulta ese país en vez del abierto. |
 | `isOffline` | `error` | Indica si un error es de falta de red. |
 | `roundCoord` | `value` | Redondea coordenadas a 3 decimales. |
 | `snapDown` | `value` | Redondea hacia abajo a 0,01°. |
@@ -191,8 +195,9 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `versionNumber` | `tag` | Convierte una etiqueta de versión en lista de números. |
 | `isNewer` | `remote, local` | Compara versiones. |
 | `checkForUpdate` | `notify` | Consulta la última release de GitHub y avisa si hay APK nuevo (solo Android). |
-| `refreshOfflineData` | — | Descarga `stations-lite.json` como máximo cada 20 horas y lo guarda para uso sin servidor. |
-| `cachedOfflineStations` | — | Lee las gasolineras descargadas o nulo. |
+| `refreshOfflineData` | — | Descarga el fichero `lite` del país abierto (`stations-lite.json` en España) como máximo cada 20 horas y lo guarda, por país, para uso sin servidor. |
+| `cachedOfflineStations` | — | Lee las gasolineras descargadas del país abierto o nulo. |
+| `setupDesktopInstall` | `isMobile, androidLink` | En ordenador (web) oculta las descargas de móvil y muestra el botón de instalar (`get-app-desktop`): lanza el aviso de instalación del navegador o, si no hay, despliega la ayuda. |
 | `setupGetApp` | — | Muestra los botones de instalación en web según el sistema. |
 | `handleOpenUrl` | `rawUrl` | Interpreta un enlace abierto en la app: ficha de gasolinera o vista (`?view=`, `?trip=1`). |
 | `setupNativeShell` | — | Ajusta la app nativa: clases del `<html>`, enlaces externos, botón atrás y enlaces de la app. |
@@ -239,6 +244,7 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `refreshMaps` | — | Añade o quita regiones en todos los mapas abiertos. |
 | `exists` | `file` | Comprueba si un fichero existe. |
 | `verifyInstalled` | — | Elimina del registro las regiones cuyo fichero desapareció. |
+| `ensureFolder` | — | Crea la carpeta de mapas antes de descargar (en Android `downloadFile` no la crea). |
 | `loadIndex` | — | Descarga la lista de regiones disponibles. |
 | `removeFile` | `file` | Borra un fichero de mapa. |
 | `install` | `entry, onProgress` | Descarga una región con progreso, la valida, la registra y borra la versión anterior. |
@@ -246,7 +252,7 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `megabytes` | `bytes` | Formatea bytes como MB o GB. |
 | `initCard` | — | Construye la tarjeta de mapas sin conexión de la pantalla Coche. |
 | `say` | `text` | Muestra un mensaje en la tarjeta. |
-| `render` | — | Dibuja la lista de regiones con Descargar, Actualizar o Borrar. |
+| `render` | — | Dibuja la lista de regiones agrupadas por país (encabezado España, Portugal o Francia) con Descargar, Actualizar o Borrar. |
 | `act` | `entry, isInstalled, button` | Ejecuta la acción del botón de una región. |
 | `firstRunHint` | — | En la app y con Wi-Fi, sin ningún mapa, ofrece una vez descargar el de la zona. |
 
@@ -254,21 +260,24 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 
 | Función | Parámetros | Qué hace |
 |---|---|---|
-| `unitFor` | `slug` | Unidad de un carburante (`L` o `kg`). |
-| `labelFor` | `slug` | Nombre legible de un carburante. |
-| `priceText` | `value, slug` | Precio con su unidad. |
-| `notificationFor` | `drop` | Título y opciones de la notificación de una bajada de precio. |
+| `unitFor` | `slug` | Unidad de un carburante (`L`, `kg` o `m3`); usa `GPCountry.fuelUnit` si está cargado. |
+| `labelFor` | `slug` | Nombre legible de un carburante, en el idioma de la app (`GPCountry.fuelLabel`). |
+| `priceText` | `value, slug` | Precio con su unidad (`/kg` o `/m³` donde corresponda). |
+| `changeLine` | `fuel` | Línea de la notificación de un carburante: «nombre: precio anterior → precio nuevo». |
+| `notificationFor` | `drop` | Título y opciones de la notificación de un cambio de precio («ha bajado», «ha subido» o «ha cambiado de precio», en el idioma de la app) con hasta tres líneas de detalle. |
 | `openDb` | — | Abre el almacén de avisos en IndexedDB. |
 | `get` | `key` | Lee un valor guardado. |
 | `set` | `key, value` | Guarda un valor. |
-| `checkPrices` | `apiBase` | Compara precios de favoritas con los anteriores y devuelve las bajadas de al menos 0,002 €. |
+| `getSettings` | — | Lee la variación mínima (`alertThreshold`; 0,03 € por defecto, `DEFAULT_THRESHOLD`) y si se avisa también de las subidas (`alertRises`). |
+| `compare` | `previousPrices, stationFuels, settings` | Compara los precios guardados con los actuales y devuelve `{ prices, fuelDrops, fuelRises }`. El precio de referencia de un carburante solo cambia cuando la variación llega al mínimo, así que varias variaciones pequeñas acaban avisando cuando suman lo bastante. |
+| `checkPrices` | `apiBase` | Para cada favorita, de cualquier país (pide la ficha con `?pais=` y guarda los precios con la clave `pais:ideess`), compara con los anteriores y devuelve los avisos de bajada (y de subida si se activaron) de al menos el mínimo elegido. |
 
 ### `js/background.js`
 
 | Función | Parámetros | Qué hace |
 |---|---|---|
 | `runner` | — | Plugin `BackgroundRunner` o nulo. |
-| `syncAlerts` | `favorites, enabled` | Envía al ejecutor las favoritas y el estado de los avisos. |
+| `syncAlerts` | `favorites, enabled` | Envía al ejecutor las favoritas (con su país), el estado de los avisos, la variación mínima y el aviso de subidas, las etiquetas de carburantes y los textos de la notificación en el idioma de la app. |
 | `checkNow` | — | Pide una comprobación inmediata de precios. |
 
 ### `js/permissions.js`

@@ -17,7 +17,7 @@ Cada país tiene su propia base SQLite en el servidor y su propio lite JSON en e
 | Petición a la API | — | `request` añade `?pais=` con `GPCountry.apiQuery`; sin sufijo para España |
 | Carburante por defecto de una lista | `Fuels::headline` del país (segundo valor como carburante de reserva al ordenar por precio) | El carburante lo elige la pantalla; los desplegables se rellenan con los del país (`GPCountry.fillFuelSelect`) |
 | Hora de «abierto ahora» | Hora local de la gasolinera (`Station::localNow`) | No existe (el lite no trae horarios interpretados) |
-| Normalización de texto | Igual en los tres países: `á→a`, `ñ→n`, `ç→c`, y para el cliente `NFD` sin marcas diacríticas, de modo que «Évora» y «evora», «São» y «sao» o «Île» e «ile» coinciden | Igual |
+| Normalización de texto | `Search::normalize` (lista fija de letras, ver abajo) | `NFD` sin marcas diacríticas |
 
 `OfflineEngine` guarda el lite del país actual en `stationsCache` (`loadData`). Para otros países mantiene un `otherCountries` con una promesa por país (`loadCountry`), que descarga `GPCountry.liteUrlFor(país)` a demanda y anota cada gasolinera con `pais`. Si la descarga falla devuelve una lista vacía y lo reintenta la siguiente vez. `loadCountries(lista)` junta varios países.
 
@@ -34,6 +34,8 @@ Servidor: `Models\Search::normalize`. Cliente: `OfflineEngine`/`normalize`.
 - Servidor: sustituye las letras acentuadas por su versión simple (`á→a`, `ñ→n`, `ç→c`…), pasa a minúsculas y colapsa cualquier secuencia de espacios en uno.
 - Cliente: `text.normalize('NFD')` y elimina las marcas diacríticas, luego minúsculas.
 
+**Letras de Portugal y Francia.** La lista de `Search::normalize` cubre las vocales con acento agudo, grave, diéresis y circunflejo, `ñ` y `ç`, que bastan para el castellano, el francés casi completo y buena parte del portugués. No incluye `ã`, `õ`, `œ` ni `æ`, que el cliente (`NFD`) sí reduce en el caso de `ã` y `õ`. Consecuencia: en el servidor, buscar «sao joao» no encuentra «São João» porque en la base queda `são joão`; el cliente sin conexión sí. Es una diferencia conocida entre las dos implementaciones, pendiente de igualar (el importador usa la misma `Search::normalize`, así que añadir las letras obliga a regenerar las bases).
+
 En la base, las columnas `municipio_normalizado`, `direccion_normalizada`, `rotulo_normalizado` y `localidad_normalizada` ya están normalizadas. En el cliente se normaliza cada campo en el momento de comparar.
 
 ## Cerca de ti (`near`)
@@ -45,7 +47,7 @@ En la base, las columnas `municipio_normalizado`, `direccion_normalizada`, `rotu
 
 Servidor: primero una **caja envolvente** (`boundingBox`: ±`radio/111` grados de latitud y ±`radio/(111·cos(lat))` de longitud) para que SQLite use los índices de `lat` y `lon`, y después el filtro exacto por Haversine.
 
-`open=now` (abierto ahora) solo existe en el servidor: el lite JSON no incluye horarios interpretados. En la app nativa, `canUseLocal` devuelve `false` si `open` es `now`, y entonces se va al servidor. El servidor evalúa el horario con la **hora local de cada gasolinera** (`Station::localNow`: la zona del país y, donde la hay, la de la isla, como Canarias o Azores), no con la de Madrid; una gasolinera de Lisboa a las 22:30 hora peninsular española está abierta o cerrada según la hora de Lisboa.
+`open=now` (abierto ahora) solo existe en el servidor: el lite JSON no incluye horarios interpretados. En la app nativa, `canUseLocal` devuelve `false` si `open` es `now`, y entonces se va al servidor. El servidor evalúa el horario con la **hora local de cada gasolinera** (`Station::localNow`: la zona del país y, donde la hay, la de la isla, como Canarias o Azores), no con la de Madrid; una gasolinera de Lisboa está abierta o cerrada según la hora de Lisboa, que va una hora por detrás de la peninsular española.
 
 ## Búsqueda por texto (`search`)
 
