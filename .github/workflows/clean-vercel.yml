@@ -26,3 +26,4 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
         run: node scripts/clean-vercel.mjs
+

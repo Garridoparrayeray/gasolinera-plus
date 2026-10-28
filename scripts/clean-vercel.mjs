@@ -2,10 +2,9 @@
 
 const token = process.env.VERCEL_TOKEN;
 const teamId = process.env.VERCEL_ORG_ID;
-const projectId = process.env.VERCEL_PROJECT_ID;
 
-if (!token || !projectId) {
-  console.error('Error: Faltan variables de entorno requeridas (VERCEL_TOKEN, VERCEL_PROJECT_ID).');
+if (!token) {
+  console.error('Error: Falta la variable de entorno VERCEL_TOKEN.');
   process.exit(1);
 }
 
@@ -14,45 +13,47 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
-async function main() {
-  console.log('=== Limpieza de despliegues no utilizados en Vercel ===');
-
-  // 1. Obtener detalles del proyecto y el ID de despliegue de produccion activo
-  const projectUrl = new URL(`https://api.vercel.com/v9/projects/${projectId}`);
-  if (teamId) projectUrl.searchParams.set('teamId', teamId);
-
-  const projRes = await fetch(projectUrl.toString(), { headers });
-  if (!projRes.ok) {
-    console.error(`Error al consultar el proyecto: ${projRes.status} ${projRes.statusText}`);
-    const text = await projRes.text();
-    console.error(text);
-    process.exit(1);
+/**
+ * @param {string} urlString
+ */
+async function fetchJson(urlString) {
+  const res = await fetch(urlString, { headers });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`HTTP ${res.status}: ${text}`);
   }
+  return res.json();
+}
 
-  const project = await projRes.json();
+/**
+ * Limpia los despliegues no utilizados de un proyecto concreto
+ * @param {{ id: string, name: string, targets?: { production?: { id?: string } } }} project
+ */
+async function cleanProject(project) {
   const prodDeploymentId = project.targets?.production?.id;
-  console.log(`Proyecto: ${project.name} (${project.id})`);
-  console.log(`Despliegue de produccion activo: ${prodDeploymentId || 'No detectado especificamente'}`);
+  console.log(`\n------------------------------------------------------`);
+  console.log(`Proyecto: ${project.name} (ID: ${project.id})`);
+  console.log(`Produccion activa protegida: ${prodDeploymentId || 'No asignada especificamente'}`);
 
-  // 2. Paginar y recorrer todos los despliegues
-  let deletedCount = 0;
-  let skippedCount = 0;
+  let deleted = 0;
+  let protectedCount = 0;
   let until;
 
   while (true) {
     const listUrl = new URL('https://api.vercel.com/v6/deployments');
-    listUrl.searchParams.set('projectId', projectId);
+    listUrl.searchParams.set('projectId', project.id);
     if (teamId) listUrl.searchParams.set('teamId', teamId);
     listUrl.searchParams.set('limit', '100');
     if (until) listUrl.searchParams.set('until', String(until));
 
-    const listRes = await fetch(listUrl.toString(), { headers });
-    if (!listRes.ok) {
-      console.error(`Error al listar despliegues: ${listRes.status}`);
+    let data;
+    try {
+      data = await fetchJson(listUrl.toString());
+    } catch (err) {
+      console.error(`Error al listar despliegues de ${project.name}:`, err.message);
       break;
     }
 
-    const data = await listRes.json();
     const deployments = data.deployments || [];
     if (deployments.length === 0) {
       break;
@@ -63,12 +64,12 @@ async function main() {
     for (const d of deployments) {
       const isProduction = (d.uid === prodDeploymentId) || (d.target === 'production');
       if (isProduction) {
-        console.log(`[PROTEGIDO] Produccion: ${d.uid} (${d.url})`);
-        skippedCount++;
+        console.log(`  [PROTEGIDO] Produccion: ${d.uid} (${d.url})`);
+        protectedCount++;
         continue;
       }
 
-      console.log(`[BORRANDO] Preview/Antiguo: ${d.uid} (${d.url})`);
+      console.log(`  [BORRANDO] Inactivo/Preview: ${d.uid} (${d.url})`);
       const delUrl = new URL(`https://api.vercel.com/v13/deployments/${d.uid}`);
       if (teamId) delUrl.searchParams.set('teamId', teamId);
 
@@ -78,12 +79,12 @@ async function main() {
           headers
         });
         if (delRes.ok) {
-          deletedCount++;
+          deleted++;
         } else {
-          console.warn(`No se pudo borrar ${d.uid}: status ${delRes.status}`);
+          console.warn(`  No se pudo borrar ${d.uid}: HTTP ${delRes.status}`);
         }
       } catch (err) {
-        console.warn(`Error de red al borrar ${d.uid}:`, err);
+        console.warn(`  Error de red al borrar ${d.uid}:`, err);
       }
     }
 
@@ -93,10 +94,49 @@ async function main() {
     until = deployments[deployments.length - 1].created;
   }
 
+  console.log(`Resultado ${project.name}: ${deleted} borrados, ${protectedCount} protegidos.`);
+  return { deleted, protectedCount };
+}
+
+async function main() {
+  console.log('=== Limpieza de despliegues no utilizados en TODOS los proyectos de Vercel ===');
+
+  // 1. Obtener la lista de todos los proyectos de la cuenta / equipo
+  const projectsUrl = new URL('https://api.vercel.com/v9/projects');
+  if (teamId) projectsUrl.searchParams.set('teamId', teamId);
+  projectsUrl.searchParams.set('limit', '100');
+
+  let projectsData;
+  try {
+    projectsData = await fetchJson(projectsUrl.toString());
+  } catch (err) {
+    console.error('Error al listar proyectos:', err.message);
+    process.exit(1);
+  }
+
+  const projects = projectsData.projects || [];
+  if (projects.length === 0) {
+    console.log('No se encontraron proyectos en esta cuenta/equipo.');
+    return;
+  }
+
+  console.log(`Se encontraron ${projects.length} proyectos: ${projects.map(p => p.name).join(', ')}`);
+
+  let totalDeleted = 0;
+  let totalProtected = 0;
+
+  for (const project of projects) {
+    const res = await cleanProject(project);
+    totalDeleted += res.deleted;
+    totalProtected += res.protectedCount;
+  }
+
+  console.log('\n======================================================');
+  console.log('=== RESUMEN GLOBAL DE LIMPIEZA ===');
+  console.log(`Proyectos analizados: ${projects.length}`);
+  console.log(`Total despliegues borrados (inactivos / previews): ${totalDeleted}`);
+  console.log(`Total despliegues de produccion protegidos: ${totalProtected}`);
   console.log('======================================================');
-  console.log(`Limpieza finalizada con exito:`);
-  console.log(` - Despliegues borrados: ${deletedCount}`);
-  console.log(` - Despliegues de produccion protegidos: ${skippedCount}`);
 }
 
 main().catch((err) => {
