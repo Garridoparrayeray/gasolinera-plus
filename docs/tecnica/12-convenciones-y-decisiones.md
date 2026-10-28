@@ -46,7 +46,7 @@ Patrón de «Cargando…»: `GPSectionLoading.track(vista, promesa)`. Cualquier 
 |---|---|---|
 | Datos personales solo en el dispositivo | Privacidad, coste cero de servidor, sin cuentas | Servidor de usuarios |
 | Índice de medias agregado en meses y celdas | Comparar «tu precio frente a la media del día y de tu zona» sin guardar cada precio de cada gasolinera de cada día (serían gigabytes) | Guardar todo el histórico por gasolinera |
-| Histórico de gasolineras de solo 10 días en el servidor | Limita el tamaño de SQLite (~50 MB) en Vercel | Histórico completo |
+| Histórico de gasolineras de solo 10 días en el servidor | Limita el tamaño de SQLite en Vercel (la de España pesa unos 80 MB con esos 10 días y las tres bases juntas rozan el límite de la función; ver [11](11-compilacion-y-pruebas.md)) | Histórico completo |
 | Serie nacional sin recorte | Es pequeña (una fila por día y carburante) y sirve a Estadísticas | Recortarla también |
 | Ruta calculada en el dispositivo | Sin servicio externo, sin coste, funciona sin conexión, privacidad | API de rutas de pago |
 | Grafo en formato binario propio con teselas | Carga rápida y poca memoria en el móvil | GeoJSON o servicio remoto |
@@ -57,6 +57,13 @@ Patrón de «Cargando…»: `GPSectionLoading.track(vista, promesa)`. Cualquier 
 | Consumo de un viaje relativo al estilo del conductor | Con pocos datos, una cifra absoluta por velocidad es poco fiable | Constantes universales |
 | Sin seguimiento de usuarios: la web usa solo Vercel Web Analytics (agregada, anónima y sin cookies) y la app no lleva analítica | Privacidad | Herramientas de analítica con perfiles |
 | Un solo HTML generado por PHP | El mismo servidor sirve la web y genera el paquete de la app | Fichero estático |
+| Los precios diarios se publican en releases de GitHub (`data-es`, `data-pt`, `data-fr`) y no como commits | Una base de ~80 MB commiteada cada día hacía crecer el historial de git sin límite. La release se sobrescribe y conserva solo la de hoy y la anterior (`gasolinera-<país>-anterior.sqlite.gz`) | `git commit` diario de `data/gasolinera.sqlite` (lo que se hacía hasta la 1.1.1; el último `chore: snapshot diario` es del 20/10/2026) |
+| Una base SQLite y un lite JSON por país (`config/countries.json`) | Cada país se importa, se valida y se publica por separado: si falla la fuente de uno, los otros siguen y la app muestra el que falla como próximamente. Cada consulta abre una sola base y el esquema no necesita columna de país | Una base única con todos los países |
+| Adelgazar solo la copia que se despliega (`scripts/slim-database.py`) | La función de Vercel no admite más de ~110 MB de bases. Adelgazar `price_history` no cambia el contenido y deja intactas las bases de las releases, que sirven de partida del día siguiente | Adelgazar la base original (cambiaría el proceso diario) o quitar histórico |
+| Ninguna rama despliega a producción: una rama solo da una vista previa (con `road-graph-test`) | Probar un cambio sin tocar la web de la que depende la app instalada. `vercel deploy --prod` exige `github.ref == 'refs/heads/main'` | Dejar que Vercel despliegue ramas y `main` solos (`git.deploymentEnabled.main = false`) |
+| Tras desplegar a producción se comprueba que responde (`Check that production answers`), y `check-production.yml` mira lo que ve Google | Un despliegue puede salir «bien» y dar 500 en la API (pasó con el peso de las bases) | Esperar a que alguien lo note |
+| Las fusiones a `main` son por *squash* | El repositorio no admite commits de fusión; cada pull request queda como un solo commit en `main` (el último `Merge pull request` es el #28; después, cada cambio es un commit) | Fusión con commit de fusión o *rebase* |
+| El favicon tiene direcciones propias: `/favicon.ico` e `/icons/favicon-48.png`, `-96.png` y `-192.png`, declarados en todas las páginas (`api/shell.php` y `api/seo.php`) | Google guarda el favicon por URL y no vuelve a leer una dirección que ya conoce, así que cambiar el logo sin cambiar la dirección no actualizaba el icono en los resultados | Sustituir el contenido de `icons/icon-192.png` |
 
 ## Trampas conocidas
 
@@ -70,10 +77,23 @@ Patrón de «Cargando…»: `GPSectionLoading.track(vista, promesa)`. Cualquier 
 - **Android en segundo plano:** para que el Bluetooth del coche arranque un viaje con la app cerrada, el móvil debe permitir a la app ignorar el ahorro de batería. Algunos fabricantes son más agresivos.
 - **iOS:** sin Bluetooth de coche. La detección automática usa movimiento y ubicación «Siempre».
 - **Índice de precios:** solo cinco carburantes. Un coche con otro no tendrá comparación histórica.
+- **Vercel, peso de la función:** las bases SQLite se empaquetan dentro de la función y el total no puede pasar de ~110 MB. Con las tres sin adelgazar (117 MB) toda la API daba `500 FUNCTION_INVOCATION_FAILED`; con 107 MB funcionaba. Si crece una base o se añade un país, mide el total desplegado antes de dar por bueno el despliegue (ver [11](11-compilacion-y-pruebas.md)).
+- **WAL en una función de solo lectura:** `build-database.php` abre las bases con `journal_mode = WAL`, que deja ficheros `-wal` y `-shm` junto a la base. La función las abre con `mode=ro&immutable=1` (`Core\Database`) y la función de Vercel no escribe junto a la base, por eso `slim-database.py` pasa la copia desplegada a `journal_mode = DELETE`. Una base con WAL no debe llegar sola a producción.
+- **Las bases adelgazadas no son las de las releases:** no subas a una release la base ya adelgazada ni la uses como partida del día siguiente sin saber que `price_history` cambió de forma; el flujo actual solo adelgaza dentro del job `deploy`.
+- **Google guarda el favicon por URL:** para que cambie el icono o el logo en los resultados hay que cambiar la dirección del fichero (por eso `favicon-48/96/192.png`) y declararla en todas las páginas.
+- **Sitemaps leídos durante una caída:** si la API da 500, `sitemap-<país>.xml` también (lo genera la función). Search Console guarda esa lectura como error y tarda en volver a leerlos; no hace falta tocar nada, pero conviene comprobarlos con `check-production.yml` tras arreglar el fallo y volver a enviarlos.
+- **Un sitemap no debe incluir páginas de zona sin nombre:** cuatro gasolineras francesas con la provincia vacía generaban `/fr/stations-service/`, que es el índice de zonas; `Seo` las excluye.
+- **La vista previa de una rama usa el grafo `road-graph-test`:** las bases son las mismas releases `data-<país>` que en producción, pero el grafo puede ser de otra versión que el de `road-graph`.
+- **Pull requests y pruebas:** `tests.yml` solo corre en push a `main`, en pull requests y a mano. Una rama sin pull request no pasa pruebas hasta que se abre uno.
 
 ## Cosas pendientes o mejorables
 
-- **Base de datos en git:** el proceso diario hace commit de `gasolinera.sqlite` (~50 MB). El historial crece cada día. Conviene publicarla como asset de una release.
+- **Base de datos en git:** los datos diarios ya van a releases y no hay commits diarios, pero `data/gasolinera.sqlite` (unos 80 MB, de octubre de 2026) y `data/stations-lite.json` siguen versionados como base de partida; cualquier commit que los cambie vuelve a engordar el historial. Convendría sacarlos de git y que la primera ejecución parta solo de la release `data-es`.
+- **Margen del peso de la función:** con las bases adelgazadas el total queda en torno a 107 MB y el límite está cerca de 110 MB. No hay una comprobación automática del peso: solo se detecta por el paso de comprobación de producción tras fallar. Convendría medirlo en el flujo y avisar antes de desplegar.
+- **Dominio propio:** la web y la API viven en `gasolineraplus.vercel.app` (así lo usan la app nativa, los sitemaps y `check-production.yml`). Un dominio propio permitiría separar la identidad del alojamiento y mantener las direcciones aunque cambie de proveedor; exigiría cambiar `SITE_URL` en `js/native.js`, la dirección base de `Seo.php`, las URL de los flujos y volver a enviar los sitemaps a Search Console.
+- **Comprobación de producción solo manual:** `check-production.yml` no se lanza solo; si un sitemap o una página vuelven a fallar, nada avisa hasta que alguien lo ejecuta (el paso del despliegue solo mira seis direcciones).
+- **Pruebas de países sin cobertura en CI móvil:** `android-countries.mjs`, `android-e2e.mjs` y `android-trip.mjs` son manuales y necesitan emulador; `tests.yml` no las ejecuta.
+- **Horarios:** parte de las gasolineras de Portugal (15 %) y Francia (33 %) sigue sin horario porque ni la fuente oficial ni OpenStreetMap lo traen.
 - **Release `price-index`:** hasta que el proceso `price-index.yml` complete su primera ejecución (400 días, puede tardar horas), la comparación por semana y por mes no tiene datos y el APK no lleva índice inicial.
 - **Pruebas de la interfaz del asistente nuevo:** el test de garaje recorre los pasos, pero no cubre el paso de edición de litros ni el de revisión de km.
 - **Código sin uso:** `chooseStationOnMap` (`garage.js`) ya no se llama desde ningún botón.
