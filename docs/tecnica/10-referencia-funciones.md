@@ -611,48 +611,68 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `clear` | — | Vacía la cola. |
 | `push` | `key, value` | Heap: inserta un valor con su prioridad; duplica la capacidad si hace falta. |
 | `pop` | — | Heap: extrae el valor de menor prioridad y guarda su clave en `topKey`. |
-| `parseMain` | `buffer` | Interpreta el fichero principal del grafo (`GPRG`) en vistas de arrays tipados. |
+| `parsePart` | `buffer` | Interpreta el paquete principal de un país (`GPRP`, `main-<país>.bin`) en vistas de arrays tipados: el trozo de cruces, arcos, tramos y geometría que ocupa ese país. |
 | `take` | `Type, count` | Corta un array tipado del búfer y avanza alineado a 4 bytes. |
+| `mergeParts` | `manifest, parts` | Junta los paquetes de país cargados en vectores globales (nodos, tramos, geometría y arcos), marca qué cruces están cargados (`nodeLoaded`) y descarta los arcos que apuntan a un país no cargado. |
+| `tileKeysAround` | `manifest, lat, lon` | Función del módulo: claves de las teselas del manifiesto que caen alrededor de un punto. Se expone en `GPRouter`. |
+| `countriesFor` | `manifest, points` | Países cuyos paquetes hacen falta para unos puntos: mira la celda de cada punto y muestrea cada tramo recto entre puntos consecutivos; si no encuentra ninguno, devuelve el primer país del manifiesto. |
+| `add` | `lat, lon` | Dentro de `countriesFor`: anota el país de la celda de un punto. |
 | `parseTile` | `buffer` | Interpreta una tesela (`GPRT`). |
 | `take` | `Type, count` | Igual que `take`, dentro de `parseTile`. |
-| `constructor` | `manifest, mainBuffer, loadTile` | Router: prepara coordenadas globales, marcas de búsqueda y estructuras de detalle. |
-| `tileKeysAround` | `lat, lon` | Claves de las teselas existentes alrededor de un punto. |
+| `constructor` | `manifest, partBuffers, loadTile` | Router: lee y junta los paquetes de país (`parsePart`, `mergeParts`) y prepara coordenadas globales, marcas de búsqueda y estructuras de detalle. |
+| `tileKeysAround` | `lat, lon` | Método de `Router`: claves de las teselas existentes alrededor de un punto (usa la función del módulo). |
 | `ensureTiles` | `points` | Descarga y carga las teselas que faltan para los puntos de la ruta. |
 | `addTile` | `key, tile` | Registra una tesela y crea sus aristas de detalle. |
+| `isLoaded` | `node` | Indica si un cruce está cargado (las teselas de detalle solo se usan entre cruces cargados). |
 | `addDetailEdge` | `from, to, time, ref, reversed` | Añade una arista de detalle al mapa de adyacencias. |
 | `segmentPoints` | `ref` | Puntos de la polilínea de un tramo. |
 | `segmentInfo` | `ref` | Extremos, longitud, tiempo, sentido único y peaje de un tramo. |
 | `findMainEdge` | `node, s, reversed` | Busca el arco de un tramo principal en un cruce y sentido. |
 | `projectOnSegment` | `ref, lat, lon` | Proyecta un punto sobre un tramo y devuelve distancia, posición y trozo. |
 | `snapCandidates` | `lat, lon, count` | Los mejores tramos candidatos (radio 2,5 km, penalización de 40 m para autopistas) para enganchar un punto. |
+| `consider` | `ref, fromLat, fromLon, toLat, toLon, length, penalty` | Dentro de `snapCandidates`: evalúa un tramo como candidato y conserva los mejores. |
 | `snap` | `lat, lon` | Engancha un punto al tramo más cercano: el primer candidato de `snapCandidates`. |
+| `reachableNodes` | `snapped, limit` | Cuenta (hasta `limit`) los cruces alcanzables saliendo de un punto enganchado; sirve para descartar tramos aislados. |
+| `buildReverse` | — | Construye una vez el grafo principal invertido (para ir hacia atrás). |
+| `buildDetailReverse` | — | Construye el grafo invertido de las aristas de detalle cargadas. |
+| `reverseReachable` | `snapped, limit` | Cuenta (hasta `limit`) los cruces desde los que se puede llegar a un punto enganchado. |
+| `viableFirst` | `list, role` | Ordena los candidatos de enganche poniendo antes los que no quedan aislados (400 cruces alcanzables hacia delante para el origen y hacia atrás para el destino). |
+| `isViable` | `candidate` | Dentro de `viableFirst`: comprueba si un candidato tiene salida y entrada suficientes según su papel. |
 | `endpointCosts` | `snapped, leaving` | Coste de salir o llegar por cada extremo de un tramo según el sentido. |
 | `heuristic` | `node, targetLat, targetLon` | Estimación optimista del tiempo restante en línea recta. |
 | `search` | `origin, destination, avoidTolls` | A* de mínimo tiempo entre dos puntos enganchados; con `avoidTolls` descarta los tramos de peaje. |
+| `relax` | `from, to, time, edgeCode` | Dentro de `search`: actualiza el coste de un cruce y lo mete en la cola si mejora. |
 | `detailEdgeId` | `edge` | Identificador numérico de una arista de detalle. |
 | `orientedPoints` | `ref, reversed` | Puntos de un tramo en el sentido de la marcha. |
 | `partial` | `snapped, fromStart, reversedDirection` | Fragmento de un tramo enganchado desde o hasta el punto proyectado. |
 | `leg` | `origin, destination, avoidTolls` | Reconstruye un tramo de ruta: geometría, metros, segundos y peaje. |
 | `directOnSegment` | `origin, destination` | Ruta directa cuando origen y destino están en el mismo tramo. |
-| `route` | `points, options = {}` | Encadena tramos entre todos los puntos, probando candidatos de enganche y con opción de evitar peajes; devuelve el resultado o el error (`no-road`, `no-connection`). |
+| `route` | `points, options = {}` | Encadena tramos entre todos los puntos: carga las teselas, toma hasta 24 candidatos de enganche por punto (`viableFirst`, se quedan 4) y prueba combinaciones (máximo 8 intentos por tramo) con opción de evitar peajes; devuelve el resultado o el error (`no-road`, `no-connection`). |
 
 ### `js/router-worker.js`
 
 | Función | Parámetros | Qué hace |
 |---|---|---|
-| `readBuffer` | `url, onProgress` | Descarga un fichero con progreso y lo descomprime si es gzip. |
-| `readGraphFile` | `path, onProgress` | Lee un fichero del grafo probando primero la versión `.gz` y después la que no está comprimida (como en el APK). |
-| `load` | `id` | Carga el manifiesto y el fichero principal una sola vez y crea el motor. |
+| `fetchBytes` | `url, onProgress, cache` | Descarga un fichero con progreso; si hay caché del navegador, lo lee de ella y, si no, lo guarda tras descargarlo. Rechaza respuestas HTML (fichero inexistente). |
+| `decode` | `bytes` | Descomprime los bytes con `DecompressionStream('gzip')` si empiezan por la firma gzip. |
+| `readFile` | `path, onProgress` | Lee un fichero del grafo probando en cada origen disponible primero la versión `.gz` y después la que no está comprimida (como en el APK). |
+| `fetchJson` | `url` | Descarga un JSON sin usar la caché (el manifiesto). |
+| `remoteSource` | — | Origen remoto de los paquetes: manifiesto del servidor, caché `road-graph-<fecha>` (borra las anteriores) y, si la versión coincide con la empaquetada, también los ficheros locales. |
+| `sourceFor` | `points` | Elige de dónde leer el grafo: el empaquetado, si trae los países que necesita la ruta (`GPRouter.countriesFor`), o el remoto. |
+| `routerFor` | `id, points` | Devuelve el `Router` con los países que pide la ruta, reconstruyéndolo con la unión de los que ya tenía y los nuevos; lee cada `main-<país>.bin` informando del progreso (`{ received, total, country }`). |
+| `loadTile` | `key` | Dentro de `routerFor`: lee una tesela (`tiles/<clave>.bin`); en el origen solo empaquetado devuelve nulo para países no incluidos. |
+
+Al recibir un mensaje `route`, el trabajador calcula la ruta y responde con el resultado más `ms` y `countries`; cualquier otro mensaje se contesta con `{ ready: true }`.
 
 ### `js/route.js`
 
 | Función | Parámetros | Qué hace |
 |---|---|---|
-| `number` | `value, digits` | Formatea un número en español. |
+| `number` | `value, digits` | Formatea un número con la configuración regional del idioma de la app. |
 | `durationText` | `seconds` | Formatea segundos como minutos u horas y minutos. |
 | `setStatus` | `text` | Muestra un mensaje de estado bajo el formulario. |
 | `worker` | — | Crea (una vez) el trabajador de cálculo de rutas y enruta sus mensajes. |
-| `computeRoute` | `points` | Envía puntos al trabajador y devuelve el resultado, mostrando el progreso de descarga del mapa. |
+| `computeRoute` | `points` | Envía puntos al trabajador (con la URL base de la API para descargar los paquetes) y devuelve el resultado, mostrando el progreso de descarga del mapa con el país («Cargando el mapa de carreteras de Portugal…»). |
 | `loadPlaces` | — | Carga y prepara `places.json` (lugares con nombre normalizado). |
 | `searchPlaces` | `text` | Busca lugares por texto: exacto, empieza por, contiene; ordena por relevancia y tipo. |
 | `placeLabel` | `place` | Nombre de un lugar con su alternativo entre paréntesis. |
@@ -660,7 +680,7 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `wireSuggestions` | `input, list, key` | Conecta un campo con su lista de sugerencias (espera de 150 ms). |
 | `resolveInput` | `input, key` | Convierte el texto del campo en coordenadas: punto elegido, lugar exacto, geocodificador o lugar aproximado. |
 | `useMyLocation` | — | Pone la ubicación actual como origen. |
-| `ensureMap` | — | Crea el mapa de la ruta y permite fijar el destino tocando. |
+| `ensureMap` | — | Crea el mapa de la ruta, centrado en el país abierto, y permite fijar el destino tocando. |
 | `updatePointMarkers` | — | Dibuja los marcadores de origen y destino y ajusta la vista. |
 | `buildCorridor` | `coords, maxKm, stations, fuel, only24h` | Gasolineras cerca de la ruta: distancia perpendicular mínima y posición a lo largo del camino. |
 | `vehicleContext` | — | Coche activo y su resumen, o nulo. |
@@ -669,7 +689,7 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `priceColor` | `price, min, max` | Color de un precio entre el mínimo y el máximo del corredor. |
 | `renderStations` | — | Lista y puntos de las gasolineras del corredor (hasta 150), con «Parar aquí». |
 | `drawRoute` | — | Dibuja la ruta y la parada en el mapa. |
-| `refreshCorridor` | — | Recalcula el corredor con el desvío y los filtros actuales. |
+| `refreshCorridor` | — | Recalcula el corredor con el desvío y los filtros actuales, con las gasolineras de todos los países por los que pasa la ruta (`OfflineEngine.loadCountries`). |
 | `renderSummary` | — | Muestra distancia, duración, peaje y extra de la parada. |
 | `run` | `points` | Ejecuta un cálculo de ruta con estados y mensajes de error legibles. |
 | `calculate` | `event` | Evita cálculos simultáneos y envuelve el cálculo con el aviso de carga. |

@@ -27,7 +27,7 @@ Detalles de implementación:
 |---|---|---|
 | `id` | texto | UUID |
 | `name` | texto | Nombre libre |
-| `fuel` | texto | Identificador de carburante (`gasoleo_a`…). El AdBlue no se ofrece |
+| `fuel` | texto | Identificador de carburante (`gasoleo_a`…), cualquiera de los de `config/fuels.json`, es decir, de los **tres países** (en la importación solo se exige que sea un identificador válido: `FUEL_PATTERN`). El AdBlue y el GNC en €/m³ (`gnc_m3`) no se ofrecen. El coche no está atado al país: se puede tener un coche de gasóleo y repostar en España, Portugal y Francia |
 | `tankCapacity` | número | 5–300 |
 | `homologated` | número | Consumo homologado, 1–40 por 100 km |
 | `odometer`, `odometerAt` | número, ISO | Última lectura del cuentakilómetros y cuándo se puso |
@@ -44,18 +44,30 @@ Detalles de implementación:
 | `full` | `true` si se llenó el depósito |
 | `missedBefore` | `true` si se saltó anotar un repostaje anterior |
 | `stationId`, `stationName`, `stationLat`, `stationLon` | Gasolinera; todo `null` si no se indicó |
+| `pais` | País del repostaje: `es`, `pt` o `fr` (`GarageStore` lo normaliza a `es` si falta o no es válido). Es el que decide con qué media se compara (ver [06](06-calculos.md)) |
 | `nationalAvg`, `zoneAvg`, `zoneRadiusKm` | Medias del día guardadas al anotar (o `null`) |
 
 **Viaje (`trips`)**: `id`, `vehicleId`, `auto`, `startedAt`, `endedAt`, `metrics` (ver [06](06-calculos.md)), `track` (puntos aligerados `[t, lat, lon, km/h]`), `createdAt`.
 
-**Copia de seguridad**: JSON con `format: "gasolinera-plus-backup"`, `schema`, `exportedAt`, los cuatro almacenes y `extra` con las favoritas y el comparador de `localStorage`. La importación **añade y sobrescribe por clave** (`put`), no borra lo existente; las favoritas y el comparador se fusionan sin duplicar por `ideess`. Si el fichero es de un esquema más nuevo, se rechaza. En la app nativa se escribe en caché y se abre el menú de compartir; en web se descarga.
+**País del repostaje (`pais`).** Se fija en `applyStation`: es el país de la gasolinera elegida (`station.pais`) y, sin gasolinera, el país abierto en la app (`GPCountry.code`). Al editar un repostaje ya guardado se conserva su país si la gasolinera sigue siendo la misma, o si se le quita la gasolinera. El campo se añadió sin cambiar el esquema de IndexedDB (`DB_VERSION` sigue en 1): los repostajes anteriores no lo tienen y se tratan como `es`.
+
+**Copia de seguridad** (`GPBackup`, `GarageStore.exportAll/importAll`): JSON con `format: "gasolinera-plus-backup"`, `schema` (el de `DB_VERSION`, hoy 1), `exportedAt`, los cuatro almacenes y `extra`. El fichero se llama `gasolinera-plus-copia-AAAA-MM-DD.json`. `extra` lleva las listas de `localStorage` de los **tres países**:
+
+| Clave de `extra` | Origen en `localStorage` | Contenido |
+|---|---|---|
+| `favorites` | `gasolinera_favorites` | Favoritas de España |
+| `favoritesPt` | `gasolinera_favorites_pt` | Favoritas de Portugal |
+| `favoritesFr` | `gasolinera_favorites_fr` | Favoritas de Francia |
+| `compare` | `gasolinera_compare` | Comparador (una sola lista, la de España) |
+
+Cada favorita guarda `ideess`, `rotulo`, `direccion` y, si lo tiene, `municipio`. La importación **añade y sobrescribe por clave** (`put`), no borra lo existente; las favoritas y el comparador se fusionan sin duplicar por `ideess` dentro de la lista de cada país (`mergeLocalList`), y se descartan los identificadores con caracteres no válidos o de más de 20. Una copia hecha con una versión anterior, sin `favoritesPt` ni `favoritesFr`, se importa igual (esas listas faltan y no se toca nada). Si el fichero es de un esquema más nuevo, se rechaza. En la app nativa se escribe en caché y se abre el menú de compartir; en web se descarga.
 
 ## Carga y estado (`GPGarage`)
 
 - `load()` lee los coches (ordenados por creación), decide el coche activo (`activeVehicleId`, o el primero si el guardado ya no existe) y carga **solo los repostajes del coche activo**.
 - `refresh()` = `load()` + `render()`.
 - `render()` muestra el estado vacío («Añadir mi coche») o la ficha: chips de coches, resumen, repostajes, gráficos.
-- Cambiar de coche (`setActive`) guarda `activeVehicleId`, recarga y anuncia el coche activo (`gp:vehicle-active`), lo que hace que la pestaña de precios cambie su filtro de carburante (`useVehicleFuel`).
+- Cambiar de coche (`setActive`) guarda `activeVehicleId`, recarga y anuncia el coche activo (`gp:vehicle-active`), lo que hace que la pestaña de precios cambie su filtro de carburante (`useVehicleFuel`). Ese filtro solo contiene los carburantes principales del país abierto, así que si el carburante del coche no es uno de ellos (por ejemplo un E10 en Portugal), el filtro se queda como estaba.
 
 ### Alta y edición de coches
 
@@ -107,13 +119,13 @@ Si se abre un repostaje ya guardado (`openRefuelDialog(refuel, null)`), `state.w
 3. Valida: fecha correcta, litros/precio/total > 0, km ≥ 0, litros ≤ capacidad × 1,15.
 4. En edición confirma avisos de km.
 5. `checkFullTank()` por última vez.
-6. Construye el registro (`applyStation` copia la gasolinera), añade las medias del día (`attachReferences`) y guarda.
+6. Construye el registro (`applyStation` copia la gasolinera y su país), añade las medias del día (`attachReferences`) y guarda.
 7. Sube el odómetro del coche si el del repostaje es mayor (`odometerAt` = ahora).
 8. Recarga el garaje y muestra el panel 7 con el resumen (o cierra con aviso en edición).
 
 ### Sugerencias de gasolinera
 
-Al abrir el campo (sin texto o con menos de 3 letras) aparecen las **favoritas** y las **cercanas** (hasta 25 km, 15 resultados), ordenadas: favoritas que están cerca (por distancia), resto de favoritas, y cercanas. Con 3 o más letras se busca por texto con hasta 25 resultados, ordenados por cercanía si hay ubicación (la ubicación viene de la app o se pide al dispositivo con un tiempo máximo de 4 s). La lista se muestra encima del campo para que no la tape el teclado.
+Las sugerencias son del **país abierto en la app**: las favoritas de ese país (`GPCountry.storageKey('gasolinera_favorites')`) y las búsquedas a la API de ese país. Para anotar un repostaje en otro país hay que abrir ese país en el selector de la cabecera. Al abrir el campo (sin texto o con menos de 3 letras) aparecen las **favoritas** y las **cercanas** (hasta 25 km, 15 resultados), ordenadas: favoritas que están cerca (por distancia), resto de favoritas, y cercanas. Con 3 o más letras se busca por texto con hasta 25 resultados, ordenados por cercanía si hay ubicación (la ubicación viene de la app o se pide al dispositivo con un tiempo máximo de 4 s). La lista se muestra encima del campo para que no la tape el teclado.
 
 ## Carga de secciones y otros detalles
 
