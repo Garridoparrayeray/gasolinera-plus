@@ -143,6 +143,53 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `useVehicleFuel` | `fuel` | Cambia el filtro de carburante al del coche activo y relanza la búsqueda. |
 | `applyOpenRequest` | `request` | Abre la vista pedida por un enlace o por la notificación del viaje y, si procede, la pantalla del viaje en curso. |
 
+### `js/country.js`
+
+Módulo `GPCountry`: decide el país y el idioma de la sesión al cargarse, traduce la interfaz y reúne lo que depende del país. Usa los objetos globales `window.GP_COUNTRIES`, `window.GP_FUELS` y `window.GP_I18N` que vuelca `shell.php`. El país sale de `?pais=`, del prefijo de la ruta (`/pt`, `/fr`) o de `localStorage` (`gasolinera_pais`); el idioma, de `?lang=`, de `localStorage` (`gasolinera_idioma_<país>`) o del idioma propio del país.
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `stored` | `key` | Lee de `localStorage` sin fallar si no está disponible. |
+| `store` | `key, value` | Escribe en `localStorage` sin fallar si no está disponible. |
+| `t` | `key, vars` | Texto del diccionario de la interfaz (`GP_I18N`) por clave, con respaldo en español y sustitución de `{nombre}`. |
+| `applyTranslations` | `root` | Rellena los elementos con `data-i18n` (texto), `data-i18n-html` (HTML) y `data-i18n-attr` (atributos) y fija el atributo `lang` de la página. |
+| `tr` | `source, vars` | Traduce un texto escrito en español al idioma elegido (por frase exacta o por patrón con `{variables}`); si no hay traducción lo deja igual. Sustituye `{pais}` y `{fuente}`. |
+| `localize` | `text` | Sustituye `{pais}` por el nombre del país y `{fuente}` por su fuente oficial. |
+| `lookup` | `source` | Busca la traducción de un texto probando la frase exacta, sin los dos puntos finales y por trozos separados por « · »; en español de otro país cambia «España» y el ministerio por los del país. |
+| `lookupExact` | `source` | Busca una frase exacta o un patrón en los diccionarios `texts` y `patterns`, traduciendo recursivamente las variables. |
+| `translateTextNode` | `node` | Traduce un nodo de texto del DOM (una vez; apunta lo que no encuentra en `missing`). |
+| `translateAttributes` | `element` | Traduce `placeholder`, `aria-label`, `title`, `alt` y `label` de un elemento. |
+| `translateTree` | `root` | Traduce un árbol del DOM, saltando `script`, `style` y `textarea`. |
+| `watchPage` | — | Traduce la página y un `MutationObserver` traduce lo que se vaya añadiendo o cambiando. Solo se activa si el idioma o el país no son los de España. |
+| `fuelLabel` | `slug` | Nombre del carburante en el idioma de la app. |
+| `fuelShort` | `slug` | Nombre corto del carburante (el largo si no tiene corto). |
+| `fuelUnit` | `slug` | Unidad del carburante (`L`, `kg` o `m3`). |
+| `countryName` | `other` | Nombre de un país en el idioma de la app. |
+| `label` | `name` | Etiqueta propia del país (`labels` de `countries.json`) en el idioma de la app. |
+| `apiQuery` | `path, other` | Añade `pais=` a una ruta de la API para el país abierto (o `other`); para España no añade nada. |
+| `liteUrl` | — | Ruta del fichero ligero de gasolineras del país abierto. |
+| `liteUrlFor` | `other` | Ruta del fichero ligero de otro país. |
+| `storageKey` | `base` | Clave de `localStorage` del país abierto: igual en España y con sufijo `_pt` o `_fr` en los demás. |
+| `stationKey` | `ideess` | Identificador de gasolinera con prefijo de país (`pt:`/`fr:`) fuera de España. |
+| `go` | `nextCountry, nextLang` | Recarga la página en el país e idioma indicados (`/?pais=` y `lang=`, o la ruta `/pt` o `/fr` en la web). |
+| `setLang` | `nextLang` | Cambia el idioma manteniendo el país. |
+| `setCountry` | `nextCountry` | Cambia de país con el idioma que ese país tenga guardado. |
+| `formatNumber` | `value, digits` | Formatea un número con la configuración regional del país. |
+| `wireHeader` | — | Conecta la cabecera: nombre del país bajo el título, tarjetas y botones de idioma del selector, y apertura y cierre del menú (clic fuera o Esc). |
+| `fit` | — | Dentro de `wireHeader`: iguala el ancho del nombre del país al del título «GASOLINERA». |
+| `close` | — | Dentro de `wireHeader`: cierra el selector de país. |
+| `pad` | `value` | Rellena con ceros a dos cifras. |
+| `parseHours` | `raw` | Convierte el horario crudo (`L-V: 07:00-22:00; S: …`) en una lista por día de la semana, o nulo si no se entiende. |
+| `capitalize` | `text` | Pone la primera letra en mayúscula. |
+| `weeklyHours` | `raw` | Líneas `{ label, value }` del horario día por día en el idioma del país, agrupando días seguidos con el mismo horario («Lunes a viernes»); vacío si no hay horario o es 24 h todos los días. |
+| `keyOf` | `spans` | Dentro de `weeklyHours`: clave para comparar los horarios de dos días. |
+| `fuelColor` | `slug` | Color del carburante en los gráficos (gris si no tiene). |
+| `fillFuelSelect` | `select, scope, exclude` | Rellena un selector de carburante: con `'country'` los del país abierto (los principales primero, luego «Otras gasolinas y gasóleos» y «Alternativos y renovables») y con `'all'` los de todos los países; `exclude` quita slugs. Conserva la selección anterior si sigue existiendo. |
+| `add` | `parent, fuel` | Dentro de `fillFuelSelect`: añade una opción de carburante. |
+| `fillFuelSelects` | — | Rellena `filter-fuel` y `stats-fuel` con los carburantes del país abierto. |
+
+Expone `code`, `lang`, `config`, `countries`, `fuels`, `locale`, `uiLocale`, `t`, `tr`, `missing`, `applyTranslations`, `fuelLabel`, `fuelShort`, `fuelUnit`, `fuelColor`, `fillFuelSelect`, `weeklyHours`, `countryName`, `label`, `apiQuery`, `liteUrl`, `liteUrlFor`, `storageKey`, `stationKey`, `setLang`, `setCountry` y `formatNumber`.
+
 ### `js/api.js`
 
 | Función | Parámetros | Qué hace |
@@ -292,6 +339,17 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `alertsRow` | — | Fila de avisos de bajada de precio con su botón. |
 | `tripRows` | — | Filas de viajes automáticos, Bluetooth del coche y batería (solo app). |
 | `render` | — | Dibuja todas las filas al entrar en Info y tras cada acción. |
+
+### `js/feedback.js`
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `say` | `text` | Muestra u oculta el mensaje bajo el formulario de comentarios. |
+| `appVersion` | — | Versión y compilación de la app (`web` en el navegador). |
+| `technicalInfo` | — | Datos técnicos opcionales: versión, sistema, vista, conexión, idioma, tamaño de pantalla, navegador y fecha. No incluye ubicación ni datos personales. |
+| `build` | — | Valida el mensaje (mínimo 5 letras, máximo 1500) y compone asunto y cuerpo, con los datos técnicos si se marcó la casilla. |
+| `send` | — | Abre la aplicación de correo con el mensaje preparado (`mailto:`). |
+| `copy` | — | Copia el mensaje al portapapeles para pegarlo en un correo. |
 
 ## Cliente · garaje, cálculos y viajes
 
@@ -600,6 +658,24 @@ Los módulos JavaScript son funciones autoejecutadas: las funciones que se lista
 | `sync` | — | Importa viajes pendientes y refresca el estado. |
 | `openTripScreen` | — | Refresca el estado y muestra la pantalla del viaje si se está grabando (al tocar la notificación). |
 
+### `js/history.js`
+
+Diálogo «historial» de viajes y repostajes (`history-dialog`), con rango de fechas y paginación de 20 en 20. Expone `open(tipo)`.
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `localDate` | `date` | Fecha `AAAA-MM-DD` en hora local. |
+| `daysAgo` | `days` | Fecha de hace N días. |
+| `setRange` | `days` | Pone el rango «hasta hoy» y «desde hace N días» (todo si es 0). |
+| `bounds` | — | Límites del rango como instantes ISO. |
+| `plural` | `count, one, many` | «N viaje(s)» o «N repostaje(s)» con el formato numérico del idioma. |
+| `periodText` | — | Texto del periodo elegido para el resumen. |
+| `loadTripsPage` | `reset` | Carga una página de viajes del rango (`trips.between` y `countBetween`) y los pinta con `GPTrips.tripItem`. |
+| `loadRefuelsPage` | `reset` | Pinta una página de los repostajes del rango (`GPGarage.refuelHistory`) con el total gastado. |
+| `load` | `reset` | Carga la primera página o la siguiente según el tipo, sin cargas simultáneas. |
+| `setKind` | `kind` | Cambia entre viajes y repostajes. |
+| `open` | `kind` | Abre el diálogo con el rango por defecto (30 días) y carga la lista. |
+
 ## Cliente · ruta
 
 ### `js/router-core.js`
@@ -709,15 +785,15 @@ Al recibir un mensaje `route`, el trabajador calcula la ruta y responde con el r
 |---|---|---|
 | `readJson` | `key, fallback` | Lee un valor JSON del almacén del ejecutor. |
 | `writeJson` | `key, value` | Guarda un valor JSON. |
-| `priceText` | `value, slug` | Precio con su unidad. |
-| `labelFor` | `slug` | Nombre legible de un carburante. |
-| `checkPrices` | — | Comprueba bajadas y programa notificaciones locales. |
+| `priceText` | `value, slug` | Precio con su unidad (`/kg` o `/m³` donde corresponda). |
+| `labelFor` | `slug` | Nombre legible de un carburante: el traducido que envió la app (`labels`), el de respaldo en español o el propio slug. |
+| `checkPrices` | — | Para cada favorita (de cualquier país: pide la ficha con `?pais=` y guarda los precios con la clave `pais:ideess`) compara con los precios anteriores aplicando la variación mínima y el aviso de subidas, y programa notificaciones locales con los textos en el idioma de la app. |
 
 ### `sw.js`
 
 | Función | Parámetros | Qué hace |
 |---|---|---|
-| `notifyPriceDrops` | — | Comprueba bajadas de precio de favoritas y muestra notificaciones desde el Service Worker. |
+| `notifyPriceDrops` | — | Comprueba cambios de precio de favoritas (`AlertsStore.checkPrices`) y muestra notificaciones desde el Service Worker. |
 
 ## Servidor PHP
 
@@ -744,11 +820,34 @@ Al recibir un mensaje `route`, el trabajador calcula la ruta y responde con el r
 | `get` | `string $pattern, callable $handler` | Registra una ruta GET convirtiendo `{parámetros}` en expresión regular. |
 | `dispatch` | `Request $request` | Busca la ruta coincidente, extrae parámetros y llama al manejador; devuelve 404 o 405 si no. |
 
+### `api/Core/Country.php`
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `all` | — | Los países de `config/countries.json`, leídos una vez. |
+| `code` | — | Código del país de la petición: `?pais=`, o el prefijo `/pt` o `/fr` de la URL; si no es uno conocido, `es` (`DEFAULT`). |
+| `current` | — | Configuración del país de la petición. |
+| `dbPath` | — | Ruta de la base SQLite del país de la petición. |
+| `dbPathFor` | `string $code` | Ruta de la base SQLite de un país. |
+| `hasData` | — | Indica si existe la base del país de la petición. |
+| `withData` | — | Códigos de los países cuya base existe (los que se anuncian en `hreflang`, mapas de sitio y selector). |
+| `timezoneFor` | `float $lat, float $lon` | Zona horaria de un punto del país: la primera de sus `zones` cuyo `lonMax` queda al este del punto (Canarias en España, Azores en Portugal) o la zona general. Sirve para «abierta ahora». |
+| `prefix` | `string $code` | Prefijo de URL del país: vacío para España, `/pt` o `/fr`. |
+
+### `api/Core/Fuels.php`
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `catalog` | — | Catálogo de `config/fuels.json` indexado por slug, leído una vez. |
+| `known` | — | Slugs de todos los carburantes conocidos (los que acepta el parámetro `fuel`). |
+| `main` | — | Carburantes principales del país de la petición (`mainFuels`), para las estadísticas por carburante. |
+| `headline` | — | Los dos carburantes de cabecera del país (gasóleo A y gasolina 95 en España y Portugal, y SP95-E10 en Francia). |
+
 ### `api/Core/Config.php`
 
 | Función | Parámetros | Qué hace |
 |---|---|---|
-| `current` | — | Configuración de `Config/config.php`, leída una vez. |
+| `current` | — | Configuración de `Config/config.php`, leída una vez, con `db_path` (la base del país), `attribution` («Datos: …» con la fuente oficial del país) y `country`. |
 
 ### `api/Core/Database.php`
 
@@ -787,13 +886,13 @@ Al recibir un mensaje `route`, el trabajador calcula la ruta y responde con el r
 | `show` | `Request $request, array $params` | `GET /stations/{ideess}`. |
 | `history` | `Request $request, array $params` | `GET /stations/{ideess}/history`. |
 | `nationalStats` | `Request $request` | `GET /stats/national`. |
-| `statsByFuel` | `Request $request` | `GET /stats/by-fuel`. |
+| `statsByFuel` | `Request $request` | `GET /stats/by-fuel` (con los carburantes principales del país, `Fuels::main`). |
 | `statsByProvince` | `Request $request` | `GET /stats/by-province`. |
 | `priceDistribution` | `Request $request` | `GET /stats/price-distribution`. |
-| `resolvePlace` | `Request $request` | `GET /places/resolve`. |
+| `resolvePlace` | `Request $request` | `GET /places/resolve` (geocodifica en los países con datos). |
 | `zoneAverage` | `Request $request` | `GET /stats/zone-average`. |
 | `zoneComparison` | `Request $request, array $params` | `GET /stations/{ideess}/zone-comparison`. |
-| `normalizeFuel` | `?string $fuel` | Carburante válido o nulo. |
+| `normalizeFuel` | `?string $fuel` | Carburante válido (`Fuels::known`) o nulo. |
 | `isInvalidFuel` | `?string $fuel` | Verdadero si se envió un carburante que no existe. |
 | `parseCoordinates` | `?string $lat, ?string $lon` | Coordenadas válidas o nulo. |
 | `normalizeGroup` | `?string $group` | `day` o `month`. |
@@ -821,7 +920,7 @@ Al recibir un mensaje `route`, el trabajador calcula la ruta y responde con el r
 | `relevanceScore` | `array $row, string $normalizedQuery, string $rawQuery` | Relevancia de una fila para el texto buscado (0 a 5). |
 | `withinBounds` | — | Puntos del mapa dentro de una caja, con tope y muestreo. |
 | `batchFuelPrices` | `array $ideessList, string $fuel` | Precios de un carburante para una lista de gasolineras. |
-| `find` | `string $ideess` | Ficha completa de una gasolinera con todos sus precios, tendencias y horario. |
+| `find` | `string $ideess` | Ficha completa de una gasolinera con todos sus precios, tendencias y horario (descrito con su hora local). |
 | `batchAllPrices` | `array $ideessList` | Todos los precios de una lista de gasolineras. |
 | `batchTrends` | `array $ideessList, array $fuels, array $pricesById` | Tendencia (`up`, `down`, `same`) de cada precio frente al día anterior. |
 | `zoneComparison` | `string $ideess, string $fuel` | Precio propio frente a la media del municipio. |
@@ -832,7 +931,8 @@ Al recibir un mensaje `route`, el trabajador calcula la ruta y responde con el r
 | `staleClause` | `int $staleStationDays` | Condición SQL para excluir gasolineras que no aparecen en el feed hace más de N días. |
 | `buildListItem` | `array $row, ?float $distanceKm, array $showFuels, array $pricesById, array $trends` | Convierte una fila en el elemento de la lista de la API. |
 | `relevanceOf` | `array $candidate` | Relevancia guardada de un candidato (0 si no tiene). |
-| `isOpenNow` | `string $horarioRaw` | Indica si está abierta ahora según su horario. |
+| `localNow` | `array $row` | Fecha y hora actuales en la zona horaria de la gasolinera (`Country::timezoneFor` con sus coordenadas). |
+| `isOpenNow` | `array $row` | Indica si está abierta ahora según su horario y la hora local de la gasolinera. |
 | `sortPaginateAndBuild` | `array $candidates, string $sort, ?string $fuel, int $offset, int $limit` | Filtra por carburante, ordena por relevancia y distancia o precio, pagina y construye los elementos con precios y tendencias. |
 | `batchHasFuel` | `array $ideessList, string $fuel` | Indica qué gasolineras tienen un carburante. |
 | `batchSortPrices` | `array $ideessList, string $sortFuel` | Precio de ordenación de cada gasolinera. |
@@ -843,6 +943,7 @@ Al recibir un mensaje `route`, el trabajador calcula la ruta y responde con el r
 |---|---|---|
 | `isAlwaysOpen` | `string $horarioRaw` | Indica si abre 24 horas. |
 | `isOpenAt` | `string $horarioRaw, \DateTime $when` | Indica si está abierta en un instante (`null` si el horario no se entiende). |
+| `specification` | `string $horarioRaw` | Horario como lista `OpeningHoursSpecification` de schema.org (una entrada por franja y días; 24 h todos los días si abre siempre; vacío si no se entiende), para los datos estructurados de la ficha. |
 | `describe` | `string $horarioRaw, \DateTime $when` | Estado (`abierto`, `cerrado`, `desconocido`) y texto legible. |
 | `normalize` | `string $raw` | Normaliza el texto del horario. |
 | `parseRanges` | `string $normalized` | Interpreta días y franjas horarias. |
@@ -855,7 +956,78 @@ Al recibir un mensaje `route`, el trabajador calcula la ruta y responde con el r
 
 | Función | Parámetros | Qué hace |
 |---|---|---|
-| `resolve` | `string $query` | Convierte un texto en coordenadas con Nominatim (solo España) y cachea 30 días. |
+| `resolve` | `string $query, string $countryCodes = 'es'` | Convierte un texto en coordenadas con Nominatim limitado a los países indicados (el del país abierto, o todos para `places/resolve`) y cachea 30 días por texto y países. |
+
+### `api/Services/Seo.php`
+
+Textos, URLs y datos estructurados de las páginas que ve un buscador. Ver [13](13-seo.md).
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `profile` | `?string $code = null` | Perfil SEO de un país (sección de la URL, idioma, `locale`, `iso`, carburantes de las tablas y `headline` de `countries.json`); el del país de la petición si no se indica. |
+| `lang` | — | Idioma del país de la petición. |
+| `t` | `string $key, array $vars = [], ?string $lang = null` | Texto de `config/i18n/<idioma>.json` por clave, con `{variables}` y `{fuente}`/`{pais}` ya sustituidos. |
+| `fuels` | — | Carburantes de las tablas del país (`slug` → nombre en su idioma). |
+| `fuelLabel` | `string $slug` | Nombre de un carburante en el idioma del país. |
+| `base` | — | `siteUrl()` más el prefijo del país. |
+| `sectionUrl` | — | Ruta del índice de zonas con prefijo (`/gasolineras`, `/pt/postos`, `/fr/stations-service`). |
+| `stationPath` | `string $ideess` | Ruta de la ficha de una gasolinera con el prefijo del país. |
+| `trim` | `string $text, int $max` | Recorta un texto a una longitud máxima cortando en una palabra y añadiendo «…». |
+| `date` | `string $iso` | Fecha en palabras en el idioma del país («14 de octubre de 2026», «14 octobre 2026»). |
+| `siteUrl` | — | Dirección base del sitio (`GP_SITE_URL`, o `https://gasolineraplus.vercel.app`). |
+| `verificationToken` | — | Valor de `google-site-verification` (`GP_GSC_VERIFICATION` o uno fijo). |
+| `escape` | `string $text` | Escapa un texto para HTML. |
+| `slug` | `string $text` | Texto en minúsculas, sin tildes, con `-` entre palabras (clave de las URLs de zona y municipio). |
+| `display` | `string $name` | Nombre legible (`Coruña (A)` pasa a `A Coruña`; lo que viene en mayúsculas pasa a tipo título). |
+| `titleCase` | `string $text` | Pasa a tipo título. |
+| `price` | `float $value` | Precio con tres decimales y coma. |
+| `jsonLd` | `array $data` | Bloque `<script type="application/ld+json">` con los datos. |
+| `provinces` | `\PDO $pdo` | Zonas (provincias, distritos o departamentos) con `slug`, nombre y número de gasolineras; descarta las que dan un `slug` vacío. |
+| `municipalities` | `\PDO $pdo, string $province` | Municipios de una zona; agrupa los que dan el mismo `slug`. |
+| `nationalHeadline` | `\PDO $pdo` | Media nacional de los dos carburantes de cabecera con su variación. |
+| `lastUpdate` | `\PDO $pdo` | Última fecha con precios. |
+| `freshClause` | — | Condición SQL de gasolinera vigente (vista en los últimos 10 días). |
+| `fuelPlaceholders` | — | Marcadores `?` para los carburantes del perfil. |
+| `averages` | `\PDO $pdo, string $whereSql, array $params` | Media, mínimo, máximo y número de gasolineras por carburante para un filtro. |
+| `cheapest` | `\PDO $pdo, string $whereSql, array $params, string $fuel, int $limit` | Las gasolineras más baratas de un filtro para un carburante. |
+| `stationJsonLd` | `array $station, array $prices, string $updated, string $provinceName` | Datos estructurados `GasStation` de una ficha: dirección, coordenadas, horario (`openingHoursSpecification`) y ofertas por carburante. |
+| `breadcrumb` | `array $items` | Datos estructurados `BreadcrumbList`. |
+
+### `api/seo.php`
+
+Páginas de zona y municipio, mapas de sitio, `robots.txt`, `llms.txt` y 404. Ver [13](13-seo.md).
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `seoCache` | `int $seconds` | Cabeceras de caché pública. |
+| `seoNotFound` | — | Responde una 404 sin indexar con enlace al índice. |
+| `seoStyles` | — | Estilos en línea de las páginas (tipografía Bricolage Grotesque, modo claro y oscuro). |
+| `seoAlternates` | `callable $suffix` | Enlaces `hreflang` de los países con datos, más `x-default`. |
+| `seoCountryNav` | — | Enlaces de la cabecera a los otros países. |
+| `seoHead` | `string $title, string $description, string $canonical, string $robots, string $jsonLd, string $alternates = ''` | Cabecera HTML completa con metaetiquetas, Open Graph, iconos y la barra superior. |
+| `seoFooter` | `string $updated` | Pie con la fecha de los datos. |
+| `seoCrumbs` | `array $items` | Migas de pan. |
+| `seoPriceTable` | `array $averages` | Tabla de medias, mínimos y máximos por carburante. |
+| `seoRanking` | `array $rows` | Lista numerada de las gasolineras más baratas. |
+| `seoCheapestJsonLd` | `array $rows, string $listName, string $updated` | Datos estructurados `ItemList` de las más baratas. |
+| `seoAverageList` | `array $averages` | Frase con la media de los carburantes de cabecera. |
+| `seoIntro` | `string $placeLabel, array $averages, int $count, array $topCheapest` | Párrafo de introducción de una zona. |
+| `seoDescription` | `string $text` | Descripción de 160 caracteres como máximo con el sufijo de la marca. |
+| `seoAreaPage` | `\PDO $pdo, string $provinceSlug, string $municipalitySlug` | Página de una zona o de un municipio (o redirección/404 si no existe). |
+| `seoIndexPage` | `\PDO $pdo` | Índice de zonas del país con las medias nacionales. |
+| `seoSitemapIndex` | — | Índice de mapas de sitio, uno por país con datos. |
+| `seoSitemap` | `\PDO $pdo` | Mapa de sitio de un país: portada, índice, zonas, municipios con 2 o más gasolineras y fichas vigentes. |
+| `seoRobots` | — | `robots.txt`. |
+| `seoLlms` | — | `llms.txt` con la descripción del sitio y la estructura de URLs de cada país. |
+
+### `api/shell.php`
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `headlinePrice` | `array $headline, string $fuel` | Precio medio de un carburante de cabecera ya formateado (o raya si falta). |
+| `headlineDelta` | `array $headline, string $fuel` | Fragmento HTML con la variación desde ayer (▲, ▼ o «sin cambios»), traducido. |
+
+Además calcula los textos de `<head>` (título, descripción, `canonical`, `hreflang`, Open Graph, datos estructurados) según el país y la ruta (portada o ficha `/stations/<id>`, `/pt/stations/<id>`, `/fr/stations/<id>`), y vuelca `GP_COUNTRIES`, `GP_FUELS` y `GP_I18N`.
 
 ## Procesos de datos y compilación
 
@@ -864,29 +1036,56 @@ Al recibir un mensaje `route`, el trabajador calcula la ruta y responde con el r
 | Función | Parámetros | Qué hace |
 |---|---|---|
 | `fieldStr` | `array $row, string $key` | Valor de un campo del feed como texto. |
-| `main` | `array $argv` | Punto de entrada: elige modo `daily`, `backfill` o `lite`. |
-| `parseArgs` | `array $argv` | Lee `--mode`, `--source`, `--output` y `--days`. |
+| `main` | `array $argv` | Punto de entrada: valida `--country` (`es`, `pt` o `fr`), toma la base y el fichero ligero de ese país de `config/countries.json` y elige modo `daily`, `backfill` (solo España) o `lite`. |
+| `parseArgs` | `array $argv` | Lee `--mode`, `--source`, `--output`, `--days` y `--country` (España por defecto). |
 | `openDatabase` | `string $path` | Abre SQLite en modo WAL. |
 | `ensureSchema` | `\PDO $pdo` | Crea tablas e índices si no existen. |
 | `parseSpanishDecimal` | `string $value` | Convierte «1,459» en 1.459. |
 | `feedDateToIso` | `string $fecha` | Convierte `DD/MM/AAAA` en `AAAA-MM-DD`. |
 | `isoDateToHistParam` | `string $isoDate` | Convierte `AAAA-MM-DD` en `DD-MM-AAAA`. |
 | `fetchSnapshot` | `string $url` | Descarga y valida un snapshot del Ministerio. |
-| `loadFuelPrices` | `array $row` | Extrae los precios de una gasolinera por carburante. |
+| `loadFuelPrices` | `array $row` | Extrae los precios de una gasolinera por carburante: usa `prices` si la fuente ya los trae (Portugal y Francia) o traduce los campos del Ministerio con el mapa de `config/fuels.json` (`fuelSourceMap('es')`). |
 | `detectIs24h` | `string $horario` | Indica si un horario es de 24 horas. |
-| `runDaily` | `\PDO $pdo, ?string $source` | Proceso diario: snapshot actual, media nacional, recorte y JSON offline. |
+| `fetchCountrySnapshot` | `?string $source, string $country, \PDO $pdo` | Obtiene el snapshot del día de un país: de un fichero local si se indica (Portugal y Francia), de la DGEG (`fetchPortugal`), de data.economie.gouv.fr (`fetchFrance`) o del Ministerio español. |
+| `runDaily` | `\PDO $pdo, ?string $source, string $country, int $minStations` | Proceso diario de un país: snapshot actual, comprobación del mínimo de gasolineras (si no llega, se detiene sin tocar la base), media nacional, recorte y JSON offline. |
 | `updateNationalPriceHistory` | `\PDO $pdo, string $fechaIso` | Guarda la media nacional del día por carburante. |
 | `pruneOldPriceHistory` | `\PDO $pdo, string $snapshotDate` | Borra histórico más antiguo de 10 días y compacta. |
 | `runBackfill` | `\PDO $pdo, int $days` | Rellena el histórico de los últimos N días. |
 | `applySnapshot` | `\PDO $pdo, array $estaciones, string $fechaIso, bool $updateCurrentAndStations` | Guarda gasolineras y precios de un día en una transacción. |
 | `fetchLocalOrRemote` | `string $source` | Lee un snapshot de fichero local o de URL. |
 | `trendCodes` | `array $today, array $previous` | Códigos `u/d/s` de tendencia. |
-| `generateLiteJson` | `string $dbPath` | Genera `stations-lite.json`. |
+| `generateLiteJson` | `string $dbPath, string $liteName` | Genera el fichero ligero del país (`stations-lite.json`, `stations-lite-pt.json` o `stations-lite-fr.json`) junto a su base. |
+
+### `scripts/sources.php`
+
+Fuentes de datos de cada país; lo carga `build-database.php`.
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `countriesConfig` | — | Lee `config/countries.json`. |
+| `fuelSourceMap` | `string $country` | Mapa nombre del carburante en la fuente oficial → slug, a partir de `config/fuels.json`. |
+| `httpGetWithRetries` | `string $url, int $timeout` | Descarga con hasta 3 intentos y espera creciente. |
+| `snapshotNow` | — | Fecha y hora actuales en Madrid con el formato del Ministerio (`d/m/Y H:i:s`). |
+| `isRecentPrice` | `string $updatedAt` | Indica si un precio se actualizó en los últimos 10 días (los anteriores se descartan). |
+| `portugueseRange` | `?string $text` | Convierte un tramo horario de la DGEG en `HH:MM-HH:MM` (24 h → `00:00-23:59`; vacío si está cerrado). |
+| `portugueseHours` | `array $schedule` | Horario de una gasolinera de Portugal (días útiles, sábado y domingo) en el formato interno `L-V: …; S: …; D: …`. |
+| `portugueseObservationsHours` | `string $obs` | Rescata un horario del texto de observaciones de la ficha (por ejemplo «24 horas» o «das 7h às 22h»). |
+| `previousHours` | `?\PDO $pdo` | Horarios ya guardados en la base, para no volver a pedirlos todos los días. |
+| `fetchPortugueseHoursOnce` | `array $ids, int $parallel` | Pide en paralelo la ficha de varias gasolineras de Portugal y extrae su horario; devuelve los horarios y los fallos. |
+| `fetchPortugueseHours` | `array $ids` | Repite la consulta hasta 4 rondas, bajando el paralelismo, y devuelve los horarios y las fichas que siguen sin respuesta. |
+| `fetchPortugal` | `?\PDO $pdo = null` | Descarga todas las gasolineras y precios de Portugal (DGEG) con el formato del snapshot español; conserva horarios previos, refresca una séptima parte cada día y completa con OpenStreetMap lo que falte. |
+| `frenchLabel` | `array $brands, string $id, string $town` | Rótulo de una gasolinera de Francia: la marca de OpenStreetMap o «STATION <ciudad>». |
+| `frenchHours` | `array $record` | Horario de una gasolinera de Francia (24/24 o por días) en el formato interno. |
+| `groupedHours` | `array $perDay` | Agrupa días seguidos con el mismo horario en bloques `L-V: …`. |
+| `osmData` | `string $country` | Lee `data/osm-<país>.json` (marcas y horarios de OpenStreetMap) o un resultado vacío. |
+| `hoursOrOsm` | `string $official, array $osmHours, string $id` | El horario oficial si existe; si no, el de OpenStreetMap. Nunca se contradice un dato oficial. |
+| `fetchFrance` | — | Descarga todas las gasolineras y precios de Francia (data.economie.gouv.fr) con el formato del snapshot español. |
 
 ### `scripts/build-price-index.php`
 
 | Función | Parámetros | Qué hace |
 |---|---|---|
+| `indexFuels` | — | Carburantes del índice: los de `INDEX_FUELS` o, si el índice de otro país los fija (`gp_index_fuels`), esos. |
 | `indexCellKey` | `float $lat, float $lon` | Clave de celda de 0,1° para una coordenada. |
 | `emptyBucket` | — | Cubo vacío con dos números por carburante. |
 | `addSample` | `array &$bucket, int $fuelIndex, int $millis` | Suma un precio en milésimas y una muestra. |
@@ -899,11 +1098,41 @@ Al recibir un mensaje `route`, el trabajador calcula la ruta y responde con el r
 | `fetchDaySnapshot` | `string $isoDate, string $today` | Descarga un día y comprueba que la fecha devuelta es la pedida. |
 | `indexMain` | `array $argv` | Proceso principal del índice de precios. |
 
+### `scripts/build-price-index-pt.php`
+
+Índice de precios de Portugal (media nacional diaria de la DGEG), con el mismo formato mensual que el de España.
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `parsePortuguesePrice` | `string $raw` | Convierte un precio como «2,1764 €» en número. |
+| `fetchDgegMonth` | `string $dateIni, string $dateFim` | Descarga de la DGEG los precios medios diarios de un rango. |
+| `buildFuelIndexMap` | — | Mapa slug → posición en los carburantes del índice. |
+| `aggregatePtRows` | `array $rows` | Agrupa las filas de la DGEG por día en el formato del índice. |
+| `indexPtMain` | `array $argv` | Proceso principal del índice de Portugal. |
+
+### `scripts/build-price-index-fr.php`
+
+Índice de precios de Francia, calculado con el archivo anual oficial de roulez-eco (incluye SP95-E10 y E85).
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `downloadAndExtractFrenchAnnualXml` | `int $year` | Descarga y descomprime el archivo anual de un año. |
+| `processFrenchAnnualXml` | `string $xmlPath, array $datesNeeded, array &$monthBuckets` | Recorre el XML y calcula, para cada día pedido, el último precio vigente por gasolinera, agrupado por celda y departamento. |
+| `indexFrMain` | `array $argv` | Proceso principal del índice de Francia. |
+
 ### `scripts/build-www.mjs`
 
 | Función | Parámetros | Qué hace |
 |---|---|---|
 | `findPhp` | — | Localiza el ejecutable de PHP para generar el HTML. |
+
+Además, al generar `www`, copia del grafo de carreteras solo el país de casa (`bundled`): su paquete `main-<país>.bin.gz`, sus teselas, `places.json` y un manifiesto con `bundled`; rechaza un grafo con el formato antiguo (sin `parts`).
+
+### `scripts/slim-database.py`
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `slim` | `path` | Reduce una base SQLite para desplegarla: convierte `price_history` en tabla sin rowid (comprobando que no se pierden filas), recrea el índice por fecha y carburante y compacta. Se aplica a cada base que se le pasa. |
 
 ### `tools/price-index/fetch-index.mjs`
 
@@ -919,7 +1148,7 @@ Al recibir un mensaje `route`, el trabajador calcula la ruta y responde con el r
 | `constructor` | `Type, initial = 1 << 20` | GrowArray: crea un array tipado que crece al llenarse. |
 | `push` | `value` | GrowArray: añade un valor. |
 | `view` | — | GrowArray: vista de los valores usados. |
-| `parseMaxspeed` | `value` | Convierte la etiqueta `maxspeed` de OpenStreetMap a km/h. |
+| `parseMaxspeed` | `value` | Convierte la etiqueta `maxspeed` de OpenStreetMap a km/h, incluidas las zonas por país (`ES:`, `PT:`, `FR:` urbano, rural, autovía…). |
 | `isDrivable` | `tags` | Indica si una vía admite coches. |
 | `onewayOf` | `tags` | Sentido único de una vía: 1, −1 o 0. |
 | `speedOf` | `tags` | Velocidad de cálculo de una vía en km/h. |
@@ -960,7 +1189,7 @@ Al recibir un mensaje `route`, el trabajador calcula la ruta y responde con el r
 | `bytes` | — | Junta todo en un único búfer. |
 | `magic` | `text` | Bytes de la firma de un fichero. |
 | `speedMs` | `graph, way` | Velocidad de una vía en m/s. |
-| `writeGraph` | `graph, outDir` | Escribe `main.bin`, las teselas y el manifiesto, comprimidos. |
+| `writeGraph` | `graph, outDir` | Escribe un paquete principal por país (`main-<país>.bin.gz`, firma `GPRP`), las teselas y el manifiesto (`countries`, `parts`, `cells`), comprimidos. Numera los cruces y tramos país por país. |
 | `directions` | `s` | Sentidos permitidos de un tramo. |
 | `timeDs` | `s` | Tiempo de un tramo en décimas de segundo. |
 
@@ -973,7 +1202,49 @@ Al recibir un mensaje `route`, el trabajador calcula la ruta y responde con el r
 | `reachable` | `url` | Comprueba que una URL responde. |
 | `pickBuild` | `wanted` | Elige la compilación más reciente disponible. |
 | `run` | `argsList` | Ejecuta la herramienta `pmtiles`. |
-| `extract` | `url, target, bbox, maxzoom` | Extrae una región de la compilación con su caja y zoom. |
+| `extract` | `url, target, bbox, maxzoom` | Extrae una región de la compilación con su caja y zoom. El índice de regiones guarda también el país de cada una. |
+
+### `tools/graph/fetch-graph.mjs`
+
+Script sin funciones propias: descarga de la release `road-graph` (o de `ROAD_GRAPH_TAG`) el paquete `road-graph.tar.gz` y lo extrae en `data/road-graph`.
+
+### `tools/osm/build-osm.mjs`
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `meters` | `lat1, lon1, lat2, lon2` | Distancia en metros (aproximación plana). |
+| `labelOf` | `tags` | Marca de un elemento de OpenStreetMap (`brand`, `operator` o `name`), descartando nombres genéricos. |
+| `addToGrid` | `grid, lat, lon, value` | Guarda un dato en una rejilla de 0,01° para buscar vecinos. |
+| `nearest` | `grid, station` | Dato más cercano a una gasolinera en un radio de 150 m. |
+
+Une cada gasolinera del fichero ligero de un país con la marca y el horario del elemento de OpenStreetMap más cercano y escribe `data/osm-<país>.json`.
+
+### `tools/osm/osm-hours.mjs`
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `parseDays` | `text` | Interpreta los días de una regla de `opening_hours` (`Mo-Fr`, `Sa,Su`). |
+| `pad` | `value` | Rellena con ceros a dos cifras. |
+| `parseRanges` | `text` | Interpreta franjas `HH:MM-HH:MM` (24:00 pasa a 23:59). |
+| `splitRule` | `rule` | Separa una regla en días y horas. |
+| `osmToRaw` | `value` | Convierte un `opening_hours` sencillo de OpenStreetMap al horario interno (`L-V: …`); vacío si no se entiende. |
+
+### `tools/i18n/extract.py`
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `looks_human` | `text` | Indica si un texto parece escrito para personas y no código. |
+| `Collector` (`handle_starttag`, `handle_endtag`, `handle_data`) | — | Recorre el HTML y reúne textos y atributos traducibles. |
+| `page_texts` | — | Textos de la página servida en local. |
+| `js_texts` | — | Textos y patrones (con `{0}`) de los literales de los ficheros JavaScript; escribe `tools/i18n/sources.json`. |
+
+### `tools/i18n/build.py`
+
+| Función | Parámetros | Qué hace |
+|---|---|---|
+| `rows` | `name, columns` | Lee un `.tsv` de traducciones con el número de columnas esperado. |
+
+Con `seo.tsv`, `texts.tsv` y `patterns.tsv` actualiza los diccionarios `config/i18n/{es,pt,fr}.json`.
 
 ## Android (Java)
 
@@ -1162,23 +1433,26 @@ Objetos globales y lo que exponen (lo que devuelve el módulo).
 | `GPSectionLoading` | `splash.js` | `begin(vista)`, `end(vista)`, `track(vista, promesa)` |
 | `GPMapGuard` | `map-guard.js` | `install(mapa)` |
 | `GPMaps` | `offline-maps.js` | `addBaseLayers(mapa)`, `available()` |
-| `OfflineEngine` | `api.js` | `haversine`, `normalize`, `loadData`, `near`, `bbox`, `search`, `station`, `suggestPlaces` (motor local) |
+| `OfflineEngine` | `api.js` | `haversine`, `normalize`, `loadData`, `loadCountries`, `near`, `cheapest`, `bbox`, `search`, `station`, `suggestPlaces` (motor local) |
 | `Api` | `api.js` | `near`, `search`, `suggestPlaces`, `bbox`, `station`, `history`, `resolvePlace`, `zoneAverage`, `zoneComparison`, `nationalStats`, `statsByFuel`, `statsByProvince`, `priceDistribution` (ver [03](03-api.md) y [04](04-busqueda-y-paridad.md)) |
-| `AlertsStore` | `alerts-store.js` | `FUEL_LABELS`, `labelFor`, `unitFor`, `priceText`, `notificationFor`, `get`, `set`, `checkPrices` |
+| `AlertsStore` | `alerts-store.js` | `FUEL_LABELS`, `DEFAULT_THRESHOLD`, `labelFor`, `unitFor`, `priceText`, `notificationFor`, `get`, `set`, `getSettings`, `compare`, `checkPrices` |
 | `GPBackground` | `background.js` | `syncAlerts`, `checkNow` |
 | `GPPermissions` | `permissions.js` | `render` |
 | `window.GP` | `app.js` | `showToast`, `switchView`, `currentView`, `openStationModal`, `userPosition`, `ensureMap`, `showMap`, `locationActive`, `toggleLocation`, `alertsOn`, `setAlerts` |
 | `GPPriceIndexCore` | `price-index-core.js` | `cellKey`, `cellsAround`, `haversineKm`, `datesBetween`, `addDays`, `periodOf`, `average`, `nearestDay` |
 | `GPPriceIndex` | `price-index.js` | `available`, `sync`, `dayReference`, `periodReference`, `ZONE_RADIUS_KM` |
-| `GPFuel` | `fuel-math.js` | `intervals`, `summary`, `monthlySpend`, `savings`, `savingsBy`, `madridDate`, `madridMonth` |
-| `GarageStore` | `garage-store.js` | `newId`, `vehicles{list,get,save,remove}`, `refuels{forVehicle,save,remove}`, `trips{forVehicle,all,get,save,remove}`, `setting`, `saveSetting`, `exportAll`, `importAll` |
+| `GPFuel` | `fuel-math.js` | `intervals`, `summary`, `monthlySpend`, `savings`, `savingsBy`, `madridDate`, `madridMonth`, `fullTankRangeKm`, `looksLikeMissedRefuel`, `falseMissedFlags` |
+| `GarageStore` | `garage-store.js` | `newId`, `vehicles{list,get,save,remove}`, `refuels{forVehicle,save,remove}`, `trips{forVehicle,all,between,countBetween,get,save,remove}`, `setting`, `saveSetting`, `exportAll`, `importAll` |
 | `GPBackup` | `backup.js` | `exportBackup`, `importBackup` |
 | `GPRecap` | `recap.js` | `compute`, `draw`, `exportImage`, `exportPdf` |
-| `GPGarage` | `garage.js` | `refresh`, `activeVehicle`, `summary`, `reload` |
-| `GPTripMetrics` | `trip-metrics.js` | `compute`, `thin`, `distance` |
-| `GPTrips` | `trips.js` | `importPending`, `saveTrip`, `state` |
-| `GPRouter` | `router-core.js` | `Router`, `parseMain`, `parseTile`, `metersBetween` |
+| `GPGarage` | `garage.js` | `refresh`, `activeVehicle`, `summary`, `reload`, `refuelHistory` |
+| `GPTripMetrics` | `trip-metrics.js` | `compute`, `thin`, `distance`, `fuelAndCost` |
+| `GPTrips` | `trips.js` | `importPending`, `saveTrip`, `state`, `tripItem`, `vehicleNames`, `renderList` |
+| `GPRouter` | `router-core.js` | `Router`, `parsePart`, `parseTile`, `metersBetween`, `tileKeysAround`, `countriesFor` |
 | `GPRoute` | `route.js` | `calculate`, `state` |
+| `GPCountry` | `country.js` | `code`, `lang`, `config`, `countries`, `fuels`, `locale`, `uiLocale`, `t`, `tr`, `missing`, `applyTranslations`, `fuelLabel`, `fuelShort`, `fuelUnit`, `fuelColor`, `fillFuelSelect`, `weeklyHours`, `countryName`, `label`, `apiQuery`, `liteUrl`, `liteUrlFor`, `storageKey`, `stationKey`, `setLang`, `setCountry`, `formatNumber` |
+| `GPHistory` | `history.js` | `open` |
+| `GPFeedback` | `feedback.js` | `build` |
 
 ### Eventos entre módulos (`document`)
 
@@ -1188,3 +1462,8 @@ Objetos globales y lo que exponen (lo que devuelve el módulo).
 | `gp:location` | `requestGeolocation` | `{ lat, lon }` | Ruta (rellena el origen) |
 | `gp:vehicle-active` | `announceActive` | `{ id, fuel }` del coche activo | `app.js` (`useVehicleFuel`) |
 | `gp:refuel-here` | Ficha de gasolinera | la gasolinera | Garaje (abre el asistente en la pestaña Coche) |
+| `gp:route-to` | Botón «Ruta hasta aquí» de la ficha (solo escritorio) | `{ lat, lon, label }` | Ruta (rellena el destino) |
+| `gp:show-trip` | `app.js` (`applyOpenRequest`) | — | Viajes (muestra la pantalla del viaje en curso) |
+| `gp:open-view` | `native.js` (`handleOpenUrl`) | petición de abrir una vista | `app.js` (`applyOpenRequest`) |
+| `gp:history-refresh` | Garaje y viajes (al repintar las listas) | — | Historial (recarga si está abierto) |
+| `gp:layout` | Script en línea de `shell.php` | — | `app.js` (recoloca estado, ficha y paginación al cambiar entre móvil y escritorio) |

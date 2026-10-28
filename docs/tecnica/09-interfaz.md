@@ -7,7 +7,7 @@
 - Pantalla de carga (`.splash`), cabecera (con el selector de país e idioma, `country-switcher`), avisos (`update-banner`, `offline-banner`), diálogo de permiso de ubicación (`geo-ask`).
 - **Seis vistas** (`<section id="view-...">`), de las que solo se muestra una (o dos: lista y mapa se ven juntas): `list`, `map`, `route`, `garage`, `stats`, `about`.
 - **Barra de navegación** (`view-toggle`) con cinco botones: Listado, Ruta, Coche, Estad., Info. En pantallas de ordenador se muestra abajo igual que en móvil; los rótulos largos cambian a cortos con CSS (`.tab-long/.tab-short`).
-- Diálogos modales (`<dialog>`): ficha de gasolinera, favoritas, comparador, aviso legal, coche, repostaje, cuentakilómetros, resumen de viaje, detalle de viaje.
+- Diálogos modales (`<dialog>`): ficha de gasolinera, favoritas, comparador, aviso legal, coche, repostaje, cuentakilómetros, resumen de viaje, detalle de viaje e historial de viajes y repostajes (`history-dialog`).
 - Pantalla de viaje en curso (`trip-drive`) y chip «EN CURSO».
 
 Antes de los scripts de la app, `shell.php` vuelca en la página tres objetos globales leídos de `config/`: `window.GP_COUNTRIES` (`countries.json`), `window.GP_FUELS` (`fuels.json`) y `window.GP_I18N` (diccionarios `i18n/es.json`, `pt.json` y `fr.json`). `js/country.js` (`GPCountry`) los usa para fijar el país y el idioma, traducir los textos y rellenar los selectores de carburante; ver [10](10-referencia-funciones.md).
@@ -38,6 +38,7 @@ Cada fila es un elemento con `id` de `shell.php`. «Función» es la que se ejec
 
 La cabecera (logo, título y país) se mantiene siempre en una línea. Las tarjetas de país son enlaces (`/?pais=es`; en la web, `/pt` y `/fr`): al elegir otro país o idioma se recarga la página con ese país (`GPCountry.go`). El país se recuerda en `localStorage` (`gasolinera_pais`) y el idioma de cada país en `gasolinera_idioma_<país>`. Cada país abre en su idioma (es, pt, fr) y se puede cambiar. Las preferencias propias de cada país (carburante, favoritas, comparador) llevan el sufijo `_pt` o `_fr` (`GPCountry.storageKey`).
 | `update-link` | Enlace | Descarga el APK de la versión nueva (solo Android) | enlace directo |
+| `update-close` | Botón (×) | Cierra el aviso de versión nueva | — |
 | `offline-banner` | Aviso | Se muestra sin red; ver [08](08-viajes-y-nativo.md) | `syncOfflineBanner` |
 
 ### Permiso de ubicación (`geo-ask`)
@@ -80,6 +81,7 @@ En cada tarjeta de gasolinera (`renderList`) hay un botón «Ver ficha» que abr
 | `modal-close` | Botón Cerrar | Retrocede en el historial (si se abrió con `pushState`) o cierra |
 | `modal-share` | Botón Compartir | Comparte el enlace de la ficha (solo si el dispositivo lo permite) |
 | `modal-favorite-toggle` | Botón corazón | Añade o quita de favoritas. Se oculta si la ficha es de una gasolinera de otro país (por ejemplo, abierta desde una ruta entre países) |
+| `modal-route` | Botón «Ruta hasta aquí» (solo escritorio) | Cierra la ficha, cambia a la vista Ruta y rellena el destino con la gasolinera (evento `gp:route-to`) |
 | `modal-directions` | Enlace «Cómo llegar» | Abre Google Maps con destino en la gasolinera |
 | `modal-compare-toggle` | Botón | Añade o quita del comparador (máximo 5) |
 | `modal-horario`, `modal-horario-week` | Texto y lista | Resumen del horario («24 horas», «abierta ahora»…) y, debajo, el horario escrito día por día en el idioma del país (`renderWeekHours`, `GPCountry.weeklyHours`): los días con el mismo horario se agrupan («Lunes a viernes», «Todos los días») y «cerrado» o «24 horas» según el caso. La lista se oculta si no hay horario o si es 24 h todos los días |
@@ -134,6 +136,7 @@ Al tocar el mapa se elige el destino en ese punto. El mapa se centra en el país
 | `garage-odometer` | Botón «Actualizar km» | Abre el diálogo del cuentakilómetros | `openOdometerDialog` |
 | `garage-compare-day` / `-week` / `-month` | Botones | Comparación con la media por repostaje, por semana o por mes. Cada repostaje se compara con la media de su propio país; la leyenda dice «Media de España/Portugal/Francia» (o «Media del país» si mezcla) y, si hay varios países, los ahorros se desglosan por país | `renderComparison` |
 | `trip-start`, `trip-stop` | Botones | Empezar y terminar viaje | `start`, `stop` |
+| `trip-pause` | Botón «Pausar»/«Reanudar» | Pausa y reanuda la grabación; el tiempo en pausa no cuenta en la duración ni en la velocidad media | `togglePause` |
 | `trip-auto` | Casilla | Detección automática de viajes | `setAuto` |
 | `trip-bt`, `trip-bt-cars`, `trip-bt-device`, `trip-bt-add`, `trip-bt-help` | Casilla, lista de coches con «Quitar», selector con «Añadir» y ayuda (app de Android e iPhone) | Empezar al conectar el Bluetooth de un coche (o CarPlay en iPhone). Se pueden tener varios. La ayuda cambia según la plataforma | `setBluetooth`, `addBluetoothCar`, `removeBluetoothCar` |
 | `trip-permissions-fix` | Botón «Dar permisos» | Abre los ajustes de la app | `openAppSettings` |
@@ -145,6 +148,7 @@ Al tocar el mapa se elige el destino en ese punto. El mapa se centra en el país
 | `backup-export` | Botón | Exportar copia | `exportBackup` |
 | `backup-import-btn`, `backup-import` | Botón y selector de fichero | Importar copia | `importBackup` |
 | Filas de repostajes y de viajes | Botones | Abren el repostaje para editarlo o el detalle del viaje | `openRefuelDialog`, `openTrip` |
+| `refuel-history-open`, `trip-history-open` | Botones «Ver todo el historial» | Aparecen cuando hay más de 10 repostajes (o viajes) y abren el diálogo de historial | `GPHistory.open` |
 
 Bloques de la vista: estado vacío, coche activo (nombre, carburante, depósito, barra de nivel y autonomía, cuatro cifras: consumo medio, coste por km, gasto del mes y cuentakilómetros), gráficos (consumo, gasto mensual, precio frente a la media), lista de repostajes, viajes y mapas sin conexión (`offline-maps-card`).
 
@@ -196,12 +200,24 @@ Detalle de pasos en [07](07-garaje-y-repostajes.md).
 |---|---|
 | `trip-rec-chip` | Chip «EN CURSO» que reabre la pantalla de viaje si se minimizó |
 | `trip-drive-min` | Minimiza la pantalla de viaje |
+| `trip-drive-pause` | Pausa o reanuda el viaje desde la pantalla de viaje |
 | `trip-drive-stop` | Termina el viaje |
 | `trip-summary-close` | Cierra el resumen al terminar un viaje |
 | `trip-dialog-close` | Cierra el detalle de un viaje |
 | `trip-delete` | Borra el viaje abierto |
 
 La pantalla de viaje (`trip-drive`) muestra velocidad, tiempo, distancia y velocidad máxima; la velocidad se colorea por rangos (`speedLevel`: aviso a partir de 100 km/h, exceso a partir de 120) y una barra hasta 160 km/h.
+
+### Historial (`history-dialog`)
+
+| id | Qué hace |
+|---|---|
+| `history-close` | Cierra el diálogo (también un clic en el fondo) |
+| Botones `data-history-kind` | Cambian entre Viajes y Repostajes |
+| `history-from`, `history-to` | Rango de fechas; al cambiarlas se recarga la lista |
+| Botones `data-history-days` | Rangos rápidos: 30 días, 3 meses, 1 año o todo |
+| `history-summary` | Resumen del rango (número de viajes o repostajes y, en repostajes, el gasto) |
+| `history-list`, `history-more` | Lista de 20 en 20 y botón «Cargar más» |
 
 ### Vista Estadísticas
 
@@ -222,6 +238,11 @@ Gráficos: media nacional, precios por carburante, por provincia (barras horizon
 | `legal-close` | Botón | Lo cierra |
 | `get-app-android` | Enlace | Descarga el APK de prueba (solo en web) |
 | `get-app-ios` | Botón | Muestra u oculta la ayuda para instalar en iPhone (solo en web) |
+| `get-app-desktop` | Botón | En ordenador (web): lanza la instalación de la web como aplicación o, si el navegador no la ofrece, muestra la ayuda (`get-app-desktop-help`) |
+| `feedback-kind`, botones `.feedback-kind` | Selector de tipo | Sugerencia, error u otro comentario (`feedback-kind` guarda el valor) |
+| `feedback-message`, `feedback-count` | Campo y contador | Mensaje de 5 a 1500 caracteres |
+| `feedback-tech` | Casilla | Incluir datos técnicos (versión, sistema, pantalla, idioma…; nunca la ubicación) |
+| `feedback-send`, `feedback-copy`, `feedback-note` | Botones y aviso | Abrir la aplicación de correo con el mensaje preparado, o copiarlo (`GPFeedback`) |
 | `permissions-list`, `permissions-note` | Lista y aviso | «Permisos y privacidad»: una fila por permiso (ubicación, avisos de bajada de precio y, en la app, detección de viajes, Bluetooth del coche y batería) con su estado y botones para activar, desactivar o abrir los ajustes del sistema. Los permisos del sistema solo se retiran desde los ajustes del móvil (`GPPermissions.render`) |
 | Acordeones de la guía | `<details>` | «Guía de uso» con seis apartados y el botón de descarga del PDF |
 
