@@ -97,11 +97,6 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
 
-      - name: Build AAB for Google Play
-        if: env.HAS_KEYSTORE == 'true'
-        working-directory: android
-        run: ./gradlew bundleRelease --no-daemon
-
       - name: Build debug APK (installable without a keystore)
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
@@ -115,22 +110,12 @@ jobs:
             cp android/app/build/outputs/apk/release/app-release-unsigned.apk dist/gasolinera-plus-unsigned.apk
           fi
           cp android/app/build/outputs/apk/debug/app-debug.apk dist/gasolinera-plus-debug.apk
-          if [ -f android/app/build/outputs/bundle/release/app-release.aab ]; then
-            cp android/app/build/outputs/bundle/release/app-release.aab dist/gasolinera-plus.aab
-          fi
           ls -la dist
 
       - uses: actions/upload-artifact@v7
         with:
           name: android-apk
           path: dist/*.apk
-
-      - name: Upload the AAB for Google Play
-        uses: actions/upload-artifact@v7
-        with:
-          name: android-aab
-          path: dist/*.aab
-          if-no-files-found: ignore
 
       - name: Publish the debug APK as a rolling pre-release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/feat/')
