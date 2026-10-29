@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.9.4
+
+### Cambios
+- El aviso previo a la detección automática de viajes y al arranque por Bluetooth explica ahora que la ubicación se recoge en segundo plano, también con la app cerrada, para qué se usa y que los datos se quedan en el móvil.
+
 ## 1.9.3
 
 ### Cambios
