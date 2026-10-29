@@ -125,7 +125,7 @@ Estructura:
 - `t` guarda la **tendencia** de cada carburante frente al día anterior: `u` (sube), `d` (baja), `s` (igual). `trendCodes` la calcula con una tolerancia de 0,0005 €. El día anterior sale de `price_history` (fila 2 por `ROW_NUMBER() OVER (PARTITION BY ideess, carburante ORDER BY fecha DESC)`).
 - No incluye histórico. El horario se guarda en bruto (`horario_raw`) y la app lo interpreta (ver [sección 9](#9-horarios)).
 
-La app lo descarga cada 20 horas (`refreshOfflineData`) y lo guarda con `AlertsStore.set('offlineStations', ...)` en IndexedDB. En la APK viaja empaquetado como primera copia solo el de España (`scripts/build-www.mjs` copia `data/stations-lite.json`); el despliegue web publica los tres (`scripts/vercel-build.mjs`).
+La app lo descarga como máximo cada 3 horas (`refreshOfflineData`, constante `OFFLINE_REFRESH_MS`) y lo guarda con `AlertsStore.set('offlineStations', ...)` en IndexedDB. En la APK viaja empaquetado como primera copia solo el de España (`scripts/build-www.mjs` copia `data/stations-lite.json`); el despliegue web publica los tres (`scripts/vercel-build.mjs`).
 
 ## 4. Índice de precios (medias históricas, 400 días)
 
@@ -205,7 +205,7 @@ Sentido único: `onewayOf` interpreta `oneway` (`yes/1/true` → 1, `-1/reverse`
 
 | Flujo | Cuándo | Qué hace |
 |---|---|---|
-| `rebuild-schedule.yml` | Cada día a las 05:00 (hora de Madrid) por un disparador externo, con respaldos programados en GitHub a las 03:17, 05:41 y 07:13 UTC; en cada push a `main` y manual (`force`, `preview`) | Job `data` (matriz `es`, `pt`, `fr`): importa el feed de cada país y publica su base y su lite JSON en la release `data-<país>`. Job `deploy`: baja lo último de las tres releases, adelgaza las bases y despliega en Vercel. Detalle en [sección 8](#8-releases-de-datos-y-despliegue-diario) |
+| `rebuild-schedule.yml` | Cada 3 horas a los 17 minutos (03:17, 06:17, 09:17, 12:17, 15:17, 18:17 y 21:17 UTC) por la programación de GitHub, más el disparador externo de las 05:00 (hora de Madrid); en cada push a `main` y manual (`force`, `preview`) | Job `data` (matriz `es`, `pt`, `fr`): importa el feed de cada país y publica su base y su lite JSON en la release `data-<país>`. Job `deploy`: baja lo último de las tres releases, adelgaza las bases y despliega en Vercel. Detalle en [sección 8](#8-releases-de-datos-y-despliegue-diario) |
 | `price-index.yml` | Al terminar bien la actualización diaria, cada día 09:30 UTC como respaldo, al cambiar un `build-price-index*.php` en `feat/**` y manual | Matriz `es`, `pt`, `fr`: actualiza y publica el índice de precios de cada país (`price-index`, `price-index-pt`, `price-index-fr`) |
 | `road-graph.yml` | Día 2 de cada mes 04:00 (y al cambiar `tools/graph/**` en `feat/**`) | En un runner propio reconstruye el grafo de los tres países, lo valida y lo publica. En `main` también refresca `osm-pt.json` y `osm-fr.json` (marcas y horarios de OpenStreetMap) en las releases `data-pt` y `data-fr` |
 | `offline-maps.yml` | Día 3 de cada mes 05:00 (y al cambiar `tools/maps/**` en `feat/**`) | Extrae y publica los mapas por región de los tres países |
@@ -235,12 +235,14 @@ Las releases se crean la primera vez con `--latest=false` (no son la «última v
 La matriz `country: [es, pt, fr]` ejecuta con `fail-fast: false`, así que un país que falla no impide los otros. Pasos:
 
 1. **Descargar la base de ayer.** Si existe `gasolinera-<país>.sqlite.gz` en `data-<país>`, la descomprime en la ruta `db` del país. Si no hay release, parte de la base del repositorio, y si tampoco existe la crea desde cero. En `pt` y `fr` baja antes `osm-<país>.json` (si no hay, usa el del repositorio).
-2. **Saltar si ya está hecho.** Compara el `last_snapshot_date` de la tabla `meta` con la fecha de hoy en Madrid. Si coinciden y no se lanzó con `force`, el país no se repite.
+2. **Saltar si la foto es reciente.** Lee `source_updated_at` de la tabla `meta` (la hora de Madrid a la que se tomó la última foto) y calcula los minutos que han pasado. Si son menos de 90 y no se lanzó con `force`, el país no se repite (evita importar dos veces por un push justo después de una ejecución programada). En cualquier otro caso se importa: los precios cambian durante el día y se actualizan en cada ejecución.
 3. **Importar y comprobar.** `php scripts/build-database.php --mode=daily --country=<país>`: descarga el feed, exige el mínimo de gasolineras (`minStations`) y genera el lite JSON. Si algo falla, no se publica nada de ese país.
 4. **Publicar.** Copia la base descargada en el paso 1 como `...-anterior.sqlite.gz` y sube esa más la nueva (`gzip -9`) y el lite JSON, con `--clobber`.
 5. **Marcar como publicado.** Sube el artefacto `published-<país>` (retención de 1 día) para que el job `deploy` sepa cuántos países trajeron datos nuevos.
 
-El `last_snapshot_date` es la fecha de los precios de la base (`meta`): en España la que declara el Ministerio y en Portugal y Francia la del día de la ejecución. Es lo que decide si hay que repetir y lo que el aviso de datos viejos lee en el lite JSON (`snapshotDate`).
+El `last_snapshot_date` es la fecha de los precios de la base (`meta`): en España la que declara el Ministerio y en Portugal y Francia la del día de la ejecución. Es lo que lee el aviso de datos viejos en el lite JSON (`snapshotDate`). El `source_updated_at` es la fecha y hora exactas de la última foto y es lo que usa el paso de salto.
+
+**Varias fotos al día.** Cada importación sustituye `current_prices` por completo con los precios de ese momento, actualiza la media nacional del día (`national_price_history`) y, en `price_history`, sobrescribe el precio del día (`INSERT OR REPLACE`), de modo que el historial guarda **el último precio de cada día**. El relleno de días pasados (`--mode=backfill`) sigue sin pisar nada (`INSERT OR IGNORE`). La prueba `tests/price-history-daily-test.php` lo comprueba. Hasta la 1.9.2 había una sola foto al día, hacia las 05:00 (hora de Madrid), y se enseñaba hasta el día siguiente: lo que una gasolinera cambiara después no llegaba a la app.
 
 ### Job `deploy`
 

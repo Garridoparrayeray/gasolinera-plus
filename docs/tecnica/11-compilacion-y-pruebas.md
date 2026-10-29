@@ -48,12 +48,12 @@ Regla aprendida: `api/shell.php` debe existir físicamente dentro de `api/` para
 
 ### Despliegue: `rebuild-schedule.yml`
 
-Se lanza a las 03:17, 05:41 y 07:13 UTC, en cada push a `main` y a mano (`workflow_dispatch` con `force`, que descarga y despliega aunque el snapshot de hoy ya esté publicado, y `preview`, que despliega como vista previa). El grupo de concurrencia `production-deploy` impide dos ejecuciones a la vez y no cancela la que está en marcha.
+Se lanza cada 3 horas a los 17 minutos (03:17 a 21:17 UTC), en cada push a `main` y a mano (`workflow_dispatch` con `force`, que descarga y despliega aunque la última foto de precios tenga menos de 90 minutos, y `preview`, que despliega como vista previa). El grupo de concurrencia `production-deploy` impide dos ejecuciones a la vez y no cancela la que está en marcha.
 
 **Job `data`** (no se ejecuta en un push; una instancia por país en la matriz `country: [es, pt, fr]`, con `fail-fast: false` para que un país caído no pare a los otros):
 
 1. Descarga la base de ayer de la release `data-<país>` (`gasolinera-<país>.sqlite.gz`). Para Portugal y Francia baja también `osm-<país>.json`. Si no hay release, parte de la base del repositorio o la crea desde cero.
-2. Comprueba si el `last_snapshot_date` de `meta` ya es el de hoy (hora de Madrid); si lo es y no hay `force`, se salta el resto.
+2. Comprueba cuántos minutos hace que se tomó la última foto (`source_updated_at` de `meta`, hora de Madrid); si son menos de 90 y no hay `force`, se salta el resto.
 3. Importa y valida los precios con `php scripts/build-database.php --mode=daily --country=<país>`.
 4. Publica en la release `data-<país>` la base comprimida (`gasolinera-<país>.sqlite.gz`), el lite JSON del país y una copia de la anterior (`gasolinera-<país>-anterior.sqlite.gz`). Solo llega aquí si las comprobaciones pasaron.
 5. Sube un artefacto `published-<país>` para avisar al job siguiente.
@@ -150,6 +150,7 @@ El grafo de carreteras se baja antes (`node tools/graph/fetch-graph.mjs`, con `c
 | Prueba | Dónde | Qué comprueba |
 |---|---|---|
 | `tests/fuel-math.test.mjs`, `trip-metrics.test.mjs`, `alerts.test.mjs`, `recap.test.mjs`, `price-index-core.test.mjs` | `static-checks.py` | Consumo lleno a lleno, depósito y ahorros; limpieza, franjas, eco y consumo de viajes; avisos de precio; resumen; medias, celdas y periodos del índice |
+| `tests/price-history-daily-test.php` | `static-checks.py` | Que varias importaciones el mismo día dejan en `price_history` el último precio, sin filas repetidas, y que el relleno de días pasados no pisa lo que ya hay |
 | `tests/price-index-test.php`, `rate-limit-test.php`, `trend-test.php` | `static-checks.py` | Agregación del índice (nacional, provincia y cuadrícula de 0,1 grados, sin AdBlue) y los generadores de Portugal (`parsePortuguesePrice`) y Francia; límite de peticiones; tendencias |
 | `tests/router.test.mjs` | `road-graph.yml` (y a mano con `GRAPH_DIR`); `static-checks.py` también lo ejecuta, pero se salta si no hay grafo en `data/road-graph` | Lee el manifiesto del grafo y calcula rutas de referencia con rango de km y de horas: Bilbao–Madrid, Bilbao–Donostia, Barcelona–Sevilla, Tenerife, Lisboa–Oporto, Bilbao–Lisboa, Bilbao–Burdeos y París–Versalles; qué países necesita cada ruta (`countriesFor`); y que Madrid–Palma y un punto en el mar den error |
 | `tests/seo-audit.py` | A mano | Audita las páginas de `SEO_PAGES` (separadas por espacios) y el `robots.txt` y `sitemap.xml`: título, meta description, canonical, Open Graph, un solo `h1`, JSON-LD válido, `lang` del país, `alt`. Imprime críticos, avisos y una puntuación; sale con error si hay críticos. `SEO_PAGES="/gasolineras /pt/postos" python tests/seo-audit.py` |

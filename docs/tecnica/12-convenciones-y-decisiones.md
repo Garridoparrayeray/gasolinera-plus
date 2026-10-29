@@ -64,6 +64,7 @@ Patrón de «Cargando…»: `GPSectionLoading.track(vista, promesa)`. Cualquier 
 | Tras desplegar a producción se comprueba que responde (`Check that production answers`), y `check-production.yml` mira lo que ve Google | Un despliegue puede salir «bien» y dar 500 en la API (pasó con el peso de las bases) | Esperar a que alguien lo note |
 | Las fusiones a `main` son por *squash* | El repositorio no admite commits de fusión; cada pull request queda como un solo commit en `main` (el último `Merge pull request` es el #28; después, cada cambio es un commit) | Fusión con commit de fusión o *rebase* |
 | El favicon tiene direcciones propias: `/favicon.ico` e `/icons/favicon-48.png`, `-96.png` y `-192.png`, declarados en todas las páginas (`api/shell.php` y `api/seo.php`) | Google guarda el favicon por URL y no vuelve a leer una dirección que ya conoce, así que cambiar el logo sin cambiar la dirección no actualizaba el icono en los resultados | Sustituir el contenido de `icons/icon-192.png` |
+| Precios de los tres países cada 3 horas, con el último precio del día en el historial | Los precios cambian durante el día; con una sola foto hacia las 05:00 la app enseñaba precios de hasta 30 horas (foto del día anterior más 20 h de caché en el móvil y hasta 25 h de caché del fichero en la web) | Pedir el feed al Ministerio en cada consulta (carga y rompe el límite del servicio) o actualizar cada hora (más despliegues de Vercel, con 127 MB cada uno, y sin mejora apreciable) |
 
 ## Trampas conocidas
 
