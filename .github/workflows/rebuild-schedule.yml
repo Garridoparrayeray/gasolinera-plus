@@ -2,9 +2,7 @@ name: Rebuild schedule data
 
 on:
   schedule:
-    - cron: '17 3 * * *'
-    - cron: '41 5 * * *'
-    - cron: '13 7 * * *'
+    - cron: '17 3,6,9,12,15,18,21 * * *'
   push:
     branches:
       - main
@@ -69,16 +67,25 @@ jobs:
             echo "::notice::No hay base previa de $C; se crea desde cero"
           fi
 
-      - name: Skip if today's snapshot is already published
+      - name: Skip if the published snapshot is recent
         id: check
         run: |
-          TODAY=$(TZ=Europe/Madrid date +%F)
-          LAST=""
-          if [ -f "$DB" ]; then
-            LAST=$(python3 -c "import sqlite3; r = sqlite3.connect('$DB').execute(\"SELECT value FROM meta WHERE key = 'last_snapshot_date'\").fetchone(); print((r or [''])[0])")
-          fi
-          echo "$C · hoy: $TODAY, último snapshot: $LAST"
-          if [ "$LAST" = "$TODAY" ] && [ "${{ inputs.force }}" != "true" ]; then
+          # Los precios cambian durante el dia: se vuelve a importar en cada ejecucion, salvo que la foto
+          # publicada tenga menos de 90 minutos (por ejemplo, un push justo despues de una ejecucion programada).
+          AGE=$(python3 - <<PY
+          import sqlite3
+          from datetime import datetime, timezone
+          from zoneinfo import ZoneInfo
+          try:
+              row = sqlite3.connect('$DB').execute("SELECT value FROM meta WHERE key = 'source_updated_at'").fetchone()
+              taken = datetime.strptime(row[0], '%d/%m/%Y %H:%M:%S').replace(tzinfo=ZoneInfo('Europe/Madrid'))
+              print(int((datetime.now(timezone.utc) - taken).total_seconds() // 60))
+          except Exception:
+              print(100000)
+          PY
+          )
+          echo "$C · minutos desde la ultima foto: $AGE"
+          if [ "$AGE" -lt 90 ] && [ "${{ inputs.force }}" != "true" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"

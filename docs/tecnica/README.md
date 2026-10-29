@@ -24,7 +24,7 @@ Los ejemplos de código y los nombres de funciones son literales del repositorio
 
 ## En una frase
 
-Gasolinera+ muestra los precios oficiales de carburantes de **España, Portugal y Francia** (versión 1.9.2), en español, portugués y francés. Cada país tiene su propia base de datos, sus carburantes, su idioma por defecto y sus rutas (`/pt`, `/fr`), y se puede trazar una ruta entre países. Una **web** (PHP + JavaScript sin framework) y una **app** para Android e iPhone (la misma web dentro de Capacitor, más un plugin nativo para grabar viajes) comparten casi todo el código. Los datos de gasolineras se calculan una vez al día en un proceso automático; el móvil los usa **en local** siempre que puede, para no cargar el servidor. Todo lo personal (coches, repostajes, viajes) se guarda solo en el dispositivo.
+Gasolinera+ muestra los precios oficiales de carburantes de **España, Portugal y Francia** (versión 1.9.3), en español, portugués y francés. Cada país tiene su propia base de datos, sus carburantes, su idioma por defecto y sus rutas (`/pt`, `/fr`), y se puede trazar una ruta entre países. Una **web** (PHP + JavaScript sin framework) y una **app** para Android e iPhone (la misma web dentro de Capacitor, más un plugin nativo para grabar viajes) comparten casi todo el código. Los datos de gasolineras se calculan una vez al día en un proceso automático; el móvil los usa **en local** siempre que puede, para no cargar el servidor. Todo lo personal (coches, repostajes, viajes) se guarda solo en el dispositivo.
 
 ## Glosario
 

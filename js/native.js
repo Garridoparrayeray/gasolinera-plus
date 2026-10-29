@@ -3,7 +3,7 @@ const GPNative = (() => {
     const RELEASES_API = 'https://api.github.com/repos/Garridoparrayeray/gasolinera-plus/releases/latest';
     const APK_URL = 'https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest';
     const RELEASES_URL = 'https://github.com/Garridoparrayeray/gasolinera-plus/releases';
-    const OFFLINE_REFRESH_MS = 20 * 60 * 60 * 1000;
+    const OFFLINE_REFRESH_MS = 3 * 60 * 60 * 1000;
     const backHandlers = [];
 
     function isNative() {

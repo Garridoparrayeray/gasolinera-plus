@@ -242,7 +242,7 @@ Expone `code`, `lang`, `config`, `countries`, `fuels`, `locale`, `uiLocale`, `t`
 | `versionNumber` | `tag` | Convierte una etiqueta de versión en lista de números. |
 | `isNewer` | `remote, local` | Compara versiones. |
 | `checkForUpdate` | `notify` | Consulta la última release de GitHub y avisa si hay APK nuevo (solo Android). |
-| `refreshOfflineData` | — | Descarga el fichero `lite` del país abierto (`stations-lite.json` en España) como máximo cada 20 horas y lo guarda, por país, para uso sin servidor. |
+| `refreshOfflineData` | — | Descarga el fichero `lite` del país abierto (`stations-lite.json` en España) como máximo cada 3 horas y lo guarda, por país, para uso sin servidor. |
 | `cachedOfflineStations` | — | Lee las gasolineras descargadas del país abierto o nulo. |
 | `setupDesktopInstall` | `isMobile, androidLink` | En ordenador (web) oculta las descargas de móvil y muestra el botón de instalar (`get-app-desktop`): lanza el aviso de instalación del navegador o, si no hay, despliega la ayuda. |
 | `setupGetApp` | — | Muestra los botones de instalación en web según el sistema. |
