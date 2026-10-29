@@ -2,7 +2,9 @@ name: Rebuild schedule data
 
 on:
   schedule:
-    - cron: '17 3,6,9,12,15,18,21 * * *'
+    # Respaldo: las cuatro actualizaciones diarias (03:00, 09:00, 15:00 y 21:00, hora de Madrid) las lanza un servicio
+    # externo con workflow_dispatch, porque las ejecuciones programadas de GitHub llegan con hasta unas 5 horas de retraso.
+    - cron: '47 2,14 * * *'
   push:
     branches:
       - main

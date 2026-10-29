@@ -48,7 +48,7 @@ Regla aprendida: `api/shell.php` debe existir físicamente dentro de `api/` para
 
 ### Despliegue: `rebuild-schedule.yml`
 
-Se lanza cada 3 horas a los 17 minutos (03:17 a 21:17 UTC), en cada push a `main` y a mano (`workflow_dispatch` con `force`, que descarga y despliega aunque la última foto de precios tenga menos de 90 minutos, y `preview`, que despliega como vista previa). El grupo de concurrencia `production-deploy` impide dos ejecuciones a la vez y no cancela la que está en marcha.
+Se lanza cuatro veces al día (03:00, 09:00, 15:00 y 21:00, hora de Madrid) desde un servicio externo de tareas programadas que llama a `workflow_dispatch`, con la programación de GitHub (dos veces al día, 02:47 y 14:47 UTC) solo como respaldo, en cada push a `main` y a mano (`workflow_dispatch` con `force`, que descarga y despliega aunque la última foto de precios tenga menos de 90 minutos, y `preview`, que despliega como vista previa). El grupo de concurrencia `production-deploy` impide dos ejecuciones a la vez y no cancela la que está en marcha.
 
 **Job `data`** (no se ejecuta en un push; una instancia por país en la matriz `country: [es, pt, fr]`, con `fail-fast: false` para que un país caído no pare a los otros):
 
