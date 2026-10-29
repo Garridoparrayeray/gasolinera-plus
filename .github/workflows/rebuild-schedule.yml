@@ -3,8 +3,11 @@ name: Rebuild schedule data
 on:
   schedule:
     # Respaldo: las cuatro actualizaciones diarias (03:00, 09:00, 15:00 y 21:00, hora de Madrid) las lanza un servicio
-    # externo con workflow_dispatch, porque las ejecuciones programadas de GitHub llegan con hasta unas 5 horas de retraso.
-    - cron: '47 2,14 * * *'
+    # externo con workflow_dispatch. Estas ejecuciones llegan con hasta unas 5 horas de retraso y solo importan si no
+    # hay ninguna foto de precios de las ultimas 6 horas.
+    - cron: '17 3 * * *'
+    - cron: '41 5 * * *'
+    - cron: '13 7 * * *'
   push:
     branches:
       - main
@@ -72,8 +75,13 @@ jobs:
       - name: Skip if the published snapshot is recent
         id: check
         run: |
-          # Los precios cambian durante el dia: se vuelve a importar en cada ejecucion, salvo que la foto
-          # publicada tenga menos de 90 minutos (por ejemplo, un push justo despues de una ejecucion programada).
+          # Los precios cambian durante el dia: se vuelve a importar en cada ejecucion, salvo que la foto publicada
+          # sea reciente: menos de 90 minutos (por ejemplo, un push justo despues de otra ejecucion) o, si es una
+          # ejecucion programada de GitHub (solo respaldo del servicio externo), menos de 6 horas.
+          LIMIT=90
+          if [ "$GITHUB_EVENT_NAME" = "schedule" ]; then
+            LIMIT=360
+          fi
           AGE=$(python3 - <<PY
           import sqlite3
           from datetime import datetime, timezone
@@ -87,7 +95,7 @@ jobs:
           PY
           )
           echo "$C · minutos desde la ultima foto: $AGE"
-          if [ "$AGE" -lt 90 ] && [ "${{ inputs.force }}" != "true" ]; then
+          if [ "$AGE" -lt "$LIMIT" ] && [ "${{ inputs.force }}" != "true" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
