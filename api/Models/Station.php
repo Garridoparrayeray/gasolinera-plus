@@ -107,9 +107,7 @@ class Station
                 continue;
             }
             $relevance = $this->relevanceScore($row, $normalized, $rawQuery);
-            if ($radiusKm !== null && $distanceKm !== null && $relevance > 3 && $distanceKm > $radiusKm) {
-                continue;
-            }
+            $beyondRadius = $radiusKm !== null && $distanceKm !== null && $relevance > 3 && $distanceKm > $radiusKm;
             // El radio se mide desde el lugar buscado y, si no hay, desde la ubicación del usuario.
             $fromCenterKm = $distanceKm;
             if ($mergePlace !== null) {
@@ -121,9 +119,16 @@ class Station
                 'distanceKm' => $distanceKm,
                 'relevance' => $relevance,
                 'outside' => $radiusKm !== null && $fromCenterKm !== null && $fromCenterKm > $radiusKm,
+                'beyondRadius' => $beyondRadius,
             ];
         }
         $textMatched = count($rows) > 0;
+
+        // Una búsqueda por nombre respeta el radio mientras haya coincidencias dentro; si no hay ninguna, se enseñan las de fuera.
+        $withinRadius = array_filter($candidates, fn ($candidate) => !$candidate['beyondRadius']);
+        if (count($withinRadius) > 0) {
+            $candidates = array_values($withinRadius);
+        }
 
         if ($mergePlace !== null) {
             $bbox = self::boundingBox($mergePlace['lat'], $mergePlace['lon'], $mergeRadiusKm);

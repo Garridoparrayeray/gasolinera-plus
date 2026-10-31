@@ -225,10 +225,13 @@ const OfflineEngine = (() => {
                     distanciaKm = Math.round(haversine(lat, lon, s.lat, s.lon) * 100) / 100;
                 }
                 const rel = relevance(s);
-                if (hasLocation && radiusKm > 0 && rel > 3 && distanciaKm > radiusKm) {
-                    continue;
-                }
-                matches.push({ station: s, relevance: rel, distanciaKm });
+                const beyondRadius = hasLocation && radiusKm > 0 && rel > 3 && distanciaKm > radiusKm;
+                matches.push({ station: s, relevance: rel, distanciaKm, beyondRadius });
+            }
+            // Una búsqueda por nombre respeta el radio mientras haya coincidencias dentro; si no hay ninguna, se enseñan las de fuera.
+            const withinRadius = matches.filter((entry) => !entry.beyondRadius);
+            if (withinRadius.length > 0 && withinRadius.length < matches.length) {
+                matches.splice(0, matches.length, ...withinRadius);
             }
 
             // Por precio, primero lo que cae dentro del radio elegido y después lo de fuera, de más barata a más cara.
