@@ -258,4 +258,5 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.TEAM_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.PROJECT_ID }}
-        run: vercel rm gasolineraplus --safe --yes --token="${{ secrets.TOKEN_GASOLINERA }}" || true
+          VERCEL_TOKEN: ${{ secrets.TOKEN_GASOLINERA }}
+        run: node scripts/prune-deployments.mjs
