@@ -26,14 +26,14 @@ const hourMs = 60 * 60 * 1000;
 
 {
     const deployments = [
-        { url: 'prev-recent', target: null, state: 'READY', createdAt: now - 2 * hourMs },
-        { url: 'prev-old', target: null, state: 'READY', createdAt: now - 48 * hourMs },
-        { url: 'prev-failed', target: null, state: 'ERROR', createdAt: now - 1 * hourMs },
+        { url: 'prev-recent', target: null, state: 'READY', createdAt: now - 1 * hourMs },
+        { url: 'prev-old', target: null, state: 'READY', createdAt: now - 3 * hourMs },
+        { url: 'prev-failed', target: null, state: 'ERROR', createdAt: now - 0.5 * hourMs },
     ];
-    const res = classifyDeployments(deployments, { keepPreviewHours: 24, now: now });
-    assert.equal(res.toKeep.length, 1, 'solo conserva el preview reciente y READY');
+    const res = classifyDeployments(deployments, { now: now });
+    assert.equal(res.toKeep.length, 1, 'solo conserva el preview de menos de 2h y READY');
     assert.equal(res.toKeep[0].url, 'prev-recent');
-    assert.equal(res.toDelete.length, 2, 'marca el viejo y el fallido para borrar');
+    assert.equal(res.toDelete.length, 2, 'marca el de 3h y el fallido para borrar');
     const deletedUrls = res.toDelete.map(function (d) { return d.url; });
     assert.ok(deletedUrls.includes('prev-old'));
     assert.ok(deletedUrls.includes('prev-failed'));
@@ -50,10 +50,10 @@ const hourMs = 60 * 60 * 1000;
 }
 
 {
-    const args1 = buildVercelArgs(['list', 'app'], 'my-token', 'my-scope');
-    assert.deepEqual(args1, ['list', 'app', '--token=my-token', '--scope=my-scope']);
+    const args1 = buildVercelArgs(['list', 'app'], 'my-token');
+    assert.deepEqual(args1, ['list', 'app', '--token=my-token']);
 
-    const args2 = buildVercelArgs(['rm', 'url', '--yes'], '', '');
+    const args2 = buildVercelArgs(['rm', 'url', '--yes'], '');
     assert.deepEqual(args2, ['rm', 'url', '--yes']);
 }
 
