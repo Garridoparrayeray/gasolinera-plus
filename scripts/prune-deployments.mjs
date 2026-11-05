@@ -96,17 +96,45 @@ export function buildVercelArgs(baseArgs, token) {
     return args;
 }
 
-async function fetchDeploymentsApi(project, token, teamId) {
-    let url = `https://api.vercel.com/v6/deployments?app=${encodeURIComponent(project)}&limit=100`;
-    if (teamId && teamId.startsWith('team_')) {
+export function buildFetchUrl(project, teamId, limit) {
+    let count = 100;
+    if (typeof limit === 'number') {
+        count = limit;
+    }
+    let url = `https://api.vercel.com/v6/deployments?app=${encodeURIComponent(project)}&limit=${count}`;
+    if (teamId) {
         url = url + `&teamId=${encodeURIComponent(teamId)}`;
     }
+    return url;
+}
 
-    const res = await fetch(url, {
+export function buildDeleteUrl(id, teamId) {
+    let url = `https://api.vercel.com/v13/deployments/${encodeURIComponent(id)}`;
+    if (teamId) {
+        url = url + `?teamId=${encodeURIComponent(teamId)}`;
+    }
+    return url;
+}
+
+async function fetchDeploymentsApi(project, token, teamId) {
+    const url = buildFetchUrl(project, teamId);
+    let res = await fetch(url, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
     });
+
+    if (!res.ok && res.status === 404 && teamId) {
+        const fallbackUrl = buildFetchUrl(project, '');
+        const fallbackRes = await fetch(fallbackUrl, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        if (fallbackRes.ok) {
+            res = fallbackRes;
+        }
+    }
 
     if (!res.ok) {
         const errorText = await res.text();
@@ -118,17 +146,26 @@ async function fetchDeploymentsApi(project, token, teamId) {
 }
 
 async function deleteDeploymentApi(id, token, teamId) {
-    let url = `https://api.vercel.com/v13/deployments/${encodeURIComponent(id)}`;
-    if (teamId && teamId.startsWith('team_')) {
-        url = url + `&teamId=${encodeURIComponent(teamId)}`;
-    }
-
-    const res = await fetch(url, {
+    const url = buildDeleteUrl(id, teamId);
+    let res = await fetch(url, {
         method: 'DELETE',
         headers: {
             Authorization: `Bearer ${token}`,
         },
     });
+
+    if (!res.ok && res.status === 404 && teamId) {
+        const fallbackUrl = buildDeleteUrl(id, '');
+        const fallbackRes = await fetch(fallbackUrl, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        if (fallbackRes.ok) {
+            return await fallbackRes.json();
+        }
+    }
 
     if (!res.ok) {
         const errorText = await res.text();

@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import {
+    buildDeleteUrl,
+    buildFetchUrl,
     buildVercelArgs,
     classifyDeployments,
     parseVercelJson,
@@ -55,6 +57,20 @@ const hourMs = 60 * 60 * 1000;
 
     const args2 = buildVercelArgs(['rm', 'url', '--yes'], '');
     assert.deepEqual(args2, ['rm', 'url', '--yes']);
+}
+
+{
+    const fetchUrl1 = buildFetchUrl('gasolineraplus', 'team_123');
+    assert.equal(fetchUrl1, 'https://api.vercel.com/v6/deployments?app=gasolineraplus&limit=100&teamId=team_123');
+
+    const fetchUrl2 = buildFetchUrl('gasolineraplus', '');
+    assert.equal(fetchUrl2, 'https://api.vercel.com/v6/deployments?app=gasolineraplus&limit=100');
+
+    const delUrl1 = buildDeleteUrl('dpl_abc123', 'team_123');
+    assert.equal(delUrl1, 'https://api.vercel.com/v13/deployments/dpl_abc123?teamId=team_123');
+
+    const delUrl2 = buildDeleteUrl('dpl_abc123', '');
+    assert.equal(delUrl2, 'https://api.vercel.com/v13/deployments/dpl_abc123');
 }
 
 console.log('prune-deployments: OK');
