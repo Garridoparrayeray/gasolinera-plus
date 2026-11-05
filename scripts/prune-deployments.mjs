@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 export function classifyDeployments(deployments, options) {
     let keepProd = 2;
-    let keepPreviewHours = 24;
+    let keepPreviewHours = 2;
     let now = Date.now();
 
     if (options) {
@@ -73,13 +73,10 @@ export function parseVercelJson(output) {
     }
 }
 
-export function buildVercelArgs(baseArgs, token, scope) {
+export function buildVercelArgs(baseArgs, token) {
     const args = Array.from(baseArgs);
     if (token) {
         args.push(`--token=${token}`);
-    }
-    if (scope) {
-        args.push(`--scope=${scope}`);
     }
     return args;
 }
@@ -87,9 +84,8 @@ export function buildVercelArgs(baseArgs, token, scope) {
 export async function prune(customOptions) {
     let project = 'gasolineraplus';
     let token = '';
-    let scope = '';
     let keepProd = 2;
-    let keepPreviewHours = 24;
+    let keepPreviewHours = 2;
 
     if (process.env.VERCEL_PROJECT_NAME) {
         project = process.env.VERCEL_PROJECT_NAME;
@@ -99,9 +95,6 @@ export async function prune(customOptions) {
     } else if (process.env.TOKEN_GASOLINERA) {
         token = process.env.TOKEN_GASOLINERA;
     }
-    if (process.env.VERCEL_ORG_ID) {
-        scope = process.env.VERCEL_ORG_ID;
-    }
 
     if (customOptions) {
         if (customOptions.project) {
@@ -109,9 +102,6 @@ export async function prune(customOptions) {
         }
         if (customOptions.token) {
             token = customOptions.token;
-        }
-        if (customOptions.scope) {
-            scope = customOptions.scope;
         }
         if (typeof customOptions.keepProd === 'number') {
             keepProd = customOptions.keepProd;
@@ -123,7 +113,7 @@ export async function prune(customOptions) {
 
     console.log(`[prune-deployments] Consultando despliegues del proyecto "${project}"...`);
 
-    const listArgs = buildVercelArgs(['list', project, '--format', 'json', '--limit', '100'], token, scope);
+    const listArgs = buildVercelArgs(['list', project, '--format', 'json', '--limit', '100'], token);
     let output = '';
     try {
         output = execFileSync('vercel', listArgs, {
@@ -154,7 +144,11 @@ export async function prune(customOptions) {
     console.log(`[prune-deployments] Despliegues a conservar: ${classification.toKeep.length} (ultimas ${keepProd} producciones + previews de < ${keepPreviewHours}h)`);
     for (let i = 0; i < classification.toKeep.length; i = i + 1) {
         const item = classification.toKeep[i];
-        console.log(`  - CONSERVA: ${item.url} [target=${item.target || 'preview'}, state=${item.state}]`);
+        let targetDesc = 'preview';
+        if (item.target) {
+            targetDesc = item.target;
+        }
+        console.log(`  - CONSERVA: ${item.url} [target=${targetDesc}, state=${item.state}]`);
     }
 
     console.log(`[prune-deployments] Despliegues a eliminar: ${classification.toDelete.length}`);
@@ -162,10 +156,13 @@ export async function prune(customOptions) {
 
     for (let i = 0; i < classification.toDelete.length; i = i + 1) {
         const item = classification.toDelete[i];
-        const targetDesc = item.target || 'preview';
+        let targetDesc = 'preview';
+        if (item.target) {
+            targetDesc = item.target;
+        }
         console.log(`  - BORRANDO: ${item.url} [target=${targetDesc}, state=${item.state}]`);
 
-        const rmArgs = buildVercelArgs(['rm', item.url, '--yes'], token, scope);
+        const rmArgs = buildVercelArgs(['rm', item.url, '--yes'], token);
         try {
             execFileSync('vercel', rmArgs, {
                 encoding: 'utf-8',
@@ -195,5 +192,8 @@ if (process.argv[1]) {
 }
 
 if (isMain) {
-    await prune();
+    const result = await prune();
+    if (!result.success) {
+        process.exitCode = 1;
+    }
 }
