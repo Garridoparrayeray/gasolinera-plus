@@ -21,8 +21,18 @@ export function classifyDeployments(deployments, options) {
 
     const list = Array.from(deployments || []);
     list.sort(function (a, b) {
-        const timeA = a.createdAt || 0;
-        const timeB = b.createdAt || 0;
+        let timeA = 0;
+        if (a.createdAt) {
+            timeA = a.createdAt;
+        } else if (a.created) {
+            timeA = a.created;
+        }
+        let timeB = 0;
+        if (b.createdAt) {
+            timeB = b.createdAt;
+        } else if (b.created) {
+            timeB = b.created;
+        }
         return timeB - timeA;
     });
 
@@ -42,7 +52,12 @@ export function classifyDeployments(deployments, options) {
                 toDelete.push(dep);
             }
         } else {
-            const created = dep.createdAt || 0;
+            let created = 0;
+            if (dep.createdAt) {
+                created = dep.createdAt;
+            } else if (dep.created) {
+                created = dep.created;
+            }
             const age = now - created;
             const isRecent = age < maxAgeMs;
             const isReady = dep.state === 'READY';
@@ -81,9 +96,76 @@ export function buildVercelArgs(baseArgs, token) {
     return args;
 }
 
+async function fetchDeploymentsApi(project, token, teamId) {
+    let url = `https://api.vercel.com/v6/deployments?app=${encodeURIComponent(project)}&limit=100`;
+    if (teamId && teamId.startsWith('team_')) {
+        url = url + `&teamId=${encodeURIComponent(teamId)}`;
+    }
+
+    const res = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Vercel API error (${res.status}): ${errorText}`);
+    }
+
+    const data = await res.json();
+    return data.deployments || [];
+}
+
+async function deleteDeploymentApi(id, token, teamId) {
+    let url = `https://api.vercel.com/v13/deployments/${encodeURIComponent(id)}`;
+    if (teamId && teamId.startsWith('team_')) {
+        url = url + `&teamId=${encodeURIComponent(teamId)}`;
+    }
+
+    const res = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`HTTP ${res.status}: ${errorText}`);
+    }
+
+    return await res.json();
+}
+
+function fetchDeploymentsCli(project) {
+    const listArgs = buildVercelArgs(['list', project, '--format', 'json', '--limit', '100'], '');
+    const output = execFileSync('vercel', listArgs, {
+        encoding: 'utf-8',
+        shell: true,
+        stdio: ['ignore', 'pipe', 'inherit'],
+    });
+
+    const data = parseVercelJson(output);
+    if (!data || !Array.isArray(data.deployments)) {
+        throw new Error('No se pudo interpretar la salida JSON de Vercel CLI');
+    }
+    return data.deployments;
+}
+
+function deleteDeploymentCli(identifier) {
+    const rmArgs = buildVercelArgs(['rm', identifier, '--yes'], '');
+    execFileSync('vercel', rmArgs, {
+        encoding: 'utf-8',
+        shell: true,
+        stdio: ['ignore', 'pipe', 'inherit'],
+    });
+}
+
 export async function prune(customOptions) {
     let project = 'gasolineraplus';
     let token = '';
+    let teamId = '';
     let keepProd = 2;
     let keepPreviewHours = 2;
 
@@ -95,6 +177,9 @@ export async function prune(customOptions) {
     } else if (process.env.TOKEN_GASOLINERA) {
         token = process.env.TOKEN_GASOLINERA;
     }
+    if (process.env.VERCEL_ORG_ID) {
+        teamId = process.env.VERCEL_ORG_ID;
+    }
 
     if (customOptions) {
         if (customOptions.project) {
@@ -102,6 +187,9 @@ export async function prune(customOptions) {
         }
         if (customOptions.token) {
             token = customOptions.token;
+        }
+        if (customOptions.teamId) {
+            teamId = customOptions.teamId;
         }
         if (typeof customOptions.keepProd === 'number') {
             keepProd = customOptions.keepProd;
@@ -113,26 +201,23 @@ export async function prune(customOptions) {
 
     console.log(`[prune-deployments] Consultando despliegues del proyecto "${project}"...`);
 
-    const listArgs = buildVercelArgs(['list', project, '--format', 'json', '--limit', '100'], token);
-    let output = '';
+    let deployments = [];
+    let useApi = false;
+    if (token) {
+        useApi = true;
+    }
+
     try {
-        output = execFileSync('vercel', listArgs, {
-            encoding: 'utf-8',
-            shell: true,
-            stdio: ['ignore', 'pipe', 'inherit'],
-        });
+        if (useApi) {
+            deployments = await fetchDeploymentsApi(project, token, teamId);
+        } else {
+            deployments = fetchDeploymentsCli(project);
+        }
     } catch (err) {
-        console.error('[prune-deployments] Error al ejecutar "vercel list":', err.message);
+        console.error('[prune-deployments] Error al obtener despliegues:', err.message);
         return { success: false, error: err };
     }
 
-    const data = parseVercelJson(output);
-    if (!data || !Array.isArray(data.deployments)) {
-        console.warn('[prune-deployments] No se pudo interpretar la salida JSON de Vercel');
-        return { success: false, countKept: 0, countDeleted: 0 };
-    }
-
-    const deployments = data.deployments;
     console.log(`[prune-deployments] Total de despliegues encontrados: ${deployments.length}`);
 
     const classification = classifyDeployments(deployments, {
@@ -160,15 +245,21 @@ export async function prune(customOptions) {
         if (item.target) {
             targetDesc = item.target;
         }
-        console.log(`  - BORRANDO: ${item.url} [target=${targetDesc}, state=${item.state}]`);
+        let identifier = item.url;
+        if (item.uid) {
+            identifier = item.uid;
+        } else if (item.id) {
+            identifier = item.id;
+        }
 
-        const rmArgs = buildVercelArgs(['rm', item.url, '--yes'], token);
+        console.log(`  - BORRANDO: ${item.url} (${identifier}) [target=${targetDesc}, state=${item.state}]`);
+
         try {
-            execFileSync('vercel', rmArgs, {
-                encoding: 'utf-8',
-                shell: true,
-                stdio: ['ignore', 'pipe', 'inherit'],
-            });
+            if (useApi) {
+                await deleteDeploymentApi(identifier, token, teamId);
+            } else {
+                deleteDeploymentCli(identifier);
+            }
             deletedCount = deletedCount + 1;
         } catch (err) {
             console.warn(`    [!] No se pudo borrar ${item.url}: ${err.message}`);
