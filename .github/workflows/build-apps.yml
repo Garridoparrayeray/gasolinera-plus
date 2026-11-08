@@ -93,6 +93,13 @@ jobs:
             echo "keyPassword=$KEYSTORE_PASSWORD"
           } > android/keystore.properties
 
+      - name: Ensure Gradle wrapper availability
+        run: |
+          if ! curl -sSfL -m 15 "https://services.gradle.org/distributions/gradle-8.14.3-all.zip" -o /dev/null 2>/dev/null; then
+            echo "::warning::services.gradle.org no responde (504 en GitHub Releases). Usando mirror alternativo."
+            sed -i 's|https\\://services.gradle.org/distributions|https\\://mirrors.cloud.tencent.com/gradle|' android/gradle/wrapper/gradle-wrapper.properties
+          fi
+
       - name: Build APK
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
