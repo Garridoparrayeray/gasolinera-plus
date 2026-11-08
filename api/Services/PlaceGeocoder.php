@@ -7,7 +7,7 @@ use Core\Http;
 
 class PlaceGeocoder
 {
-    private const CONTACT = 'https://gasolineraplus.vercel.app';
+    private const CONTACT = 'https://gasolineraplus.app';
 
     
     public static function resolve(string $query, string $countryCodes = 'es'): ?array

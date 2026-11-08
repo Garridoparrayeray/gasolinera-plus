@@ -974,7 +974,7 @@ Textos, URLs y datos estructurados de las páginas que ve un buscador. Ver [13](
 | `stationPath` | `string $ideess` | Ruta de la ficha de una gasolinera con el prefijo del país. |
 | `trim` | `string $text, int $max` | Recorta un texto a una longitud máxima cortando en una palabra y añadiendo «…». |
 | `date` | `string $iso` | Fecha en palabras en el idioma del país («14 de octubre de 2026», «14 octobre 2026»). |
-| `siteUrl` | — | Dirección base del sitio (`GP_SITE_URL`, o `https://gasolineraplus.vercel.app`). |
+| `siteUrl` | — | Dirección base del sitio (`GP_SITE_URL`, o `https://gasolineraplus.app`). |
 | `verificationToken` | — | Valor de `google-site-verification` (`GP_GSC_VERIFICATION` o uno fijo). |
 | `escape` | `string $text` | Escapa un texto para HTML. |
 | `slug` | `string $text` | Texto en minúsculas, sin tildes, con `-` entre palabras (clave de las URLs de zona y municipio). |

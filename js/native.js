@@ -1,5 +1,5 @@
 const GPNative = (() => {
-    const SITE_URL = 'https://gasolineraplus.vercel.app';
+    const SITE_URL = 'https://gasolineraplus.app';
     const RELEASES_API = 'https://api.github.com/repos/Garridoparrayeray/gasolinera-plus/releases/latest';
     const APK_URL = 'https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest';
     const RELEASES_URL = 'https://github.com/Garridoparrayeray/gasolinera-plus/releases';

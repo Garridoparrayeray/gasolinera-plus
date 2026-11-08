@@ -81,7 +81,7 @@ El workflow `.github/workflows/tests.yml` los ejecuta en cada push a una rama di
 
 ## App nativa (Android e iOS)
 
-La misma web empaquetada con [Capacitor 8](https://capacitorjs.com/) (MIT, gratis). `scripts/build-www.mjs` renderiza `api/shell.php` por CLI con `GP_NATIVE=1` (sin analytics ni service worker) a `www/index.html` y copia `js/`, `vendor/` (Leaflet, markercluster, heat, Chart.js y las fuentes, ya sin CDN), `icons/`, `runners/` y los datos offline. Dentro de la app la API se llama en absoluto contra `https://gasolineraplus.vercel.app` (`js/native.js`), que responde con `Access-Control-Allow-Origin: *`.
+La misma web empaquetada con [Capacitor 8](https://capacitorjs.com/) (MIT, gratis). `scripts/build-www.mjs` renderiza `api/shell.php` por CLI con `GP_NATIVE=1` (sin analytics ni service worker) a `www/index.html` y copia `js/`, `vendor/` (Leaflet, markercluster, heat, Chart.js y las fuentes, ya sin CDN), `icons/`, `runners/` y los datos offline. Dentro de la app la API se llama en absoluto contra `https://gasolineraplus.app` (`js/native.js`), que responde con `Access-Control-Allow-Origin: *`.
 
 Piezas nativas: botón atrás de Android, compartir nativo, "Cómo llegar" abre Google Maps, ubicación con el proveedor fused (`@capacitor/geolocation`), avisos de bajada de precio en segundo plano (`@capacitor/background-runner` + `runners/alerts.js`, cada 12 h), refresco diario de `stations-lite.json` y aviso de versión nueva contra la última Release de GitHub.
 

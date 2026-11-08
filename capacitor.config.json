@@ -2,7 +2,7 @@
   "appId": "app.vercel.gasolineraplus",
   "appName": "Gasolinera+",
   "webDir": "www",
-  "appendUserAgent": "GasolineraPlus/2 (+https://gasolineraplus.vercel.app)",
+  "appendUserAgent": "GasolineraPlus/2 (+https://gasolineraplus.app)",
   "backgroundColor": "#f7f5f0",
   "server": {
     "androidScheme": "https"

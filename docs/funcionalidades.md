@@ -4,7 +4,7 @@ Gasolinera+ muestra los precios oficiales de **España, Portugal y Francia** (ve
 
 | Versión | Cómo se usa | Datos de gasolineras |
 |---|---|---|
-| **Web** | Navegador, `gasolineraplus.vercel.app` (España), `/pt` (Portugal) y `/fr` (Francia) | Servidor (API PHP) y, si están descargados, copia local |
+| **Web** | Navegador, `gasolineraplus.app` (España), `/pt` (Portugal) y `/fr` (Francia) | Servidor (API PHP) y, si están descargados, copia local |
 | **Web instalable (PWA)** | "Añadir a pantalla de inicio" | Igual que la web, con caché del navegador |
 | **Android** | APK (prueba: enlace en la pestaña Info) | Copia local descargada; el servidor solo si falta |
 | **iPhone** | Compilación de iOS (Capacitor) | Igual que Android |

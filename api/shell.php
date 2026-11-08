@@ -959,7 +959,7 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
                     <p>Graba viajes a mano o de forma automática. Sin conexión, la app usa los datos guardados. En «Permisos y privacidad» (arriba) activas o desactivas la ubicación y los avisos. Exporta una copia de seguridad de vez en cuando: tus datos solo están en tu dispositivo.</p>
                 </details>
                 <div class="about-links">
-                    <a class="pill" href="https://gasolineraplus.vercel.app/docs/guia-usuario.pdf" target="_blank" rel="noopener noreferrer">Descargar la guía en PDF</a>
+                    <a class="pill" href="https://gasolineraplus.app/docs/guia-usuario.pdf" target="_blank" rel="noopener noreferrer">Descargar la guía en PDF</a>
                 </div>
             </div>
 <?php if (!$isNative): ?>

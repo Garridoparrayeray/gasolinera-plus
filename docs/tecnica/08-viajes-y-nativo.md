@@ -6,7 +6,7 @@ La app es la web dentro de un `WebView` con Capacitor 8 (`capacitor.config.json`
 
 - **Contenido:** `npm run sync` ejecuta `scripts/build-www.mjs`, que genera `www/` (el HTML lo produce PHP: `php api/shell.php` con `GP_NATIVE=1`) y copia `js`, `vendor`, `icons`, `runners`, `style.css`, `manifest.json`, `privacidad.html`, `data/stations-lite.json` (solo España), `data/price-index-seed` (histórico inicial de España) y `data/road-graph`. Del grafo solo viaja el **país de casa** (`bundled = ['es']`: `main-es.bin.gz`, sus teselas, `places.json` y un `manifest.json` con el campo `bundled`); los paquetes de Portugal y Francia se descargan al usarlos (ver [05](05-ruta.md)), igual que sus gasolineras (`stations-lite-pt.json`, `stations-lite-fr.json`) y su histórico de precios. Después `cap sync` lo lleva a `android/` e `ios/`.
 - **Esquema:** `androidScheme: https` (la app se sirve como `https://localhost`).
-- **Llamadas a la API:** `GPNative.apiBase()` devuelve la URL de producción (`https://gasolineraplus.vercel.app`) en la app, cadena vacía en la web. Se puede forzar otra con `window.GP_API_BASE` (solo para pruebas).
+- **Llamadas a la API:** `GPNative.apiBase()` devuelve la URL de producción (`https://gasolineraplus.app`) en la app, cadena vacía en la web. Se puede forzar otra con `window.GP_API_BASE` (solo para pruebas).
 - **Plugins oficiales usados:** `App` (botón atrás, enlaces, versión), `Filesystem` (descargas y ficheros), `Share`, `LocalNotifications`, `BackgroundRunner`, `Geolocation`, `App Launcher`.
 - **Plugin propio:** `TripRecorder`, en `android/.../trips/` (Java) y `ios/App/App/TripRecorderPlugin.swift`.
 
@@ -15,7 +15,7 @@ La app es la web dentro de un `WebView` con Capacitor 8 (`capacitor.config.json`
 ### Enlaces y navegación
 
 - Los enlaces externos se abren fuera de la app (`openExternal`).
-- `appUrlOpen`: enlaces `https://gasolineraplus.vercel.app/stations/<id>` abren esa ficha (Android `assetlinks`/`autoVerify` en `AndroidManifest.xml`).
+- `appUrlOpen`: enlaces `https://gasolineraplus.app/stations/<id>` abren esa ficha (Android `assetlinks`/`autoVerify` en `AndroidManifest.xml`).
 - Web: `handleDeepLink` lee `?station=` y `?view=`; la ficha empuja `/stations/<id>` al historial (`history.pushState`) para que el botón atrás la cierre.
 
 ### Actualizaciones (solo Android)
