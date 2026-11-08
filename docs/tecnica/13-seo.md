@@ -47,7 +47,7 @@ Al ser un `rewrite` y no una redirección, la URL del navegador no cambia. `favi
 | `Seo::profile($code)` | Devuelve el perfil del país actual (o del indicado) con el campo `headline`, los dos carburantes titulares que vienen de `config/countries.json` |
 | `Seo::sectionUrl()` | Ruta del índice de zonas con prefijo: `/gasolineras`, `/pt/postos`, `/fr/stations-service` |
 | `Seo::stationPath($ideess)` | Ruta de una ficha: `/stations/{id}`, `/pt/stations/{id}`, `/fr/stations/{id}` |
-| `Seo::siteUrl()` | Dirección base del sitio, sin barra final. Lee la variable de entorno `GP_SITE_URL`; si no existe, `https://gasolineraplus.vercel.app`. Todas las URLs absolutas (canonical, hreflang, sitemaps, JSON-LD, `og:image`) cuelgan de ella |
+| `Seo::siteUrl()` | Dirección base del sitio, sin barra final. Lee la variable de entorno `GP_SITE_URL`; si no existe, `https://gasolineraplus.app`. Todas las URLs absolutas (canonical, hreflang, sitemaps, JSON-LD, `og:image`) cuelgan de ella |
 | `Seo::base()` | `siteUrl()` más el prefijo del país |
 | `Seo::verificationToken()` | Valor de la metaetiqueta `google-site-verification`; viene de `GP_GSC_VERIFICATION` o, si no está, de un valor fijo en el código |
 | `Seo::slug($texto)` | Minúsculas, sin tildes ni diacríticos, todo lo no alfanumérico pasa a `-`. Es la clave de las URLs de zona y de municipio |
@@ -156,7 +156,7 @@ Cuando una zona no existe en el país de la URL, `seoAreaPage` prueba con los de
 
 | URL pedida | Resultado |
 |---|---|
-| `/gasolineras/bas-rhin` | 301 a `https://gasolineraplus.vercel.app/fr/stations-service/bas-rhin` |
+| `/gasolineras/bas-rhin` | 301 a `https://gasolineraplus.app/fr/stations-service/bas-rhin` |
 | `/gasolineras/aveiro` | 301 a `.../pt/postos/aveiro` |
 | `/gasolineras/no-existe` | 404 limpio |
 
@@ -183,7 +183,7 @@ Los iconos tienen dirección propia (no se reutilizan los de la aplicación `ico
 
 ### Flujo manual `check-production.yml`
 
-`.github/workflows/check-production.yml` se lanza a mano (`workflow_dispatch`), desde la pestaña *Actions* de GitHub o con `gh workflow run "Check production"`. Ejecuta un script de Python contra `https://gasolineraplus.vercel.app` (sin seguir redirecciones, para ver los 301 tal cual) y falla si algo no cumple:
+`.github/workflows/check-production.yml` se lanza a mano (`workflow_dispatch`), desde la pestaña *Actions* de GitHub o con `gh workflow run "Check production"`. Ejecuta un script de Python contra `https://gasolineraplus.app` (sin seguir redirecciones, para ver los 301 tal cual) y falla si algo no cumple:
 
 | Comprobación | Condición para pasar |
 |---|---|
@@ -221,7 +221,7 @@ Al final imprime CRÍTICOS, AVISOS y BIEN, y una puntuación `100 - 10 por crít
 
 | Herramienta | Qué se hace |
 |---|---|
-| Google Search Console | Propiedad verificada con la metaetiqueta `google-site-verification` que emiten `api/shell.php` y `seoHead` (valor de `Seo::verificationToken()`). Se envía **solo** `https://gasolineraplus.vercel.app/sitemap.xml`; Google descubre los de cada país a partir del índice |
+| Google Search Console | Propiedad verificada con la metaetiqueta `google-site-verification` que emiten `api/shell.php` y `seoHead` (valor de `Seo::verificationToken()`). Se envía **solo** `https://gasolineraplus.app/sitemap.xml`; Google descubre los de cada país a partir del índice |
 | Bing Webmaster Tools | Se envía la misma dirección, o se importa la propiedad desde Search Console |
 
 Si se cambia de dominio, la propiedad y los envíos hay que rehacerlos (ver la última sección).
@@ -253,7 +253,7 @@ Entre el 21 y el 26 de octubre de 2026 la función de Vercel respondía 500 por 
 
 | Tema | Situación |
 |---|---|
-| Dominio propio | El sitio vive en `gasolineraplus.vercel.app`. Las URLs absolutas salen de `GP_SITE_URL`, de modo que basta cambiar esa variable y redesplegar. Pero `js/native.js` tiene `SITE_URL` con la dirección fija (la usa la aplicación para llamar a la API y construir enlaces), y también aparece en `check-production.yml`, en `rebuild-schedule.yml`, en el enlace a la guía PDF de `api/shell.php`, en `Services/PlaceGeocoder.php` y en `appendUserAgent` de `capacitor.config.json`. Las aplicaciones ya instaladas seguirían usando la dirección antigua hasta actualizarse, y habría que mantener la redirección del dominio viejo. Hay también que verificar la propiedad nueva en Search Console y usar «Cambio de dirección» |
+| Dominio propio | El sitio vive en `gasolineraplus.app` (con redirección 308 desde `gasolineraplus.vercel.app`). Las URLs absolutas salen de `Seo::siteUrl()`. `js/native.js`, los flujos de comprobación y la app apuntan ya a `gasolineraplus.app`. Se debe mantener la redirección en Vercel, añadir la propiedad en Search Console y ejecutar «Cambio de dirección» |
 | `lastmod` | Todas las URLs de un mapa llevan la misma fecha (la última actualización de precios del país), no la fecha real de cambio de cada página. Google tiende a ignorar un `lastmod` que no distingue; sería mejor emitir una fecha por zona o por ficha cuando cambie el precio. `changefreq` y `priority` los ignora Google |
 | Fichas casi idénticas | Las decenas de miles de fichas comparten plantilla y solo cambian nombre, dirección, precios y coordenadas. Google puede clasificar muchas como «Rastreada, actualmente sin indexar». Ayudaría un texto propio (zona, marca, comparativa con la media del municipio) o limitar el mapa a fichas con más señales |
 | Zona y municipio sin hreflang | Solo la portada y el índice enlazan sus versiones por país |

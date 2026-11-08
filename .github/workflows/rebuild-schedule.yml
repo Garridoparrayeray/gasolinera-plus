@@ -236,7 +236,7 @@ jobs:
           for P in "/api/stats/national" "/api/stations/near?lat=43.33&lon=-3.0&radius=5&fuel=gasolina_95_e5" "/api/stats/national?pais=pt" "/api/stats/national?pais=fr" "/" "/gasolineras"; do
             CODE=000
             for TRY in 1 2 3; do
-              CODE=$(curl -s -o /tmp/answer.txt -w '%{http_code}' "https://gasolineraplus.vercel.app$P" || true)
+              CODE=$(curl -sL -o /tmp/answer.txt -w '%{http_code}' "https://gasolineraplus.app$P" || true)
               if [ "$CODE" = "200" ]; then
                 break
               fi

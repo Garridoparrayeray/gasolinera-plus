@@ -130,7 +130,7 @@ class Seo
         if (is_string($env) && $env !== '') {
             return rtrim($env, '/');
         }
-        return 'https://gasolineraplus.vercel.app';
+        return 'https://gasolineraplus.app';
     }
 
     public static function verificationToken(): string

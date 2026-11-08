@@ -413,7 +413,7 @@ public class TripService extends Service {
             manager.createNotificationChannel(channel);
         }
         Intent open = new Intent(this, MainActivity.class);
-        open.setData(Uri.parse("https://gasolineraplus.vercel.app/?view=garage&trip=1"));
+        open.setData(Uri.parse("https://gasolineraplus.app/?view=garage&trip=1"));
         open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent openPending = PendingIntent.getActivity(this, 0, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         Intent stop = new Intent(this, TripService.class);

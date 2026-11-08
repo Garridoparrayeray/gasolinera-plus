@@ -24,6 +24,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="gasolineraplus.app" android:pathPrefix="/stations/" />
                 <data android:scheme="https" android:host="gasolineraplus.vercel.app" android:pathPrefix="/stations/" />
             </intent-filter>
         </activity>

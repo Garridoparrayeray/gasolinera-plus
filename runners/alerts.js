@@ -1,4 +1,4 @@
-const SITE_URL = 'https://gasolineraplus.vercel.app';
+const SITE_URL = 'https://gasolineraplus.app';
 const DEFAULT_THRESHOLD = 0.03;
 const KG_FUELS = ['gnc', 'gnl', 'hidrogeno', 'biogas_natural_comprimido', 'biogas_natural_licuado'];
 const LABELS = {

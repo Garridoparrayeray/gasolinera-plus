@@ -111,7 +111,7 @@ check('el runner de avisos responde', (await ev('GPBackground.checkNow().then(()
 s.where = 'offline';
 s.offline = true;
 s.allowHttpErrors = true;
-await s.send('Network.setBlockedURLs', { urls: ['*localhost:8021*', '*gasolineraplus.vercel.app*'] });
+await s.send('Network.setBlockedURLs', { urls: ['*localhost:8021*', '*gasolineraplus.vercel.app*', '*gasolineraplus.app*'] });
 await ev("(()=>{const i=document.getElementById('search-input');i.value='valladolid';document.getElementById('search-form').requestSubmit();})()");
 check('sin conexion busca con los datos del APK', await waitFor("document.querySelectorAll('#stations-list li').length > 0 && document.getElementById('stations-list').textContent.toLowerCase().includes('valladolid')", 10000));
 await ev("document.querySelector('#stations-list li .station-card__open').click()");
@@ -122,7 +122,7 @@ s.allowHttpErrors = false;
 
 s.where = 'enlace';
 const id = await ev("fetch(GPNative.apiBase() + '/api/stations/search?q=bilbao&limit=1').then(r => r.json()).then(d => d.stations[0].ideess)");
-adb('shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', `https://gasolineraplus.vercel.app/stations/${id}`, PKG);
+adb('shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', `https://gasolineraplus.app/stations/${id}`, PKG);
 check('un enlace a una ficha abre esa ficha en la app', await waitFor(`location.pathname === '/stations/${id}' && document.getElementById('station-modal').open`, 10000));
 
 s.finish('ANDROID');
