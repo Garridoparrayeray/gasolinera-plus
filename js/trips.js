@@ -711,7 +711,7 @@ const GPTrips = (() => {
             perms = await plugin.requestBluetooth();
         }
         if (perms.location && perms.bluetooth && !perms.background) {
-            const ok = window.confirm('Para empezar el viaje al conectarte al coche con la app cerrada, el móvil te pedirá permitir la ubicación "Siempre" o "Todo el tiempo". Gasolinera+ solo la usa mientras vas en coche y los recorridos se quedan en tu móvil. ¿Continuar?');
+            const ok = window.confirm('Gasolinera+ recoge tu ubicación en segundo plano, también con la app cerrada o sin usarla, para empezar a grabar el viaje cuando te conectas al Bluetooth de tu coche y registrar el recorrido y los kilómetros. Solo la usa mientras vas en coche; los datos se guardan en tu móvil y no se envían ni se comparten. Después el móvil te pedirá permitir la ubicación "Todo el tiempo". ¿Aceptas?');
             if (ok) {
                 perms = await plugin.requestBackground();
             }
@@ -768,7 +768,7 @@ const GPTrips = (() => {
                 always = '"Siempre"';
                 system = 'iOS';
             }
-            const ok = window.confirm('Para detectar tus viajes con la app cerrada, ' + system + ' te pedirá permitir la ubicación ' + always + '. Gasolinera+ solo la usa mientras vas en coche y los recorridos se quedan en tu móvil. ¿Continuar?');
+            const ok = window.confirm('Gasolinera+ recoge tu ubicación en segundo plano, también con la app cerrada o sin usarla, para detectar cuándo vas en coche y grabar el recorrido y los kilómetros de tus viajes. Solo la usa mientras vas en coche; los datos se guardan en tu móvil y no se envían ni se comparten. Después ' + system + ' te pedirá permitir la ubicación ' + always + '. ¿Aceptas?');
             if (ok) {
                 perms = await plugin.requestBackground();
             }

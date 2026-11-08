@@ -49,15 +49,21 @@ jobs:
           cat "$RUNNER_TEMP/php-server.log"
           exit 1
 
-      - name: Download the data of Portugal and France
+      - name: Download the latest data of each country
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          for C in pt fr; do
+          for C in es pt fr; do
+            DB=$(python3 -c "import json; print(json.load(open('config/countries.json'))['$C']['db'])")
+            LITE=$(python3 -c "import json; print(json.load(open('config/countries.json'))['$C']['lite'])")
             mkdir -p "$RUNNER_TEMP/$C"
-            gh release download "data-$C" -p "gasolinera-$C.sqlite.gz" -D "$RUNNER_TEMP/$C"
-            gunzip -c "$RUNNER_TEMP/$C/gasolinera-$C.sqlite.gz" > "data/gasolinera-$C.sqlite"
-            gh release download "data-$C" -p "stations-lite-$C.json" -D data --clobber
+            if gh release download "data-$C" -p "gasolinera-$C.sqlite.gz" -p "$(basename "$LITE")" -D "$RUNNER_TEMP/$C"; then
+              gunzip -c "$RUNNER_TEMP/$C/gasolinera-$C.sqlite.gz" > "$DB"
+              cp "$RUNNER_TEMP/$C/$(basename "$LITE")" "$LITE"
+              echo "$C: datos de la release"
+            elif [ -f "$DB" ]; then
+              echo "::warning::$C: no hay release; se usan los datos del repositorio"
+            fi
           done
           ls -la data
 

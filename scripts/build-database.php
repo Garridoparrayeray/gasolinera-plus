@@ -408,7 +408,13 @@ function applySnapshot(\PDO $pdo, array $estaciones, string $fechaIso, bool $upd
         $insertCurrentPrice = $pdo->prepare('INSERT INTO current_prices (ideess, carburante, precio, fecha) VALUES (?, ?, ?, ?)');
     }
 
-    $insertHistory = $pdo->prepare('INSERT OR IGNORE INTO price_history (ideess, fecha, carburante, precio) VALUES (?, ?, ?, ?)');
+    // En la importacion diaria el precio del dia se sobrescribe con el de cada ejecucion, para que el historial
+    // guarde el ultimo del dia; en el relleno de dias pasados nunca se pisa lo que ya hay.
+    $historyVerb = 'INSERT OR IGNORE';
+    if ($updateCurrentAndStations) {
+        $historyVerb = 'INSERT OR REPLACE';
+    }
+    $insertHistory = $pdo->prepare($historyVerb . ' INTO price_history (ideess, fecha, carburante, precio) VALUES (?, ?, ?, ?)');
 
     $count = 0;
     foreach ($estaciones as $row) {

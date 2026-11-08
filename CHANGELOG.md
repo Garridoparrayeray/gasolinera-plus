@@ -1,5 +1,17 @@
 # Cambios
 
+## 1.9.4
+
+### Cambios
+- El aviso previo a la detección automática de viajes y al arranque por Bluetooth explica ahora que la ubicación se recoge en segundo plano, también con la app cerrada, para qué se usa y que los datos se quedan en el móvil.
+
+## 1.9.3
+
+### Cambios
+- Los precios se actualizan varias veces al día. Antes se guardaba una sola foto de los precios al día, hacia las 5 de la mañana, y se enseñaba hasta el día siguiente: si una gasolinera bajaba el precio después, la app seguía con el antiguo. Ahora se descargan de nuevo cuatro veces al día (a las 3, 9, 15 y 21 h) y el historial guarda el último precio de cada día.
+- La app del móvil vuelve a descargar los precios cuando han pasado 3 horas desde la última vez, en lugar de 20.
+- La web ya no guarda los precios en el navegador más de unos minutos (antes podía enseñar los de ayer hasta 25 horas).
+
 ## 1.9.2
 
 ### Cambios

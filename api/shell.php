@@ -20,6 +20,8 @@ $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = parse_url($requestUri, PHP_URL_PATH);
 
 if (!$isNative) {
+    // La portada y las fichas solo cambian cuando se despliegan precios nuevos: la CDN las guarda y la función no se ejecuta en cada visita.
+    header('Cache-Control: public, max-age=300, s-maxage=1800, stale-while-revalidate=86400');
     require_once __DIR__ . '/Core/Config.php';
     require_once __DIR__ . '/Core/Database.php';
     try {
