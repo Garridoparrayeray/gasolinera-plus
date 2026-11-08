@@ -24,6 +24,7 @@ const copies = [
     'manifest.json',
     'favicon.ico',
     'privacidad.html',
+    '.well-known',
     'data/stations-lite.json',
     'data/stations-lite-pt.json',
     'data/stations-lite-fr.json',
