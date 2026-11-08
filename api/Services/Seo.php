@@ -340,7 +340,7 @@ class Seo
                 'name' => $label,
                 'price' => number_format((float)$prices[$key], 3, '.', ''),
                 'priceCurrency' => 'EUR',
-                'itemOffered' => ['@type' => 'Product', 'name' => $label],
+                'unitCode' => 'LTR',
             ];
         }
         if ($offers !== []) {
