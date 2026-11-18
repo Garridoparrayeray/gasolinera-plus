@@ -1,5 +1,13 @@
 # Cambios
 
+## 1.9.5
+
+### Cambios
+- La web y la app usan ya la dirección gasolineraplus.app. Las versiones anteriores de la app seguían apuntando a la dirección antigua, que ahora redirige y no deja cargar los precios: actualiza a esta versión.
+- La búsqueda por nombre encuentra una gasolinera aunque esté fuera del radio elegido, siempre que no haya otras coincidencias dentro.
+- Sin conexión, la web abre la última portada guardada en lugar de mostrar un error del navegador.
+- Se corrige el aviso de Google Search Console sobre los datos estructurados de las fichas de gasolinera.
+
 ## 1.9.4
 
 ### Cambios
