@@ -1,6 +1,6 @@
 importScripts('/js/alerts-store.js');
 
-const CACHE_VERSION = 'v17';
+const CACHE_VERSION = 'v18';
 const CACHE_NAME = 'gasolinera-shell-' + CACHE_VERSION;
 const API_CACHE_NAME = 'gasolinera-api-' + CACHE_VERSION;
 const SHELL_FILES = [
@@ -63,6 +63,21 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
+// Sin red, una página sin copia exacta (por ejemplo /?pais=es) sirve la portada guardada: la app elige el país con el JS.
+async function offlineFallback(request) {
+    const cached = await caches.match(request);
+    if (cached) {
+        return cached;
+    }
+    if (request.mode === 'navigate') {
+        const shell = await caches.match('/');
+        if (shell) {
+            return shell;
+        }
+    }
+    return Response.error();
+}
+
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
@@ -97,7 +112,7 @@ self.addEventListener('fetch', (event) => {
                     }
                     return response;
                 })
-                .catch(() => caches.match(event.request))
+                .catch(() => offlineFallback(event.request))
         );
     }
 });
