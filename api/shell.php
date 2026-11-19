@@ -361,7 +361,7 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
         </header>
 
         <p id="update-banner" role="status" hidden>
-            <span>Hay un parche nuevo de Gasolinera+ (<span id="update-version"></span>). <a id="update-link" href="#" target="_blank" rel="noopener">Ver novedades y descargar</a></span>
+            <span>Hay un parche nuevo de Gasolinera+ (<span id="update-version"></span>).<span class="update-links"><a id="update-play" href="https://play.google.com/store/apps/details?id=app.vercel.gasolineraplus" target="_blank" rel="noopener">Actualizar desde Play Store</a><a id="update-link" href="#" target="_blank" rel="noopener">Código fuente en GitHub</a></span></span>
             <button id="update-close" type="button" aria-label="Cerrar aviso">&times;</button>
         </p>
 
