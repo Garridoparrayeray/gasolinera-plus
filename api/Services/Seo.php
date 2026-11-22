@@ -188,7 +188,23 @@ class Seo
 
     public static function titleCase(string $text): string
     {
-        return mb_convert_case(mb_strtolower($text, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+        $text = mb_convert_case(mb_strtolower($text, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+        // Las partículas van en minúscula salvo al principio: "Santa Cruz de Tenerife".
+        return (string)preg_replace_callback(
+            '/(?<=\s)(De|Del|La|Las|Los|El|Y|Da|Das|Do|Dos|Du|Des|Le|Les)(?=\s)/u',
+            static fn(array $m): string => mb_strtolower($m[1], 'UTF-8'),
+            $text
+        );
+    }
+
+    /**
+     * Orden alfabético por el nombre que se muestra, sin tener en cuenta tildes ni
+     * mayúsculas: "A Coruña" va en la A, "Ávila" en la A e "Illes Balears" en la I.
+     */
+    private static function sortByName(array $items): array
+    {
+        uasort($items, static fn(array $a, array $b): int => strcmp($a['slug'], $b['slug']));
+        return $items;
     }
 
     public static function price(float $value): string
@@ -213,7 +229,7 @@ class Seo
             }
             $out[$slug] = ['raw' => $row['provincia'], 'name' => self::display($row['provincia']), 'slug' => $slug, 'n' => (int)$row['n']];
         }
-        return $out;
+        return self::sortByName($out);
     }
 
     public static function municipalities(\PDO $pdo, string $province): array
@@ -233,7 +249,7 @@ class Seo
             }
             $out[$slug] = ['raw' => $row['municipio'], 'raws' => [$row['municipio']], 'name' => self::display($row['municipio']), 'slug' => $slug, 'n' => (int)$row['n']];
         }
-        return $out;
+        return self::sortByName($out);
     }
 
     public static function nationalHeadline(\PDO $pdo): array
