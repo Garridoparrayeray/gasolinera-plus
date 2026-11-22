@@ -9,9 +9,9 @@ require_once __DIR__ . '/OpeningHours.php';
 class Seo
 {
     public const PROFILES = [
-        'es' => ['section' => 'gasolineras', 'lang' => 'es', 'locale' => 'es_ES', 'iso' => 'ES', 'fuels' => ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_e5']],
-        'pt' => ['section' => 'postos', 'lang' => 'pt', 'locale' => 'pt_PT', 'iso' => 'PT', 'fuels' => ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_premium']],
-        'fr' => ['section' => 'stations-service', 'lang' => 'fr', 'locale' => 'fr_FR', 'iso' => 'FR', 'fuels' => ['gasoleo_a', 'gasolina_95_e10', 'gasolina_98_e5', 'gasolina_95_e85']],
+        'es' => ['section' => 'gasolineras', 'report' => 'informe', 'lang' => 'es', 'locale' => 'es_ES', 'iso' => 'ES', 'fuels' => ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_e5']],
+        'pt' => ['section' => 'postos', 'report' => 'relatorio', 'lang' => 'pt', 'locale' => 'pt_PT', 'iso' => 'PT', 'fuels' => ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_premium']],
+        'fr' => ['section' => 'stations-service', 'report' => 'rapport', 'lang' => 'fr', 'locale' => 'fr_FR', 'iso' => 'FR', 'fuels' => ['gasoleo_a', 'gasolina_95_e10', 'gasolina_98_e5', 'gasolina_95_e85']],
     ];
 
     private static array $dictionaries = [];
@@ -122,6 +122,11 @@ class Seo
         return (int)$parts[2] . ' de ' . $month . ' de ' . $parts[0];
     }
 
+    public static function monthYear(string $iso): string
+    {
+        return (string)preg_replace('/^\d{1,2} (de )?/u', '', self::date($iso));
+    }
+
     private const ARTICLES = ['A', 'LA', 'LAS', 'LOS', 'EL', 'ILLES', 'ELS', 'L\'', 'ES'];
 
     public static function siteUrl(): string
@@ -168,7 +173,11 @@ class Seo
         if (preg_match('/^(.*?)\s*\(([^)]+)\)$/u', $name, $m)) {
             $article = mb_strtoupper($m[2], 'UTF-8');
             if (in_array($article, self::ARTICLES, true)) {
-                $name = self::titleCase($m[2]) . ' ' . $m[1];
+                $rest = $m[1];
+                if ($rest === mb_strtoupper($rest, 'UTF-8')) {
+                    $rest = self::titleCase($rest);
+                }
+                $name = self::titleCase($m[2]) . ' ' . $rest;
             }
         }
         if ($name === mb_strtoupper($name, 'UTF-8')) {
@@ -299,6 +308,97 @@ class Seo
         $stmt = $pdo->prepare($sql);
         $stmt->execute(array_merge($params, [$fuel]));
         return $stmt->fetchAll();
+    }
+
+    public static function fuelShort(string $slug): string
+    {
+        self::fuels();
+        $fuel = self::$fuelCatalog[$slug];
+        return $fuel['short'][self::lang()] ?? $fuel['label'][self::lang()];
+    }
+
+    /**
+     * Daily average of the headline fuels over the last $days snapshot days, newest first.
+     * Returns [fecha => [carburante => media]].
+     */
+    public static function trend(\PDO $pdo, string $whereSql, array $params, int $days = 7): array
+    {
+        $fuels = self::profile()['headline'];
+        $sql = 'SELECT h.fecha, h.carburante, AVG(h.precio) AS media
+            FROM price_history h JOIN stations s ON s.ideess = h.ideess
+            WHERE ' . $whereSql . ' AND ' . self::freshClause() . ' AND h.carburante IN (?, ?)
+            AND h.fecha >= date((SELECT MAX(fecha) FROM price_history), ?)
+            GROUP BY h.fecha, h.carburante ORDER BY h.fecha DESC';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(array_merge($params, $fuels, ['-' . max(1, $days - 1) . ' days']));
+        $out = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $out[(string)$row['fecha']][(string)$row['carburante']] = (float)$row['media'];
+        }
+        return $out;
+    }
+
+    /**
+     * National daily average of the headline fuels over the last $days days, newest first.
+     */
+    public static function nationalTrend(\PDO $pdo, int $days = 30): array
+    {
+        $fuels = self::profile()['headline'];
+        $stmt = $pdo->prepare('SELECT fecha, carburante, media FROM national_price_history
+            WHERE carburante IN (?, ?) AND fecha >= date((SELECT MAX(fecha) FROM national_price_history), ?)
+            ORDER BY fecha DESC');
+        $stmt->execute(array_merge($fuels, ['-' . max(1, $days - 1) . ' days']));
+        $out = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $out[(string)$row['fecha']][(string)$row['carburante']] = (float)$row['media'];
+        }
+        return $out;
+    }
+
+    /**
+     * Today's average, min and max of the headline fuels per province.
+     * Returns [provincia raw => [carburante => row]], only cells with at least $minStations prices.
+     */
+    public static function provinceAverages(\PDO $pdo, int $minStations = 5): array
+    {
+        $fuels = self::profile()['headline'];
+        $sql = 'SELECT s.provincia, p.carburante, AVG(p.precio) AS media, MIN(p.precio) AS minimo, MAX(p.precio) AS maximo, COUNT(*) AS n
+            FROM current_prices p JOIN stations s ON s.ideess = p.ideess
+            WHERE ' . self::freshClause() . ' AND p.carburante IN (?, ?)
+            GROUP BY s.provincia, p.carburante HAVING n >= ' . (int)$minStations;
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($fuels);
+        $out = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $out[(string)$row['provincia']][(string)$row['carburante']] = $row;
+        }
+        return $out;
+    }
+
+    private const GENERIC_BRANDS = ['', '-', '.', 'N/A', 'NA', 'NO', 'NO TIENE', 'SIN ROTULO', 'SIN RÓTULO', 'OTROS', 'OTRAS', 'GENERICO', 'GENÉRICO', 'STATION', 'STATION-SERVICE', 'POSTO', 'INDEPENDENTE', 'INDÉPENDANT', 'AUTRE', 'AUTRES'];
+
+    /**
+     * Average price of $fuel per brand, for brands with at least $minStations stations, cheapest first.
+     */
+    public static function brands(\PDO $pdo, string $whereSql, array $params, string $fuel, int $minStations = 2, int $limit = 10): array
+    {
+        $sql = 'SELECT UPPER(TRIM(s.rotulo)) AS marca, AVG(p.precio) AS media, MIN(p.precio) AS minimo, COUNT(*) AS n
+            FROM current_prices p JOIN stations s ON s.ideess = p.ideess
+            WHERE ' . $whereSql . ' AND ' . self::freshClause() . ' AND p.carburante = ?
+            GROUP BY marca HAVING n >= ' . (int)$minStations . ' ORDER BY media ASC';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(array_merge($params, [$fuel]));
+        $out = [];
+        foreach ($stmt->fetchAll() as $row) {
+            if (in_array((string)$row['marca'], self::GENERIC_BRANDS, true)) {
+                continue;
+            }
+            $out[] = $row;
+            if (count($out) >= $limit) {
+                break;
+            }
+        }
+        return $out;
     }
 
     public static function stationJsonLd(array $station, array $prices, string $updated, string $provinceName): array
