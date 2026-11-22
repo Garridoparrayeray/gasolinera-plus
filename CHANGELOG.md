@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.9.6
+
+### Cambios
+- La cabecera ya no se solapa en móviles estrechos o con la letra del sistema grande: si el título y los botones no caben en una fila, los botones bajan a una segunda fila, bajo el logo. El selector de país se abre debajo de toda la cabecera.
+- La web suma un informe mensual de precios por país, con un histórico de los meses anteriores, y las provincias salen en orden alfabético.
+
 ## 1.9.5
 
 ### Cambios
