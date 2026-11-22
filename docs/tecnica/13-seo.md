@@ -11,12 +11,21 @@ Resumen: la aplicación es una página de una sola pantalla que se pinta con Jav
 | `/` | `/pt`, `/fr` | `api/shell.php` | Portada: la aplicación completa con cabecera SEO y JSON-LD de `WebSite` y `WebApplication` |
 | `/stations/{ideess}` | `/pt/stations/{id}`, `/fr/stations/{id}` | `api/shell.php` | Ficha de una gasolinera: la misma aplicación abierta en la ficha, con cabecera SEO propia |
 | `/gasolineras` | `/pt/postos`, `/fr/stations-service` | `api/seo.php` (`seoIndexPage`) | Índice de zonas del país con medias nacionales |
+| `/gasolineras/informe` | `/pt/postos/relatorio`, `/fr/stations-service/rapport` | `api/seo.php` (`seoReportPage`) | Informe del mes en vivo: se calcula en cada visita con la base del día |
+| `/gasolineras/informe/historico` | `/pt/postos/relatorio/historico`, `/fr/stations-service/rapport/archives` | `api/seo.php` (`seoArchiveIndexPage`) | Índice de los informes mensuales guardados |
+| `/gasolineras/informe/{AAAA-MM}` | ídem con su prefijo | `api/seo.php` (`seoArchiveMonthPage`) | Informe de un mes con los datos congelados. El del mes en curso lleva `noindex` hasta que el mes se cierra |
 | `/gasolineras/{zona}` | `/pt/postos/{zona}`, `/fr/stations-service/{zona}` | `api/seo.php` (`seoAreaPage`) | Zona (provincia, distrito o departamento): precios medios, más baratas y lista de municipios |
 | `/gasolineras/{zona}/{municipio}` | ídem con su prefijo | `api/seo.php` (`seoAreaPage`) | Municipio: medias, ranking y tabla de hasta 100 gasolineras |
 | `/sitemap.xml` | — | `api/seo.php` (`seoSitemapIndex`) | Índice de mapas de sitio |
 | `/sitemap-es.xml`, `/sitemap-pt.xml`, `/sitemap-fr.xml` | — | `api/seo.php` (`seoSitemap`) | Mapa de sitio de cada país |
 | `/robots.txt` | — | `api/seo.php` (`seoRobots`) | Reglas para rastreadores y dirección del mapa de sitio |
 | `/llms.txt` | — | `api/seo.php` (`seoLlms`) | Resumen del sitio y de la estructura de URLs para asistentes de IA que lo consulten |
+
+### Informes mensuales guardados
+
+`scripts/snapshot-report.php` se ejecuta en `rebuild-schedule.yml` después de cada importación. Calcula los datos del informe con `Seo::reportData` (medias, ranking de zonas, media nacional de cada día del mes, marcas y gasolineras más baratas, sin textos) y los guarda en la tabla `monthly_reports` de la base del país, una fila por mes (`AAAA-MM`). La fila del mes de los datos se sobrescribe cada día, nunca con datos más antiguos, así que al empezar el mes siguiente queda congelada con los del último día: ese es el informe cerrado. Los textos se ponen al pintar la página, en la lengua del país.
+
+Copia de seguridad: el histórico completo se exporta a `informes-{país}.json` y se sube a la release `data-{país}`. Si la base se tuviera que reconstruir desde cero, el script recupera de ahí los meses que falten. Los meses anteriores a la puesta en marcha no se pueden reconstruir con todo el detalle; solo la media nacional diaria sigue en `national_price_history`.
 
 Los textos (títulos, descripciones, frases de introducción) salen de `config/i18n/{es,pt,fr}.json`, claves `seo.*`, mediante `Seo::t`. La lengua la fija el perfil del país.
 
