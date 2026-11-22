@@ -301,6 +301,77 @@ class Seo
         return $stmt->fetchAll();
     }
 
+    public static function fuelShort(string $slug): string
+    {
+        self::fuels();
+        $fuel = self::$fuelCatalog[$slug];
+        return $fuel['short'][self::lang()] ?? $fuel['label'][self::lang()];
+    }
+
+    /**
+     * Daily average of the headline fuels over the last $days snapshot days, newest first.
+     * Returns [fecha => [carburante => media]].
+     */
+    public static function trend(\PDO $pdo, string $whereSql, array $params, int $days = 7): array
+    {
+        $fuels = self::profile()['headline'];
+        $sql = 'SELECT h.fecha, h.carburante, AVG(h.precio) AS media
+            FROM price_history h JOIN stations s ON s.ideess = h.ideess
+            WHERE ' . $whereSql . ' AND ' . self::freshClause() . ' AND h.carburante IN (?, ?)
+            AND h.fecha >= date((SELECT MAX(fecha) FROM price_history), ?)
+            GROUP BY h.fecha, h.carburante ORDER BY h.fecha DESC';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(array_merge($params, $fuels, ['-' . max(1, $days - 1) . ' days']));
+        $out = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $out[(string)$row['fecha']][(string)$row['carburante']] = (float)$row['media'];
+        }
+        return $out;
+    }
+
+    /**
+     * National daily average of the headline fuels over the last $days days, newest first.
+     */
+    public static function nationalTrend(\PDO $pdo, int $days = 30): array
+    {
+        $fuels = self::profile()['headline'];
+        $stmt = $pdo->prepare('SELECT fecha, carburante, media FROM national_price_history
+            WHERE carburante IN (?, ?) AND fecha >= date((SELECT MAX(fecha) FROM national_price_history), ?)
+            ORDER BY fecha DESC');
+        $stmt->execute(array_merge($fuels, ['-' . max(1, $days - 1) . ' days']));
+        $out = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $out[(string)$row['fecha']][(string)$row['carburante']] = (float)$row['media'];
+        }
+        return $out;
+    }
+
+    private const GENERIC_BRANDS = ['', '-', '.', 'N/A', 'NA', 'NO', 'NO TIENE', 'SIN ROTULO', 'SIN RÓTULO', 'OTROS', 'OTRAS', 'GENERICO', 'GENÉRICO', 'STATION', 'STATION-SERVICE', 'POSTO', 'INDEPENDENTE', 'INDÉPENDANT', 'AUTRE', 'AUTRES'];
+
+    /**
+     * Average price of $fuel per brand, for brands with at least $minStations stations, cheapest first.
+     */
+    public static function brands(\PDO $pdo, string $whereSql, array $params, string $fuel, int $minStations = 2, int $limit = 10): array
+    {
+        $sql = 'SELECT UPPER(TRIM(s.rotulo)) AS marca, AVG(p.precio) AS media, MIN(p.precio) AS minimo, COUNT(*) AS n
+            FROM current_prices p JOIN stations s ON s.ideess = p.ideess
+            WHERE ' . $whereSql . ' AND ' . self::freshClause() . ' AND p.carburante = ?
+            GROUP BY marca HAVING n >= ' . (int)$minStations . ' ORDER BY media ASC';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(array_merge($params, [$fuel]));
+        $out = [];
+        foreach ($stmt->fetchAll() as $row) {
+            if (in_array((string)$row['marca'], self::GENERIC_BRANDS, true)) {
+                continue;
+            }
+            $out[] = $row;
+            if (count($out) >= $limit) {
+                break;
+            }
+        }
+        return $out;
+    }
+
     public static function stationJsonLd(array $station, array $prices, string $updated, string $provinceName): array
     {
         $base = self::siteUrl();

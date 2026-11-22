@@ -217,6 +217,85 @@ function seoIntro(string $placeLabel, array $averages, int $count, array $topChe
     return $text;
 }
 
+function seoTrend(array $trend, string $placeLabel, int $tableRows = 7): string
+{
+    if (count($trend) < 2) {
+        return '';
+    }
+    $fuels = Seo::profile()['headline'];
+    $dates = array_keys($trend);
+    $newest = $trend[$dates[0]];
+    $oldest = $trend[$dates[count($dates) - 1]];
+    $parts = [];
+    foreach ($fuels as $fuel) {
+        if (!isset($newest[$fuel], $oldest[$fuel])) {
+            continue;
+        }
+        $cents = ($newest[$fuel] - $oldest[$fuel]) * 100;
+        $vars = ['fuel' => Seo::fuelLabel($fuel), 'cents' => number_format(abs($cents), 1, ',', '.')];
+        if (abs($cents) < 0.05) {
+            $parts[] = Seo::t('seo.trend.flat', $vars);
+        } elseif ($cents > 0) {
+            $parts[] = Seo::t('seo.trend.up', $vars);
+        } else {
+            $parts[] = Seo::t('seo.trend.down', $vars);
+        }
+    }
+    $html = '';
+    if ($parts !== []) {
+        $span = (int)round((strtotime($dates[0] . ' 12:00:00 UTC') - strtotime($dates[count($dates) - 1] . ' 12:00:00 UTC')) / 86400) + 1;
+        $separator = '; ';
+        if (Seo::lang() === 'fr') {
+            $separator = ' ; ';
+        }
+        $html .= '<p>' . Seo::escape(Seo::t('seo.trend.lead', ['d' => $span, 'place' => $placeLabel, 'list' => implode($separator, $parts)])) . '</p>';
+    }
+    $head = '<th>' . Seo::escape(Seo::t('seo.table.date')) . '</th>';
+    foreach ($fuels as $fuel) {
+        $head .= '<th class="n">' . Seo::escape(Seo::fuelLabel($fuel)) . '</th>';
+    }
+    $rows = '';
+    foreach (array_slice($dates, 0, $tableRows) as $date) {
+        $rows .= '<tr><td><time datetime="' . Seo::escape($date) . '">' . Seo::escape(Seo::date($date)) . '</time></td>';
+        foreach ($fuels as $fuel) {
+            $cell = '—';
+            if (isset($trend[$date][$fuel])) {
+                $cell = Seo::price($trend[$date][$fuel]) . ' €';
+            }
+            $rows .= '<td class="n">' . $cell . '</td>';
+        }
+        $rows .= '</tr>';
+    }
+    return $html . '<div class="card"><table><thead><tr>' . $head . '</tr></thead><tbody>' . $rows . '</tbody></table></div>';
+}
+
+function seoBrands(array $brands, string $fuel, string $placeLabel): string
+{
+    if (count($brands) < 2) {
+        return '';
+    }
+    $rows = '';
+    foreach ($brands as $row) {
+        $rows .= '<tr><td>' . Seo::escape(Seo::display((string)$row['marca'])) . '</td><td class="n">' . Seo::price((float)$row['media']) . ' €</td><td class="n">' . Seo::price((float)$row['minimo']) . ' €</td><td class="n">' . (int)$row['n'] . '</td></tr>';
+    }
+    $html = '<h2>' . Seo::escape(Seo::t('seo.h2.brands', ['p' => $placeLabel, 'fuel' => Seo::fuelLabel($fuel)])) . '</h2>';
+    $html .= '<p>' . Seo::escape(Seo::t('seo.brands.intro', ['p' => $placeLabel, 'fuel' => Seo::fuelLabel($fuel)])) . '</p>';
+    $html .= '<div class="card"><table><thead><tr><th>' . Seo::escape(Seo::t('seo.table.brand')) . '</th><th class="n">' . Seo::escape(Seo::t('seo.table.mean')) . '</th><th class="n">' . Seo::escape(Seo::t('seo.table.min')) . '</th><th class="n">' . Seo::escape(Seo::t('seo.table.count')) . '</th></tr></thead><tbody>' . $rows . '</tbody></table></div>';
+    return $html;
+}
+
+function seoPriceTitle(string $key, array $vars, string $fallback): string
+{
+    $title = Seo::t($key, $vars) . ' | Gasolinera+';
+    if (mb_strlen($title) > 65) {
+        $title = Seo::t($key, $vars);
+    }
+    if (mb_strlen($title) > 65) {
+        return $fallback;
+    }
+    return $title;
+}
+
 function seoDescription(string $text): string
 {
     $suffix = ' ' . Seo::t('seo.desc.suffix');
@@ -305,6 +384,16 @@ function seoAreaPage(\PDO $pdo, string $provinceSlug, string $municipalitySlug):
     $first = Seo::cheapest($pdo, $where, $params, $headline[0], 10);
     $second = Seo::cheapest($pdo, $where, $params, $headline[1], 10);
     $intro = seoIntro($placeLabel, $averages, $count, $first);
+    if ($first !== []) {
+        $titleVars = ['p' => $province['name'], 'fuel' => Seo::fuelShort($headline[0]), 'price' => Seo::price((float)$first[0]['precio'])];
+        if ($municipalitySlug === '') {
+            $title = seoPriceTitle('seo.prov.titlePrice', $titleVars, $title);
+        } else {
+            $title = seoPriceTitle('seo.muni.titlePrice', $titleVars + ['m' => $municipality['name']], $title);
+        }
+    }
+    $trend = Seo::trend($pdo, $where, $params, 7);
+    $brands = Seo::brands($pdo, $where, $params, $headline[0]);
 
     $ld = Seo::jsonLd(Seo::breadcrumb($crumbsLd));
     if ($first !== []) {
@@ -317,12 +406,17 @@ function seoAreaPage(\PDO $pdo, string $provinceSlug, string $municipalitySlug):
     $html .= '<p>' . Seo::escape($intro) . '</p>';
     $html .= '<a class="cta" href="' . Seo::escape($home) . '">' . Seo::escape(Seo::t('seo.cta')) . '</a>';
     $html .= '<h2>' . Seo::escape(Seo::t('seo.h2.today')) . '</h2>' . seoPriceTable($averages);
+    $trendHtml = seoTrend($trend, $placeLabel);
+    if ($trendHtml !== '') {
+        $html .= '<h2>' . Seo::escape(Seo::t('seo.h2.trend', ['place' => $placeLabel])) . '</h2>' . $trendHtml;
+    }
     if ($first !== []) {
         $html .= '<h2>' . Seo::escape(Seo::t('seo.h2.cheapest', ['fuel' => Seo::fuelLabel($headline[0])])) . '</h2>' . seoRanking($first);
     }
     if ($second !== []) {
         $html .= '<h2>' . Seo::escape(Seo::t('seo.h2.cheapest', ['fuel' => Seo::fuelLabel($headline[1])])) . '</h2>' . seoRanking($second);
     }
+    $html .= seoBrands($brands, $headline[0], $placeLabel);
     if ($municipalitySlug === '') {
         $links = '';
         foreach ($municipalities as $item) {
@@ -393,6 +487,11 @@ function seoIndexPage(\PDO $pdo): void
     $html .= '<h1>' . Seo::escape(Seo::t('seo.index.h1')) . '</h1><p>' . Seo::escape($intro) . '</p>';
     $html .= '<a class="cta" href="' . Seo::escape($home) . '">' . Seo::escape(Seo::t('seo.cta')) . '</a>';
     $html .= '<h2>' . Seo::escape(Seo::t('seo.index.averages')) . '</h2>' . seoPriceTable($averages);
+    $countryName = Country::all()[Country::code()]['name'][Seo::lang()] ?? Country::all()[Country::code()]['native'];
+    $trendHtml = seoTrend(Seo::nationalTrend($pdo, 30), $countryName, 7);
+    if ($trendHtml !== '') {
+        $html .= '<h2>' . Seo::escape(Seo::t('seo.index.trend', ['pais' => $countryName])) . '</h2>' . $trendHtml;
+    }
     $html .= '<h2>' . Seo::escape(Seo::t('seo.index.choose')) . '</h2><ul class="cols">' . $links . '</ul>';
     $html .= seoFooter($updated);
     header('Content-Type: text/html; charset=utf-8');
