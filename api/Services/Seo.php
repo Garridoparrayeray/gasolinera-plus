@@ -9,9 +9,9 @@ require_once __DIR__ . '/OpeningHours.php';
 class Seo
 {
     public const PROFILES = [
-        'es' => ['section' => 'gasolineras', 'lang' => 'es', 'locale' => 'es_ES', 'iso' => 'ES', 'fuels' => ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_e5']],
-        'pt' => ['section' => 'postos', 'lang' => 'pt', 'locale' => 'pt_PT', 'iso' => 'PT', 'fuels' => ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_premium']],
-        'fr' => ['section' => 'stations-service', 'lang' => 'fr', 'locale' => 'fr_FR', 'iso' => 'FR', 'fuels' => ['gasoleo_a', 'gasolina_95_e10', 'gasolina_98_e5', 'gasolina_95_e85']],
+        'es' => ['section' => 'gasolineras', 'report' => 'informe', 'lang' => 'es', 'locale' => 'es_ES', 'iso' => 'ES', 'fuels' => ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_e5']],
+        'pt' => ['section' => 'postos', 'report' => 'relatorio', 'lang' => 'pt', 'locale' => 'pt_PT', 'iso' => 'PT', 'fuels' => ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_premium']],
+        'fr' => ['section' => 'stations-service', 'report' => 'rapport', 'lang' => 'fr', 'locale' => 'fr_FR', 'iso' => 'FR', 'fuels' => ['gasoleo_a', 'gasolina_95_e10', 'gasolina_98_e5', 'gasolina_95_e85']],
     ];
 
     private static array $dictionaries = [];
@@ -122,6 +122,11 @@ class Seo
         return (int)$parts[2] . ' de ' . $month . ' de ' . $parts[0];
     }
 
+    public static function monthYear(string $iso): string
+    {
+        return (string)preg_replace('/^\d{1,2} (de )?/u', '', self::date($iso));
+    }
+
     private const ARTICLES = ['A', 'LA', 'LAS', 'LOS', 'EL', 'ILLES', 'ELS', 'L\'', 'ES'];
 
     public static function siteUrl(): string
@@ -168,7 +173,11 @@ class Seo
         if (preg_match('/^(.*?)\s*\(([^)]+)\)$/u', $name, $m)) {
             $article = mb_strtoupper($m[2], 'UTF-8');
             if (in_array($article, self::ARTICLES, true)) {
-                $name = self::titleCase($m[2]) . ' ' . $m[1];
+                $rest = $m[1];
+                if ($rest === mb_strtoupper($rest, 'UTF-8')) {
+                    $rest = self::titleCase($rest);
+                }
+                $name = self::titleCase($m[2]) . ' ' . $rest;
             }
         }
         if ($name === mb_strtoupper($name, 'UTF-8')) {
@@ -342,6 +351,26 @@ class Seo
         $out = [];
         foreach ($stmt->fetchAll() as $row) {
             $out[(string)$row['fecha']][(string)$row['carburante']] = (float)$row['media'];
+        }
+        return $out;
+    }
+
+    /**
+     * Today's average, min and max of the headline fuels per province.
+     * Returns [provincia raw => [carburante => row]], only cells with at least $minStations prices.
+     */
+    public static function provinceAverages(\PDO $pdo, int $minStations = 5): array
+    {
+        $fuels = self::profile()['headline'];
+        $sql = 'SELECT s.provincia, p.carburante, AVG(p.precio) AS media, MIN(p.precio) AS minimo, MAX(p.precio) AS maximo, COUNT(*) AS n
+            FROM current_prices p JOIN stations s ON s.ideess = p.ideess
+            WHERE ' . self::freshClause() . ' AND p.carburante IN (?, ?)
+            GROUP BY s.provincia, p.carburante HAVING n >= ' . (int)$minStations;
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($fuels);
+        $out = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $out[(string)$row['provincia']][(string)$row['carburante']] = $row;
         }
         return $out;
     }
