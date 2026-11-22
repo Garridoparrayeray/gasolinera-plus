@@ -835,9 +835,11 @@
  "seo.archive.indexDesc": "Um relatório por mês com os preços dos combustíveis em {pais}: média nacional, distritos mais baratos e mais caros, marcas e evolução diária. Cada relatório fica fixo quando o mês fecha.",
  "seo.archive.empty": "Ainda não há relatórios guardados. O primeiro aparece com a próxima atualização de preços.",
  "seo.archive.month": "Mês",
- "seo.archive.tableNote": "Preço médio nacional do último dia com dados de cada mês.",
+ "seo.archive.tableNote": "Preço médio nacional do último dia com dados de cada mês. A variação é a do {fuel} face ao mês anterior, em cêntimos por litro.",
  "seo.archive.averages": "Preços médios em {pais} em {date}",
  "seo.reports.card": "Relatórios de preços",
  "seo.reports.intro": "Todos os meses, um relatório com os distritos mais baratos e mais caros, a evolução do preço e as marcas mais baratas. Os dos meses anteriores ficam guardados.",
- "seo.reports.live": "Relatório deste mês (atualiza-se todos os dias)"
+ "seo.reports.live": "Relatório deste mês (atualiza-se todos os dias)",
+ "seo.home": "Voltar ao início",
+ "seo.archive.change": "Variação (cênt.)"
 }

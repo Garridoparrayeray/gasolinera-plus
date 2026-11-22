@@ -855,6 +855,31 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
         </section>
 
         <section id="view-about" hidden>
+<?php if (!$isNative): ?>
+            <div class="garage-card mobile-features-card desktop-only" id="mobile-features">
+                <h3>Gasolinera+ en tu móvil</h3>
+                <p class="garage-note">Estas funciones necesitan llevar el móvil encima, por eso no están en la web del ordenador:</p>
+                <ul class="mobile-features">
+                    <li><strong>Grabar viajes</strong> a mano o de forma automática al subir al coche, con su recorrido, distancia y velocidad.</li>
+                    <li><strong>Repostar aquí</strong> desde la ficha de la gasolinera y <strong>actualizar los kilómetros</strong> en el surtidor.</li>
+                    <li><strong>Avisos de bajada de precio</strong> de tus favoritas, aunque la app esté cerrada.</li>
+                    <li><strong>Mapas sin conexión</strong> de tu comunidad para usar el mapa sin datos.</li>
+                    <li><strong>Compartir tu resumen</strong> como imagen directamente desde el móvil.</li>
+                </ul>
+                <div class="store-blocks">
+                    <div class="store-block">
+                        <h4>Android</h4>
+                        <p>La app completa, con todas las funciones de la lista.</p>
+                        <a class="pill pill--primary" href="https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest" target="_blank" rel="noopener">Descargar para Android</a>
+                    </div>
+                    <div class="store-block" id="store-iphone">
+                        <h4>iPhone</h4>
+                        <p>Ábrela en Safari, pulsa <strong>Compartir</strong> y después <strong>Añadir a pantalla de inicio</strong>. Se abre como una app. Los viajes automáticos, los avisos con la app cerrada y los mapas sin conexión son de la app de Android.</p>
+                    </div>
+                </div>
+                <p class="garage-note">Tus repostajes y viajes del móvil se pueden ver aquí: exporta una copia en el móvil e impórtala en Coche.</p>
+            </div>
+<?php endif; ?>
 <?php if (!$isNative && !empty($provinceLinks)):
     $reportBase = \Services\Seo::sectionUrl() . '/' . \Services\Seo::profile()['report'];
     $currentMonth = date('Y-m');
@@ -880,31 +905,6 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
                     <li><a href="<?= htmlspecialchars(\Services\Seo::sectionUrl()) ?>/<?= htmlspecialchars($item['slug']) ?>"><?= htmlspecialchars($item['name']) ?></a></li>
 <?php endforeach; ?>
                 </ul>
-            </div>
-<?php endif; ?>
-<?php if (!$isNative): ?>
-            <div class="garage-card mobile-features-card desktop-only" id="mobile-features">
-                <h3>Gasolinera+ en tu móvil</h3>
-                <p class="garage-note">Estas funciones necesitan llevar el móvil encima, por eso no están en la web del ordenador:</p>
-                <ul class="mobile-features">
-                    <li><strong>Grabar viajes</strong> a mano o de forma automática al subir al coche, con su recorrido, distancia y velocidad.</li>
-                    <li><strong>Repostar aquí</strong> desde la ficha de la gasolinera y <strong>actualizar los kilómetros</strong> en el surtidor.</li>
-                    <li><strong>Avisos de bajada de precio</strong> de tus favoritas, aunque la app esté cerrada.</li>
-                    <li><strong>Mapas sin conexión</strong> de tu comunidad para usar el mapa sin datos.</li>
-                    <li><strong>Compartir tu resumen</strong> como imagen directamente desde el móvil.</li>
-                </ul>
-                <div class="store-blocks">
-                    <div class="store-block">
-                        <h4>Android</h4>
-                        <p>La app completa, con todas las funciones de la lista.</p>
-                        <a class="pill pill--primary" href="https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest" target="_blank" rel="noopener">Descargar para Android</a>
-                    </div>
-                    <div class="store-block" id="store-iphone">
-                        <h4>iPhone</h4>
-                        <p>Ábrela en Safari, pulsa <strong>Compartir</strong> y después <strong>Añadir a pantalla de inicio</strong>. Se abre como una app. Los viajes automáticos, los avisos con la app cerrada y los mapas sin conexión son de la app de Android.</p>
-                    </div>
-                </div>
-                <p class="garage-note">Tus repostajes y viajes del móvil se pueden ver aquí: exporta una copia en el móvil e impórtala en Coche.</p>
             </div>
 <?php endif; ?>
             <div class="garage-card about-card">

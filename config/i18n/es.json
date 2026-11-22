@@ -109,9 +109,11 @@
  "seo.archive.indexDesc": "Un informe por mes con los precios de los carburantes en {pais}: media nacional, provincias más baratas y más caras, marcas y evolución diaria. Cada informe queda fijo al cerrar el mes.",
  "seo.archive.empty": "Todavía no hay informes guardados. El primero aparece con la próxima actualización de precios.",
  "seo.archive.month": "Mes",
- "seo.archive.tableNote": "Precio medio nacional del último día con datos de cada mes.",
+ "seo.archive.tableNote": "Precio medio nacional del último día con datos de cada mes. El cambio es el del {fuel} frente al mes anterior, en céntimos por litro.",
  "seo.archive.averages": "Precios medios en {pais} el {date}",
  "seo.reports.card": "Informes de precios",
  "seo.reports.intro": "Cada mes, un informe con las provincias más baratas y más caras, la evolución del precio y las marcas más baratas. Los de meses pasados se quedan guardados.",
- "seo.reports.live": "Informe de este mes (se actualiza cada día)"
+ "seo.reports.live": "Informe de este mes (se actualiza cada día)",
+ "seo.home": "Volver al inicio",
+ "seo.archive.change": "Cambio (cént.)"
 }
