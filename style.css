@@ -1834,11 +1834,12 @@ select,
 }
 
 /* Cabecera del móvil: si el título y los botones no caben en una fila (pantallas estrechas o letra grande
-   del sistema), los botones bajan a una segunda fila en vez de montarse sobre el título. */
+   del sistema), los botones bajan a una segunda fila, a la izquierda bajo el logo, en vez de montarse sobre el título.
+   En una sola fila quedan a la derecha porque el título crece y ocupa el espacio libre. */
 html:not(.desktop) header { flex-wrap: wrap; row-gap: 10px; }
 html:not(.desktop) .home-link-wrap { flex: 1 1 0; min-width: min-content; }
 html:not(.desktop) .lockup-text { min-width: auto; }
-html:not(.desktop) .header-actions { margin-left: auto; flex-shrink: 0; }
+html:not(.desktop) .header-actions { flex-shrink: 0; }
 @media (max-width: 400px) {
     html:not(.desktop) header { column-gap: 8px; }
     html:not(.desktop) #app-logomark svg { width: 40px; height: 40px; border-radius: 10px; }
