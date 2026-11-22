@@ -839,5 +839,6 @@
  "seo.archive.averages": "Prix moyens · {pais} au {date}",
  "seo.reports.card": "Bilans des prix",
  "seo.reports.intro": "Chaque mois, un bilan avec les départements les moins chers et les plus chers, l'évolution du prix et les enseignes les moins chères. Ceux des mois passés restent consultables.",
- "seo.reports.live": "Bilan de ce mois (mis à jour chaque jour)"
+ "seo.reports.live": "Bilan de ce mois (mis à jour chaque jour)",
+ "seo.home": "Retour à l'accueil"
 }

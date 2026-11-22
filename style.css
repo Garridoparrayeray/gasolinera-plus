@@ -1746,11 +1746,12 @@ html.desktop:not([data-view="list"]) #stations-progress { display: none; }
 .desktop #stats-province-block:not(.is-expanded) #stats-province-chart-wrap { display: none; }
 .desktop #stats-province-block.is-expanded #stats-province-chart-wrap { margin-top: 16px; }
 
-.desktop #view-about:not([hidden]) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
-.desktop #view-about > * { margin: 0; }
+/* Dos columnas que se llenan seguidas (sin huecos entre tarjetas de distinta altura). */
+.desktop #view-about:not([hidden]) { display: block; columns: 2; column-gap: 20px; }
+.desktop #view-about > * { margin: 0 0 20px; break-inside: avoid; }
 .desktop #view-about > .mobile-features-card,
-.desktop #view-about > #get-app { grid-column: 1 / -1; }
-.desktop #view-about > .mobile-features-card { order: -1; }
+.desktop #view-about > #get-app { column-span: all; }
+.desktop #view-about > #get-app { margin-top: 20px; }
 .mobile-features { margin: 12px 0 0; padding-left: 20px; }
 .mobile-features li { margin: 0 0 8px; font-size: 15px; line-height: 1.5; }
 .desktop .about-links .pill { flex: 0 1 auto; padding: 12px 18px; border-radius: 6px; }

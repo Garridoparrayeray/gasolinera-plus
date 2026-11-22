@@ -113,5 +113,6 @@
  "seo.archive.averages": "Precios medios en {pais} el {date}",
  "seo.reports.card": "Informes de precios",
  "seo.reports.intro": "Cada mes, un informe con las provincias más baratas y más caras, la evolución del precio y las marcas más baratas. Los de meses pasados se quedan guardados.",
- "seo.reports.live": "Informe de este mes (se actualiza cada día)"
+ "seo.reports.live": "Informe de este mes (se actualiza cada día)",
+ "seo.home": "Volver al inicio"
 }

@@ -71,6 +71,8 @@ ul.cols{list-style:none;padding:0;margin:0;columns:2 220px;column-gap:24px}
 ul.cols li{padding:3px 0;break-inside:avoid}
 .cta{display:inline-block;background:var(--accent);color:#111;padding:12px 18px;font-weight:800;text-decoration:none;margin:8px 0}
 .note{font-size:.85rem;color:var(--muted);margin-top:28px}
+.home-btn{display:inline-flex;align-items:center;gap:8px;margin:16px 0 0;padding:8px 14px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;text-decoration:none;font-size:.92rem}
+.home-btn svg{width:18px;height:18px}
 </style>';
 }
 
@@ -131,6 +133,13 @@ function seoHead(string $title, string $description, string $canonical, string $
 function seoFooter(string $updated): string
 {
     return '<p class="note">' . Seo::escape(Seo::t('seo.footer', ['date' => Seo::date($updated)])) . '</p></div></body></html>';
+}
+
+/** Botón para volver a la portada de la aplicación, arriba de los informes. */
+function seoHomeButton(): string
+{
+    $icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>';
+    return '<a class="home-btn" href="' . Seo::escape(Country::prefix(Country::code()) . '/') . '">' . $icon . Seo::escape(Seo::t('seo.home')) . '</a>';
 }
 
 function seoCrumbs(array $items): string
@@ -515,6 +524,7 @@ function seoRenderReport(array $data, string $month, array $archive): void
     }
 
     $html = seoHead($title, Seo::trim($description, 160), $canonical, $robots, $ld, $alternates);
+    $html .= seoHomeButton();
     $html .= seoCrumbs($crumbs);
     $html .= '<h1>' . Seo::escape($h1) . '</h1>';
     if ($isArchive) {
@@ -696,6 +706,7 @@ function seoArchiveIndexPage(\PDO $pdo): void
     });
     $description = Seo::t('seo.archive.indexDesc', ['pais' => $countryName]);
     $html = seoHead($title . ' · ' . $countryName . ' | Gasolinera+', Seo::trim($description, 160), $canonical, 'index, follow', $ld, $alternates);
+    $html .= seoHomeButton();
     $html .= seoCrumbs([['Gasolinera+', $home], [Seo::t('seo.section'), $section], [$reportLabel, seoReportUrl()], [$title, '']]);
     $html .= '<h1>' . Seo::escape($title . ' · ' . $countryName) . '</h1>';
     $html .= '<p>' . Seo::escape($description) . '</p>';
