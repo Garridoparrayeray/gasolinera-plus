@@ -110,5 +110,8 @@
  "seo.archive.empty": "Todavía no hay informes guardados. El primero aparece con la próxima actualización de precios.",
  "seo.archive.month": "Mes",
  "seo.archive.tableNote": "Precio medio nacional del último día con datos de cada mes.",
- "seo.archive.averages": "Precios medios en {pais} el {date}"
+ "seo.archive.averages": "Precios medios en {pais} el {date}",
+ "seo.reports.card": "Informes de precios",
+ "seo.reports.intro": "Cada mes, un informe con las provincias más baratas y más caras, la evolución del precio y las marcas más baratas. Los de meses pasados se quedan guardados.",
+ "seo.reports.live": "Informe de este mes (se actualiza cada día)"
 }

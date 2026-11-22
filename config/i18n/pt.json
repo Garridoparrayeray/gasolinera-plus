@@ -836,5 +836,8 @@
  "seo.archive.empty": "Ainda não há relatórios guardados. O primeiro aparece com a próxima atualização de preços.",
  "seo.archive.month": "Mês",
  "seo.archive.tableNote": "Preço médio nacional do último dia com dados de cada mês.",
- "seo.archive.averages": "Preços médios em {pais} em {date}"
+ "seo.archive.averages": "Preços médios em {pais} em {date}",
+ "seo.reports.card": "Relatórios de preços",
+ "seo.reports.intro": "Todos os meses, um relatório com os distritos mais baratos e mais caros, a evolução do preço e as marcas mais baratas. Os dos meses anteriores ficam guardados.",
+ "seo.reports.live": "Relatório deste mês (atualiza-se todos os dias)"
 }

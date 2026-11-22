@@ -495,6 +495,16 @@ class Seo
         return $out;
     }
 
+    /** Solo las claves AAAA-MM de los informes guardados, del más reciente al más antiguo. */
+    public static function archiveMonths(\PDO $pdo): array
+    {
+        try {
+            return array_map('strval', $pdo->query('SELECT month FROM monthly_reports ORDER BY month DESC')->fetchAll(\PDO::FETCH_COLUMN));
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
     public static function stationJsonLd(array $station, array $prices, string $updated, string $provinceName): array
     {
         $base = self::siteUrl();
