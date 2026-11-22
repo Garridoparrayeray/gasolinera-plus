@@ -1847,3 +1847,7 @@ html:not(.desktop) .header-actions { flex-shrink: 0; }
     html:not(.desktop) .header-actions { gap: 6px; }
     html:not(.desktop) .header-actions .btn-icon { width: 34px; height: 34px; }
 }
+/* El desplegable de país se abre debajo de toda la cabecera, también cuando los botones van en una segunda fila. */
+html:not(.desktop) .home-link-wrap { position: static; }
+html:not(.desktop) #country-switcher { top: calc(100% + 8px); left: var(--page-pad, 16px); }
+@media (min-width: 681px) { html:not(.desktop) header { position: relative; } }
