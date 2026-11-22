@@ -835,10 +835,11 @@
  "seo.archive.indexDesc": "Un bilan par mois des prix des carburants · {pais} : moyenne nationale, départements les moins chers et les plus chers, enseignes et évolution quotidienne. Chaque bilan est figé à la fin du mois.",
  "seo.archive.empty": "Aucun bilan enregistré pour l'instant. Le premier apparaîtra à la prochaine mise à jour des prix.",
  "seo.archive.month": "Mois",
- "seo.archive.tableNote": "Prix moyen national du dernier jour avec des données de chaque mois.",
+ "seo.archive.tableNote": "Prix moyen national du dernier jour avec des données de chaque mois. L'écart est celui du {fuel} par rapport au mois précédent, en centimes par litre.",
  "seo.archive.averages": "Prix moyens · {pais} au {date}",
  "seo.reports.card": "Bilans des prix",
  "seo.reports.intro": "Chaque mois, un bilan avec les départements les moins chers et les plus chers, l'évolution du prix et les enseignes les moins chères. Ceux des mois passés restent consultables.",
  "seo.reports.live": "Bilan de ce mois (mis à jour chaque jour)",
- "seo.home": "Retour à l'accueil"
+ "seo.home": "Retour à l'accueil",
+ "seo.archive.change": "Écart (cts)"
 }

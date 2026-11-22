@@ -73,6 +73,8 @@ ul.cols li{padding:3px 0;break-inside:avoid}
 .note{font-size:.85rem;color:var(--muted);margin-top:28px}
 .home-btn{display:inline-flex;align-items:center;gap:8px;margin:16px 0 0;padding:8px 14px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;text-decoration:none;font-size:.92rem}
 .home-btn svg{width:18px;height:18px}
+.years{font-weight:700}
+.years a{margin-right:4px}
 </style>';
 }
 
@@ -515,6 +517,7 @@ function seoRenderReport(array $data, string $month, array $archive): void
         $report['isPartOf'] = ['@type' => 'CollectionPage', 'url' => $base . seoArchiveUrl()];
     }
     $ld .= Seo::jsonLd($report);
+    // Los meses guardados no llevan hreflang: el mismo mes puede no existir todavía en otro país.
     $alternates = '';
     if (!$isArchive) {
         $alternates = seoAlternates(function (string $code): string {
@@ -675,22 +678,42 @@ function seoArchiveIndexPage(\PDO $pdo): void
     $reportLabel = Seo::t('seo.report.link');
     $title = Seo::t('seo.archive.title');
 
-    $rows = '';
+    // Una tabla por año, del más reciente al más antiguo, con la variación frente al mes anterior.
+    $months = array_keys($archive);
+    $years = [];
     $elements = [];
-    foreach ($archive as $month => $data) {
+    foreach ($months as $i => $month) {
+        $data = $archive[$month];
         $label = seoMonthName($month);
         if ($month >= $current) {
             $label .= ' (' . Seo::t('seo.archive.inProgress') . ')';
         }
-        $rows .= '<tr><td><a href="' . Seo::escape(seoArchiveUrl($month)) . '">' . Seo::escape($label) . '</a></td>';
+        $row = '<tr><td><a href="' . Seo::escape(seoArchiveUrl($month)) . '">' . Seo::escape($label) . '</a></td>';
         foreach ($headline as $fuel) {
             $cell = '—';
             if (isset($data['averages'][$fuel])) {
                 $cell = Seo::price((float)$data['averages'][$fuel]['media']) . ' €';
             }
-            $rows .= '<td class="n">' . $cell . '</td>';
+            $row .= '<td class="n">' . $cell . '</td>';
         }
-        $rows .= '</tr>';
+        $change = '—';
+        $previous = $months[$i + 1] ?? null;
+        if ($previous !== null && $previous !== date('Y-m', strtotime($month . '-01 -1 month'))) {
+            $previous = null; // Solo se compara con el mes justo anterior, no con el último guardado.
+        }
+        if ($previous !== null && isset($data['averages'][$headline[0]], $archive[$previous]['averages'][$headline[0]])) {
+            $cents = ((float)$data['averages'][$headline[0]]['media'] - (float)$archive[$previous]['averages'][$headline[0]]['media']) * 100;
+            $change = number_format(abs($cents), 1, ',', '.');
+            if ($cents >= 0.05) {
+                $change = '+' . $change;
+            } elseif ($cents <= -0.05) {
+                $change = '−' . $change;
+            } else {
+                $change = '0,0';
+            }
+        }
+        $row .= '<td class="n">' . $change . '</td></tr>';
+        $years[substr($month, 0, 4)][] = $row;
         if ($month < $current) {
             $elements[] = ['@type' => 'ListItem', 'position' => count($elements) + 1, 'url' => $base . seoArchiveUrl($month), 'name' => Seo::t('seo.archive.item', ['month' => seoMonthName($month)])];
         }
@@ -710,17 +733,28 @@ function seoArchiveIndexPage(\PDO $pdo): void
     $html .= seoCrumbs([['Gasolinera+', $home], [Seo::t('seo.section'), $section], [$reportLabel, seoReportUrl()], [$title, '']]);
     $html .= '<h1>' . Seo::escape($title . ' · ' . $countryName) . '</h1>';
     $html .= '<p>' . Seo::escape($description) . '</p>';
-    if ($rows === '') {
+    $html .= '<p><a class="cta" href="' . Seo::escape(seoReportUrl()) . '">' . Seo::escape(Seo::t('seo.archive.live')) . '</a></p>';
+    if ($years === []) {
         $html .= '<p>' . Seo::escape(Seo::t('seo.archive.empty')) . '</p>';
     } else {
+        if (count($years) > 1) {
+            $jumps = [];
+            foreach (array_keys($years) as $year) {
+                $jumps[] = '<a href="#y' . $year . '">' . $year . '</a>';
+            }
+            $html .= '<p class="years">' . implode(' · ', $jumps) . '</p>';
+        }
         $head = '<th>' . Seo::escape(Seo::t('seo.archive.month')) . '</th>';
         foreach ($headline as $fuel) {
             $head .= '<th class="n">' . Seo::escape(Seo::fuelLabel($fuel)) . '</th>';
         }
-        $html .= '<p>' . Seo::escape(Seo::t('seo.archive.tableNote')) . '</p>';
-        $html .= '<div class="card"><table><thead><tr>' . $head . '</tr></thead><tbody>' . $rows . '</tbody></table></div>';
+        $head .= '<th class="n">' . Seo::escape(Seo::t('seo.archive.change')) . '</th>';
+        $html .= '<p>' . Seo::escape(Seo::t('seo.archive.tableNote', ['fuel' => Seo::fuelLabel($headline[0])])) . '</p>';
+        foreach ($years as $year => $rows) {
+            $html .= '<h2 id="y' . $year . '">' . $year . '</h2>';
+            $html .= '<div class="card"><table><thead><tr>' . $head . '</tr></thead><tbody>' . implode('', $rows) . '</tbody></table></div>';
+        }
     }
-    $html .= '<p><a href="' . Seo::escape(seoReportUrl()) . '">' . Seo::escape(Seo::t('seo.archive.live')) . '</a></p>';
     $updated = date('Y-m-d');
     if ($archive !== []) {
         $updated = (string)reset($archive)['updated'];
