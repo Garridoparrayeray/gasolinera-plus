@@ -1832,3 +1832,22 @@ select,
     background-size: 10px 6px !important;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23aaa' stroke-width='1.6'/%3E%3C/svg%3E") !important;
 }
+
+/* Cabecera del móvil: si el título y los botones no caben en una fila (pantallas estrechas o letra grande
+   del sistema), los botones bajan a una segunda fila, a la izquierda bajo el logo, en vez de montarse sobre el título.
+   En una sola fila quedan a la derecha porque el título crece y ocupa el espacio libre. */
+html:not(.desktop) header { flex-wrap: wrap; row-gap: 10px; }
+html:not(.desktop) .home-link-wrap { flex: 1 1 0; min-width: min-content; }
+html:not(.desktop) .lockup-text { min-width: auto; }
+html:not(.desktop) .header-actions { flex-shrink: 0; }
+@media (max-width: 400px) {
+    html:not(.desktop) header { column-gap: 8px; }
+    html:not(.desktop) #app-logomark svg { width: 40px; height: 40px; border-radius: 10px; }
+    html:not(.desktop) #home-link { gap: 8px; }
+    html:not(.desktop) .header-actions { gap: 6px; }
+    html:not(.desktop) .header-actions .btn-icon { width: 34px; height: 34px; }
+}
+/* El desplegable de país se abre debajo de toda la cabecera, también cuando los botones van en una segunda fila. */
+html:not(.desktop) .home-link-wrap { position: static; }
+html:not(.desktop) #country-switcher { top: calc(100% + 8px); left: var(--page-pad, 16px); }
+@media (min-width: 681px) { html:not(.desktop) header { position: relative; } }
