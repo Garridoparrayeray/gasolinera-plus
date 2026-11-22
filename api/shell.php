@@ -14,6 +14,7 @@ $canonicalUrl = $ogUrl;
 $robotsContent = 'index, follow';
 $structuredData = '';
 $provinceLinks = array();
+$reportMonths = array();
 $headline = array();
 
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
@@ -27,6 +28,7 @@ if (!$isNative) {
     try {
         $pdo = \Core\Database::connection();
         $provinceLinks = \Services\Seo::provinces($pdo);
+        $reportMonths = \Services\Seo::archiveMonths($pdo);
         $headline = \Services\Seo::nationalHeadline($pdo);
 
         if (preg_match('#^/(?:(?:pt|fr)/)?stations/([^/]+)/?$#', $path, $matches)) {
@@ -853,6 +855,23 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
         </section>
 
         <section id="view-about" hidden>
+<?php if (!$isNative && !empty($provinceLinks)):
+    $reportBase = \Services\Seo::sectionUrl() . '/' . \Services\Seo::profile()['report'];
+    $currentMonth = date('Y-m');
+    $closedMonths = array_slice(array_values(array_filter($reportMonths, static fn(string $m): bool => $m < $currentMonth)), 0, 3);
+?>
+            <div class="garage-card reports-card">
+                <h3><?= htmlspecialchars(\Services\Seo::t('seo.reports.card')) ?></h3>
+                <p class="garage-note"><?= htmlspecialchars(\Services\Seo::t('seo.reports.intro')) ?></p>
+                <ul class="reports-links">
+                    <li><a href="<?= htmlspecialchars($reportBase) ?>"><?= htmlspecialchars(\Services\Seo::t('seo.reports.live')) ?></a></li>
+<?php foreach ($closedMonths as $month): ?>
+                    <li><a href="<?= htmlspecialchars($reportBase . '/' . $month) ?>"><?= htmlspecialchars(\Services\Seo::t('seo.archive.item', ['month' => \Services\Seo::monthYear($month . '-01')])) ?></a></li>
+<?php endforeach; ?>
+                    <li><a href="<?= htmlspecialchars($reportBase . '/' . \Services\Seo::profile()['archive']) ?>"><?= htmlspecialchars(\Services\Seo::t('seo.archive.link')) ?></a></li>
+                </ul>
+            </div>
+<?php endif; ?>
 <?php if (!$isNative && !empty($provinceLinks)): ?>
             <div class="garage-card province-card">
                 <h3><?= htmlspecialchars(\Services\Seo::t('seo.areaIndex')) ?></h3>

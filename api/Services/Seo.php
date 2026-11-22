@@ -9,9 +9,9 @@ require_once __DIR__ . '/OpeningHours.php';
 class Seo
 {
     public const PROFILES = [
-        'es' => ['section' => 'gasolineras', 'report' => 'informe', 'lang' => 'es', 'locale' => 'es_ES', 'iso' => 'ES', 'fuels' => ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_e5']],
-        'pt' => ['section' => 'postos', 'report' => 'relatorio', 'lang' => 'pt', 'locale' => 'pt_PT', 'iso' => 'PT', 'fuels' => ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_premium']],
-        'fr' => ['section' => 'stations-service', 'report' => 'rapport', 'lang' => 'fr', 'locale' => 'fr_FR', 'iso' => 'FR', 'fuels' => ['gasoleo_a', 'gasolina_95_e10', 'gasolina_98_e5', 'gasolina_95_e85']],
+        'es' => ['section' => 'gasolineras', 'report' => 'informe', 'archive' => 'historico', 'lang' => 'es', 'locale' => 'es_ES', 'iso' => 'ES', 'fuels' => ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_e5']],
+        'pt' => ['section' => 'postos', 'report' => 'relatorio', 'archive' => 'historico', 'lang' => 'pt', 'locale' => 'pt_PT', 'iso' => 'PT', 'fuels' => ['gasoleo_a', 'gasolina_95_e5', 'gasoleo_premium', 'gasolina_98_premium']],
+        'fr' => ['section' => 'stations-service', 'report' => 'rapport', 'archive' => 'archives', 'lang' => 'fr', 'locale' => 'fr_FR', 'iso' => 'FR', 'fuels' => ['gasoleo_a', 'gasolina_95_e10', 'gasolina_98_e5', 'gasolina_95_e85']],
     ];
 
     private static array $dictionaries = [];
@@ -415,6 +415,110 @@ class Seo
             }
         }
         return $out;
+    }
+
+    /**
+     * Todos los datos del informe mensual, sin textos: lo usan la página en vivo y la foto
+     * que se guarda cada día en monthly_reports (la del último día del mes queda como cierre).
+     */
+    public static function reportData(\PDO $pdo, int $minStations = 5): array
+    {
+        $headline = self::profile()['headline'];
+        $updated = self::lastUpdate($pdo);
+        $month = substr($updated, 0, 7);
+
+        $provinces = [];
+        foreach (self::provinces($pdo) as $item) {
+            $provinces[$item['raw']] = $item;
+        }
+        $ranked = [];
+        foreach (self::provinceAverages($pdo, $minStations) as $raw => $fuels) {
+            if (!isset($fuels[$headline[0]], $provinces[$raw])) {
+                continue;
+            }
+            $cells = [];
+            foreach ($fuels as $fuel => $row) {
+                $cells[$fuel] = ['media' => (float)$row['media'], 'minimo' => (float)$row['minimo'], 'maximo' => (float)$row['maximo'], 'n' => (int)$row['n']];
+            }
+            $ranked[] = ['name' => $provinces[$raw]['name'], 'slug' => $provinces[$raw]['slug'], 'fuels' => $cells];
+        }
+        usort($ranked, static fn(array $a, array $b): int => $a['fuels'][$headline[0]]['media'] <=> $b['fuels'][$headline[0]]['media']);
+
+        $averages = [];
+        foreach (self::averages($pdo, '1 = 1', []) as $fuel => $row) {
+            $averages[$fuel] = ['carburante' => $fuel, 'media' => (float)$row['media'], 'minimo' => (float)$row['minimo'], 'maximo' => (float)$row['maximo'], 'n' => (int)$row['n']];
+        }
+        $brands = [];
+        foreach (self::brands($pdo, '1 = 1', [], $headline[0], 20, 10) as $row) {
+            $brands[] = ['marca' => (string)$row['marca'], 'media' => (float)$row['media'], 'minimo' => (float)$row['minimo'], 'n' => (int)$row['n']];
+        }
+        $cheapest = [];
+        foreach (self::cheapest($pdo, '1 = 1', [], $headline[0], 10) as $row) {
+            $row['precio'] = (float)$row['precio'];
+            $cheapest[] = $row;
+        }
+
+        return [
+            'version' => 1,
+            'month' => $month,
+            'updated' => $updated,
+            'headline' => $headline,
+            'minStations' => $minStations,
+            'stations' => (int)$pdo->query('SELECT COUNT(*) FROM stations s WHERE ' . self::freshClause())->fetchColumn(),
+            'averages' => $averages,
+            'ranked' => $ranked,
+            'trend' => self::nationalTrend($pdo, 30),
+            'monthDays' => self::monthTrend($pdo, $month),
+            'brands' => $brands,
+            'cheapest' => $cheapest,
+        ];
+    }
+
+    /**
+     * Media nacional diaria de los carburantes principales en un mes (AAAA-MM), del día más reciente al más antiguo.
+     */
+    public static function monthTrend(\PDO $pdo, string $month): array
+    {
+        $fuels = self::profile()['headline'];
+        $stmt = $pdo->prepare('SELECT fecha, carburante, media FROM national_price_history
+            WHERE carburante IN (?, ?) AND fecha >= ? AND fecha <= ? ORDER BY fecha DESC');
+        $stmt->execute(array_merge($fuels, [$month . '-01', $month . '-31']));
+        $out = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $out[(string)$row['fecha']][(string)$row['carburante']] = (float)$row['media'];
+        }
+        return $out;
+    }
+
+    /**
+     * Meses guardados en monthly_reports, del más reciente al más antiguo: [AAAA-MM => datos].
+     * Si la tabla no existe todavía devuelve una lista vacía.
+     */
+    public static function archive(\PDO $pdo): array
+    {
+        try {
+            $rows = $pdo->query('SELECT month, data FROM monthly_reports ORDER BY month DESC')->fetchAll();
+        } catch (\Throwable $e) {
+            return [];
+        }
+        $out = [];
+        foreach ($rows as $row) {
+            $data = json_decode((string)$row['data'], true);
+            if (is_array($data)) {
+                $out[(string)$row['month']] = $data;
+            }
+        }
+        return $out;
+    }
+
+    /** Solo las claves AAAA-MM de los informes guardados, del más reciente al más antiguo. */
+    public static function archiveMonths(\PDO $pdo): array
+    {
+        try {
+            return array_map('strval', $pdo->query('SELECT month FROM monthly_reports ORDER BY month DESC')->fetchAll(\PDO::FETCH_COLUMN));
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 
     public static function stationJsonLd(array $station, array $prices, string $updated, string $provinceName): array

@@ -217,7 +217,7 @@ function seoIntro(string $placeLabel, array $averages, int $count, array $topChe
     return $text;
 }
 
-function seoTrend(array $trend, string $placeLabel, int $tableRows = 7): string
+function seoTrend(array $trend, string $placeLabel, int $tableRows = 7, bool $lead = true): string
 {
     if (count($trend) < 2) {
         return '';
@@ -242,7 +242,7 @@ function seoTrend(array $trend, string $placeLabel, int $tableRows = 7): string
         }
     }
     $html = '';
-    if ($parts !== []) {
+    if ($lead && $parts !== []) {
         $span = (int)round((strtotime($dates[0] . ' 12:00:00 UTC') - strtotime($dates[count($dates) - 1] . ' 12:00:00 UTC')) / 86400) + 1;
         $separator = '; ';
         if (Seo::lang() === 'fr') {
@@ -319,46 +319,134 @@ function seoThousands(int $value): string
     return number_format($value, 0, ',', $separator);
 }
 
+function seoArchiveUrl(?string $month = null, ?string $code = null): string
+{
+    if ($code === null) {
+        $code = Country::code();
+    }
+    if ($month === null) {
+        return seoReportUrl($code) . '/' . Seo::profile($code)['archive'];
+    }
+    return seoReportUrl($code) . '/' . $month;
+}
+
+/** Nombre del mes de una clave AAAA-MM ("noviembre de 2026"). */
+function seoMonthName(string $month): string
+{
+    return Seo::monthYear($month . '-01');
+}
+
+/**
+ * Resumen de un mes con la media nacional diaria: media del mes, día más barato, día más caro y variación.
+ */
+function seoMonthSummary(array $days, string $monthName): string
+{
+    if (count($days) < 2) {
+        return '';
+    }
+    $items = '';
+    foreach (Seo::profile()['headline'] as $fuel) {
+        $values = [];
+        foreach ($days as $date => $fuels) {
+            if (isset($fuels[$fuel])) {
+                $values[$date] = (float)$fuels[$fuel];
+            }
+        }
+        if (count($values) < 2) {
+            continue;
+        }
+        $cheapDay = array_search(min($values), $values, true);
+        $dearDay = array_search(max($values), $values, true);
+        $dates = array_keys($values);
+        $last = $values[$dates[0]];
+        $first = $values[$dates[count($dates) - 1]];
+        $cents = ($last - $first) * 100;
+        $key = 'seo.archive.summaryFlat';
+        if ($cents >= 0.05) {
+            $key = 'seo.archive.summaryUp';
+        } elseif ($cents <= -0.05) {
+            $key = 'seo.archive.summaryDown';
+        }
+        $items .= '<li>' . Seo::escape(Seo::t($key, [
+            'fuel' => Seo::fuelLabel($fuel),
+            'mean' => Seo::price(array_sum($values) / count($values)),
+            'cheapDay' => Seo::date((string)$cheapDay),
+            'cheap' => Seo::price(min($values)),
+            'dearDay' => Seo::date((string)$dearDay),
+            'dear' => Seo::price(max($values)),
+            'cents' => number_format(abs($cents), 1, ',', '.'),
+        ])) . '</li>';
+    }
+    if ($items === '') {
+        return '';
+    }
+    return '<h2>' . Seo::escape(Seo::t('seo.archive.h2.summary', ['month' => $monthName])) . '</h2><ul>' . $items . '</ul>';
+}
+
+/** Enlaces a los informes de meses anteriores (los ya cerrados). */
+function seoArchiveLinks(array $archive, string $currentMonth, int $limit = 3): string
+{
+    $items = '';
+    $shown = 0;
+    foreach (array_keys($archive) as $month) {
+        if ($month >= $currentMonth) {
+            continue;
+        }
+        $items .= '<li><a href="' . Seo::escape(seoArchiveUrl($month)) . '">' . Seo::escape(Seo::t('seo.archive.item', ['month' => seoMonthName($month)])) . '</a></li>';
+        $shown++;
+        if ($shown >= $limit) {
+            break;
+        }
+    }
+    $html = '';
+    if ($items !== '') {
+        $html = '<h2>' . Seo::escape(Seo::t('seo.archive.h2.previous')) . '</h2><ul>' . $items . '</ul>';
+    }
+    return $html . '<p><a href="' . Seo::escape(seoArchiveUrl()) . '">' . Seo::escape(Seo::t('seo.archive.link')) . '</a></p>';
+}
+
 function seoReportPage(\PDO $pdo): void
+{
+    $data = Seo::reportData($pdo);
+    seoRenderReport($data, '', Seo::archive($pdo));
+}
+
+/**
+ * Pinta el informe. Con $month vacío es la página en vivo; con un mes (AAAA-MM) es la foto guardada de ese mes,
+ * que queda fija cuando el mes termina.
+ */
+function seoRenderReport(array $data, string $month, array $archive): void
 {
     $base = Seo::siteUrl();
     $section = Seo::sectionUrl();
     $home = Country::prefix(Country::code()) . '/';
-    $updated = Seo::lastUpdate($pdo);
+    $updated = (string)$data['updated'];
     $headline = Seo::profile()['headline'];
     $country = Country::all()[Country::code()];
     $countryName = $country['name'][Seo::lang()] ?? $country['native'];
-    $month = Seo::monthYear($updated);
+    $isArchive = $month !== '';
+    $monthName = seoMonthName((string)$data['month']);
+    $closed = $isArchive && $month < substr(date('Y-m-d'), 0, 7);
     $canonical = $base . seoReportUrl();
-    $minStations = 5;
-
-    $provinces = [];
-    foreach (Seo::provinces($pdo) as $item) {
-        $provinces[$item['raw']] = $item;
+    if ($isArchive) {
+        $canonical = $base . seoArchiveUrl($month);
     }
-    $byProvince = Seo::provinceAverages($pdo, $minStations);
-    $averages = Seo::averages($pdo, '1 = 1', []);
-    $stationCount = (int)$pdo->query('SELECT COUNT(*) FROM stations s WHERE ' . Seo::freshClause())->fetchColumn();
-
-    // Ranking by the first headline fuel; the second one is shown alongside.
+    $minStations = (int)$data['minStations'];
+    $averages = $data['averages'];
     $ranked = [];
-    foreach ($byProvince as $raw => $fuels) {
-        if (!isset($fuels[$headline[0]], $provinces[$raw])) {
-            continue;
+    foreach ($data['ranked'] as $row) {
+        if (isset($row['fuels'][$headline[0]])) {
+            $ranked[] = $row;
         }
-        $ranked[] = ['province' => $provinces[$raw], 'fuels' => $fuels];
     }
-    usort($ranked, function (array $a, array $b) use ($headline): int {
-        return $a['fuels'][$headline[0]]['media'] <=> $b['fuels'][$headline[0]]['media'];
-    });
 
-    $intro = Seo::t('seo.report.intro', ['date' => Seo::date($updated), 'n' => seoThousands($stationCount), 'pais' => $countryName, 'list' => seoAverageList($averages)]);
+    $intro = Seo::t('seo.report.intro', ['date' => Seo::date($updated), 'n' => seoThousands((int)$data['stations']), 'pais' => $countryName, 'list' => seoAverageList($averages)]);
     $gaps = [];
     foreach ($headline as $fuel) {
         $list = [];
-        foreach ($byProvince as $raw => $fuels) {
-            if (isset($fuels[$fuel], $provinces[$raw])) {
-                $list[] = [$provinces[$raw]['name'], (float)$fuels[$fuel]['media']];
+        foreach ($ranked as $row) {
+            if (isset($row['fuels'][$fuel])) {
+                $list[] = [$row['name'], (float)$row['fuels'][$fuel]['media']];
             }
         }
         if (count($list) < 2) {
@@ -379,11 +467,30 @@ function seoReportPage(\PDO $pdo): void
         ]);
     }
 
-    $ld = Seo::jsonLd(Seo::breadcrumb([['Gasolinera+', $base . $home], [Seo::t('seo.section'), $base . $section], [Seo::t('seo.report.link'), $canonical]]));
-    $ld .= Seo::jsonLd([
+    $reportLabel = Seo::t('seo.report.link');
+    $crumbs = [['Gasolinera+', $home], [Seo::t('seo.section'), $section], [$reportLabel, '']];
+    $ldCrumbs = [['Gasolinera+', $base . $home], [Seo::t('seo.section'), $base . $section], [$reportLabel, $canonical]];
+    $h1 = Seo::t('seo.report.h1', ['month' => $monthName]);
+    $title = Seo::t('seo.report.title', ['month' => $monthName]);
+    $description = Seo::t('seo.report.desc', ['month' => $monthName, 'pais' => $countryName]);
+    $robots = 'index, follow';
+    if ($isArchive) {
+        $crumbs = [['Gasolinera+', $home], [Seo::t('seo.section'), $section], [$reportLabel, seoReportUrl()], [Seo::t('seo.archive.title'), seoArchiveUrl()], [$monthName, '']];
+        $ldCrumbs = [['Gasolinera+', $base . $home], [Seo::t('seo.section'), $base . $section], [$reportLabel, $base . seoReportUrl()], [Seo::t('seo.archive.title'), $base . seoArchiveUrl()], [$monthName, $canonical]];
+        $h1 = Seo::t('seo.archive.h1', ['month' => $monthName, 'pais' => $countryName]);
+        $title = Seo::t('seo.archive.pageTitle', ['month' => $monthName, 'pais' => $countryName]);
+        $description = Seo::t('seo.archive.desc', ['month' => $monthName, 'pais' => $countryName]);
+        if (!$closed) {
+            // El mes en curso ya tiene la página en vivo: esta foto provisional no se indexa hasta que se cierre.
+            $robots = 'noindex, follow';
+        }
+    }
+
+    $ld = Seo::jsonLd(Seo::breadcrumb($ldCrumbs));
+    $report = [
         '@context' => 'https://schema.org',
         '@type' => 'Report',
-        'headline' => Seo::t('seo.report.h1', ['month' => $month]),
+        'headline' => $h1,
         'inLanguage' => Seo::profile()['lang'],
         'dateModified' => $updated,
         'url' => $canonical,
@@ -392,21 +499,42 @@ function seoReportPage(\PDO $pdo): void
         'isBasedOn' => $country['source'],
         'spatialCoverage' => ['@type' => 'Country', 'name' => $countryName],
         'isAccessibleForFree' => true,
-    ]);
-    $alternates = seoAlternates(function (string $code): string {
-        $profile = Seo::profile($code);
-        return '/' . $profile['section'] . '/' . $profile['report'];
-    });
-    $description = Seo::t('seo.report.desc', ['month' => $month, 'pais' => $countryName]);
-    $html = seoHead(Seo::t('seo.report.title', ['month' => $month]), Seo::trim($description, 160), $canonical, 'index, follow', $ld, $alternates);
-    $html .= seoCrumbs([['Gasolinera+', $home], [Seo::t('seo.section'), $section], [Seo::t('seo.report.link'), '']]);
-    $html .= '<h1>' . Seo::escape(Seo::t('seo.report.h1', ['month' => $month])) . '</h1>';
+    ];
+    if ($isArchive) {
+        $report['datePublished'] = $updated;
+        $report['temporalCoverage'] = $month;
+        $report['isPartOf'] = ['@type' => 'CollectionPage', 'url' => $base . seoArchiveUrl()];
+    }
+    $ld .= Seo::jsonLd($report);
+    $alternates = '';
+    if (!$isArchive) {
+        $alternates = seoAlternates(function (string $code): string {
+            $profile = Seo::profile($code);
+            return '/' . $profile['section'] . '/' . $profile['report'];
+        });
+    }
+
+    $html = seoHead($title, Seo::trim($description, 160), $canonical, $robots, $ld, $alternates);
+    $html .= seoCrumbs($crumbs);
+    $html .= '<h1>' . Seo::escape($h1) . '</h1>';
+    if ($isArchive) {
+        $lead = Seo::t('seo.archive.open', ['month' => $monthName]);
+        if ($closed) {
+            $lead = Seo::t('seo.archive.closed', ['month' => $monthName, 'date' => Seo::date($updated)]);
+        }
+        $html .= '<p><strong>' . Seo::escape($lead) . '</strong></p>';
+    }
     $html .= '<p>' . Seo::escape($intro) . '</p>';
     foreach ($gaps as $gap) {
         $html .= '<p>' . Seo::escape($gap) . '</p>';
     }
     $html .= '<a class="cta" href="' . Seo::escape($home) . '">' . Seo::escape(Seo::t('seo.cta')) . '</a>';
-    $html .= '<h2>' . Seo::escape(Seo::t('seo.index.averages')) . '</h2>' . seoPriceTable($averages);
+    $html .= seoMonthSummary($data['monthDays'] ?? [], $monthName);
+    $averagesTitle = Seo::t('seo.index.averages');
+    if ($isArchive) {
+        $averagesTitle = Seo::t('seo.archive.averages', ['pais' => $countryName, 'date' => Seo::date($updated)]);
+    }
+    $html .= '<h2>' . Seo::escape($averagesTitle) . '</h2>' . seoPriceTable($averages);
 
     $provinceLabel = $country['labels']['province'][Seo::lang()];
     $rankTable = function (array $rows) use ($headline, $section, $provinceLabel): string {
@@ -416,7 +544,7 @@ function seoReportPage(\PDO $pdo): void
         }
         $body = '';
         foreach ($rows as $row) {
-            $body .= '<tr><td><a href="' . Seo::escape($section . '/' . $row['province']['slug']) . '">' . Seo::escape($row['province']['name']) . '</a></td>';
+            $body .= '<tr><td><a href="' . Seo::escape($section . '/' . $row['slug']) . '">' . Seo::escape($row['name']) . '</a></td>';
             foreach ($headline as $fuel) {
                 $cell = '—';
                 if (isset($row['fuels'][$fuel])) {
@@ -430,7 +558,11 @@ function seoReportPage(\PDO $pdo): void
     };
     if (count($ranked) >= 2) {
         $size = min(10, intdiv(count($ranked), 2));
-        $note = '<p>' . Seo::escape(Seo::t('seo.report.rankNote', ['min' => $minStations])) . '</p>';
+        $noteKey = 'seo.report.rankNote';
+        if ($isArchive) {
+            $noteKey = 'seo.archive.rankNote';
+        }
+        $note = '<p>' . Seo::escape(Seo::t($noteKey, ['min' => $minStations, 'date' => Seo::date($updated)])) . '</p>';
         $html .= '<h2>' . Seo::escape(Seo::t('seo.report.h2.cheapest')) . '</h2>' . $note . $rankTable(array_slice($ranked, 0, $size));
         $html .= '<h2>' . Seo::escape(Seo::t('seo.report.h2.dearest')) . '</h2>' . $rankTable(array_reverse(array_slice($ranked, -$size)));
     }
@@ -438,7 +570,7 @@ function seoReportPage(\PDO $pdo): void
     $spreads = [];
     foreach ($ranked as $row) {
         $cell = $row['fuels'][$headline[0]];
-        $spreads[] = [$row['province'], (float)$cell['maximo'] - (float)$cell['minimo']];
+        $spreads[] = [$row['name'], (float)$cell['maximo'] - (float)$cell['minimo']];
     }
     usort($spreads, function (array $a, array $b): int {
         return $b[1] <=> $a[1];
@@ -447,7 +579,7 @@ function seoReportPage(\PDO $pdo): void
         $items = '';
         foreach (array_slice($spreads, 0, 5) as $spread) {
             $items .= '<li>' . Seo::escape(Seo::t('seo.report.spreadRow', [
-                'p' => $spread[0]['name'],
+                'p' => $spread[0],
                 'cents' => number_format($spread[1] * 100, 1, ',', '.'),
                 'euros' => number_format($spread[1] * 50, 2, ',', '.'),
             ])) . '</li>';
@@ -456,18 +588,132 @@ function seoReportPage(\PDO $pdo): void
         $html .= '<p>' . Seo::escape(Seo::t('seo.report.spreadIntro', ['fuel' => Seo::fuelLabel($headline[0])])) . '</p><ul>' . $items . '</ul>';
     }
 
-    $trendHtml = seoTrend(Seo::nationalTrend($pdo, 30), $countryName, 7);
+    if ($isArchive) {
+        $trendHtml = seoTrend($data['monthDays'] ?? [], $countryName, 31, false);
+    } else {
+        $trendHtml = seoTrend($data['trend'] ?? [], $countryName, 7);
+    }
     if ($trendHtml !== '') {
         $html .= '<h2>' . Seo::escape(Seo::t('seo.index.trend', ['pais' => $countryName])) . '</h2>' . $trendHtml;
     }
-    $html .= seoBrands(Seo::brands($pdo, '1 = 1', [], $headline[0], 20, 10), $headline[0], $countryName, 20);
-    $cheapest = Seo::cheapest($pdo, '1 = 1', [], $headline[0], 10);
-    if ($cheapest !== []) {
-        $html .= '<h2>' . Seo::escape(Seo::t('seo.report.h2.stations', ['pais' => $countryName, 'fuel' => Seo::fuelLabel($headline[0])])) . '</h2>' . seoRanking($cheapest);
+    $html .= seoBrands($data['brands'], $headline[0], $countryName, 20);
+    if ($data['cheapest'] !== []) {
+        $html .= '<h2>' . Seo::escape(Seo::t('seo.report.h2.stations', ['pais' => $countryName, 'fuel' => Seo::fuelLabel($headline[0])])) . '</h2>' . seoRanking($data['cheapest']);
     }
     $html .= '<h2>' . Seo::escape(Seo::t('seo.report.h2.method')) . '</h2>';
-    $html .= '<p>' . Seo::escape(Seo::t('seo.report.method', ['fuente' => $country['source']])) . '</p>';
+    $methodKey = 'seo.report.method';
+    if ($isArchive) {
+        $methodKey = 'seo.archive.method';
+    }
+    $html .= '<p>' . Seo::escape(Seo::t($methodKey, ['fuente' => $country['source'], 'date' => Seo::date($updated)])) . '</p>';
     $html .= '<p>' . Seo::escape(Seo::t('seo.report.cite')) . ' <code>' . Seo::escape($canonical) . '</code></p>';
+    if ($isArchive) {
+        $html .= seoArchiveNav($archive, $month);
+    } else {
+        $html .= seoArchiveLinks($archive, (string)$data['month']);
+    }
+    $html .= seoFooter($updated);
+
+    header('Content-Type: text/html; charset=utf-8');
+    if ($closed) {
+        seoCache(86400);
+    } else {
+        seoCache(3600);
+    }
+    echo $html;
+}
+
+/** Mes anterior, mes siguiente e informe en vivo, al pie de un informe guardado. */
+function seoArchiveNav(array $archive, string $month): string
+{
+    $months = array_keys($archive);
+    $links = [];
+    $index = array_search($month, $months, true);
+    if ($index !== false && isset($months[$index + 1])) {
+        $links[] = '<a href="' . Seo::escape(seoArchiveUrl($months[$index + 1])) . '">← ' . Seo::escape(seoMonthName($months[$index + 1])) . '</a>';
+    }
+    $links[] = '<a href="' . Seo::escape(seoArchiveUrl()) . '">' . Seo::escape(Seo::t('seo.archive.link')) . '</a>';
+    $links[] = '<a href="' . Seo::escape(seoReportUrl()) . '">' . Seo::escape(Seo::t('seo.archive.live')) . '</a>';
+    if ($index !== false && $index > 0) {
+        $links[] = '<a href="' . Seo::escape(seoArchiveUrl($months[$index - 1])) . '">' . Seo::escape(seoMonthName($months[$index - 1])) . ' →</a>';
+    }
+    return '<p class="crumbs">' . implode(' · ', $links) . '</p>';
+}
+
+function seoArchiveMonthPage(\PDO $pdo, string $month): void
+{
+    $archive = Seo::archive($pdo);
+    if (!isset($archive[$month])) {
+        seoNotFound();
+        return;
+    }
+    seoRenderReport($archive[$month], $month, $archive);
+}
+
+/** Índice de los informes mensuales guardados, del más reciente al más antiguo. */
+function seoArchiveIndexPage(\PDO $pdo): void
+{
+    $base = Seo::siteUrl();
+    $section = Seo::sectionUrl();
+    $home = Country::prefix(Country::code()) . '/';
+    $headline = Seo::profile()['headline'];
+    $country = Country::all()[Country::code()];
+    $countryName = $country['name'][Seo::lang()] ?? $country['native'];
+    $archive = Seo::archive($pdo);
+    $current = substr(date('Y-m-d'), 0, 7);
+    $canonical = $base . seoArchiveUrl();
+    $reportLabel = Seo::t('seo.report.link');
+    $title = Seo::t('seo.archive.title');
+
+    $rows = '';
+    $elements = [];
+    foreach ($archive as $month => $data) {
+        $label = seoMonthName($month);
+        if ($month >= $current) {
+            $label .= ' (' . Seo::t('seo.archive.inProgress') . ')';
+        }
+        $rows .= '<tr><td><a href="' . Seo::escape(seoArchiveUrl($month)) . '">' . Seo::escape($label) . '</a></td>';
+        foreach ($headline as $fuel) {
+            $cell = '—';
+            if (isset($data['averages'][$fuel])) {
+                $cell = Seo::price((float)$data['averages'][$fuel]['media']) . ' €';
+            }
+            $rows .= '<td class="n">' . $cell . '</td>';
+        }
+        $rows .= '</tr>';
+        if ($month < $current) {
+            $elements[] = ['@type' => 'ListItem', 'position' => count($elements) + 1, 'url' => $base . seoArchiveUrl($month), 'name' => Seo::t('seo.archive.item', ['month' => seoMonthName($month)])];
+        }
+    }
+
+    $ld = Seo::jsonLd(Seo::breadcrumb([['Gasolinera+', $base . $home], [Seo::t('seo.section'), $base . $section], [$reportLabel, $base . seoReportUrl()], [$title, $canonical]]));
+    if ($elements !== []) {
+        $ld .= Seo::jsonLd(['@context' => 'https://schema.org', '@type' => 'ItemList', 'name' => $title . ' · ' . $countryName, 'itemListElement' => $elements]);
+    }
+    $alternates = seoAlternates(function (string $code): string {
+        $profile = Seo::profile($code);
+        return '/' . $profile['section'] . '/' . $profile['report'] . '/' . $profile['archive'];
+    });
+    $description = Seo::t('seo.archive.indexDesc', ['pais' => $countryName]);
+    $html = seoHead($title . ' · ' . $countryName . ' | Gasolinera+', Seo::trim($description, 160), $canonical, 'index, follow', $ld, $alternates);
+    $html .= seoCrumbs([['Gasolinera+', $home], [Seo::t('seo.section'), $section], [$reportLabel, seoReportUrl()], [$title, '']]);
+    $html .= '<h1>' . Seo::escape($title . ' · ' . $countryName) . '</h1>';
+    $html .= '<p>' . Seo::escape($description) . '</p>';
+    if ($rows === '') {
+        $html .= '<p>' . Seo::escape(Seo::t('seo.archive.empty')) . '</p>';
+    } else {
+        $head = '<th>' . Seo::escape(Seo::t('seo.archive.month')) . '</th>';
+        foreach ($headline as $fuel) {
+            $head .= '<th class="n">' . Seo::escape(Seo::fuelLabel($fuel)) . '</th>';
+        }
+        $html .= '<p>' . Seo::escape(Seo::t('seo.archive.tableNote')) . '</p>';
+        $html .= '<div class="card"><table><thead><tr>' . $head . '</tr></thead><tbody>' . $rows . '</tbody></table></div>';
+    }
+    $html .= '<p><a href="' . Seo::escape(seoReportUrl()) . '">' . Seo::escape(Seo::t('seo.archive.live')) . '</a></p>';
+    $updated = date('Y-m-d');
+    if ($archive !== []) {
+        $updated = (string)reset($archive)['updated'];
+    }
     $html .= seoFooter($updated);
 
     header('Content-Type: text/html; charset=utf-8');
@@ -698,6 +944,16 @@ function seoSitemap(\PDO $pdo): void
     $section = Seo::sectionUrl();
     $updated = Seo::lastUpdate($pdo);
     $urls = [[$base . Country::prefix(Country::code()) . '/', 'daily', '1.0'], [$base . $section, 'daily', '0.9'], [$base . seoReportUrl(), 'daily', '0.9']];
+    $archive = Seo::archive($pdo);
+    if ($archive !== []) {
+        $urls[] = [$base . seoArchiveUrl(), 'monthly', '0.7'];
+        $current = substr(date('Y-m-d'), 0, 7);
+        foreach (array_keys($archive) as $month) {
+            if ($month < $current) {
+                $urls[] = [$base . seoArchiveUrl($month), 'yearly', '0.6'];
+            }
+        }
+    }
     foreach (Seo::provinces($pdo) as $province) {
         $urls[] = [$base . $section . '/' . $province['slug'], 'daily', '0.8'];
         foreach (Seo::municipalities($pdo, $province['raw']) as $municipality) {
@@ -751,6 +1007,7 @@ function seoLlms(): void
         echo '- [Inicio y mapa de precios](' . $base . $prefix . "/): buscador y mapa de gasolineras.\n";
         echo '- [' . Seo::t('seo.areaIndex', [], $profile['lang']) . '](' . $base . $prefix . '/' . $profile['section'] . "): precios medios de hoy por zona.\n";
         echo '- [' . Seo::t('seo.report.link', [], $profile['lang']) . '](' . $base . seoReportUrl($code) . "): zonas más baratas y más caras, evolución de 30 días, marcas y gasolineras más baratas.\n";
+        echo '- [' . Seo::t('seo.archive.title', [], $profile['lang']) . '](' . $base . seoArchiveUrl(null, $code) . "): informes de cada mes ya cerrado, con los datos congelados del último día del mes ({AAAA-MM}).\n";
         echo '- Zona: ' . $base . $prefix . '/' . $profile['section'] . "/{zona} (precio medio, gasolineras más baratas y municipios).\n";
         echo '- Municipio: ' . $base . $prefix . '/' . $profile['section'] . "/{zona}/{municipio} (todas las gasolineras con sus precios).\n";
         echo '- Gasolinera: ' . $base . $prefix . "/stations/{id} (precios por carburante, horario y ubicación).\n";
@@ -795,6 +1052,10 @@ try {
         seoIndexPage($pdo);
     } elseif ($path === $section . '/' . Seo::profile()['report']) {
         seoReportPage($pdo);
+    } elseif ($path === $section . '/' . Seo::profile()['report'] . '/' . Seo::profile()['archive']) {
+        seoArchiveIndexPage($pdo);
+    } elseif (preg_match('#^' . preg_quote($section . '/' . Seo::profile()['report'], '#') . '/(\d{4}-(0[1-9]|1[0-2]))$#', $path, $m)) {
+        seoArchiveMonthPage($pdo, $m[1]);
     } elseif (preg_match('#^' . preg_quote($section, '#') . '/([a-z0-9-]+)$#', $path, $m)) {
         seoAreaPage($pdo, $m[1], '');
     } elseif (preg_match('#^' . preg_quote($section, '#') . '/([a-z0-9-]+)/([a-z0-9-]+)$#', $path, $m)) {

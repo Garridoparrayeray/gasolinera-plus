@@ -63,6 +63,7 @@ jobs:
           if [ "$C" = "fr" ] || [ "$C" = "pt" ]; then
             gh release download "data-$C" -p "osm-$C.json" -D data --clobber || echo "::notice::Sin datos nuevos de OSM para $C; se usan los del repositorio"
           fi
+          gh release download "data-$C" -p "informes-$C.json" -D "$RUNNER_TEMP" || echo "::notice::Sin copia de los informes mensuales de $C todavía"
           if gh release download "data-$C" -p "gasolinera-$C.sqlite.gz" -D "$RUNNER_TEMP/prev"; then
             gunzip -c "$RUNNER_TEMP/prev/gasolinera-$C.sqlite.gz" > "$DB"
             echo "Base de ayer descargada de la release data-$C"
@@ -105,6 +106,14 @@ jobs:
         if: steps.check.outputs.skip != 'true'
         run: php scripts/build-database.php --mode=daily --country="$C"
 
+      - name: Save the monthly report snapshot
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          # La foto del mes se sobrescribe cada día; al empezar el mes siguiente queda la del último día como cierre.
+          # Si falla no se bloquea la publicación de los precios.
+          php scripts/snapshot-report.php --country="$C" --db="$DB" --backup="$RUNNER_TEMP/informes-$C.json" \
+            || echo "::warning::No se pudo guardar la foto del informe mensual de $C"
+
       - name: Publish to the release
         if: steps.check.outputs.skip != 'true'
         run: |
@@ -119,6 +128,9 @@ jobs:
           fi
           gzip -9 -c "$DB" > "$RUNNER_TEMP/gasolinera-$C.sqlite.gz"
           gh release upload "data-$C" "$RUNNER_TEMP/gasolinera-$C.sqlite.gz" "$LITE" --clobber
+          if [ -f "$RUNNER_TEMP/informes-$C.json" ]; then
+            gh release upload "data-$C" "$RUNNER_TEMP/informes-$C.json" --clobber
+          fi
           echo "published" > "$RUNNER_TEMP/published.txt"
 
       - name: Mark as published
