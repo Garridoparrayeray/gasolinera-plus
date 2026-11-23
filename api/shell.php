@@ -356,6 +356,12 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
                     <span class="btn-label">Comparar</span>
                     <span id="compare-count" class="count-badge" hidden>0</span>
                 </button>
+<?php if (!$isNative): ?>
+                <a id="support-link" class="btn-icon desktop-only" href="https://ko-fi.com/ygarrido" target="_blank" rel="noopener noreferrer" aria-label="Invitar a un café">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8z"/><path d="M16 10h2a2.5 2.5 0 0 1 0 5h-2"/><path d="M8 3v2M12 3v2"/></svg>
+                    <span class="btn-label">Invitar a un café</span>
+                </a>
+<?php endif; ?>
             </span>
 <?php if (!$isNative): ?>
             <p class="sidebar-note">Viajes, avisos y mapas sin conexión, en la <a href="https://github.com/Garridoparrayeray/gasolinera-plus/releases/latest" target="_blank" rel="noopener">app para Android</a>.</p>
@@ -915,9 +921,7 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
                     <a class="pill" href="https://www.linkedin.com/in/yeray-garrido" target="_blank" rel="noopener noreferrer">LinkedIn</a>
                     <a class="pill" href="https://www.yeraygarrido.dev/" target="_blank" rel="noopener noreferrer">Portfolio</a>
                     <a class="pill" href="https://github.com/Garridoparrayeray" target="_blank" rel="noopener noreferrer">GitHub</a>
-<?php if (!$isNative): ?>
                     <a class="pill" href="https://ko-fi.com/ygarrido" target="_blank" rel="noopener noreferrer">Invitar a un café</a>
-<?php endif; ?>
                 </div>
                 <div class="about-links">
                     <button id="legal-open" type="button" class="pill">Aviso legal y privacidad</button>
