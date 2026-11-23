@@ -623,7 +623,8 @@
   "el jueves": "na quinta-feira",
   "el viernes": "na sexta-feira",
   "el sábado": "no sábado",
-  "el domingo": "no domingo"
+  "el domingo": "no domingo",
+  "Invitar a un café": "Convidar para um café"
  },
  "patterns": {
   "(+{0} min, +{1} km por la parada)": "(+{0} min, +{1} km pela paragem)",
