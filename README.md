@@ -104,3 +104,13 @@ cd android && ./gradlew assembleDebug      # JAVA_HOME = JDK 21 (el de Android S
 Más detalle de cada versión y sus funciones: [docs/funcionalidades.md](docs/funcionalidades.md).
 
 Documentación técnica completa para programadores: [docs/tecnica/](docs/tecnica/README.md).
+
+---
+
+<p align="center">
+  <a href="https://yeraygarrido.dev"><picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/img/yg-logo-dark.svg">
+    <img src="docs/img/yg-logo-light.svg" alt="YG." width="80" />
+  </picture></a><br/>
+  Hecho por <a href="https://yeraygarrido.dev">Yeray Garrido</a>
+</p>
