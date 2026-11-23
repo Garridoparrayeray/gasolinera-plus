@@ -290,11 +290,16 @@ function runDaily(\PDO $pdo, ?string $source, string $country, int $minStations)
 
 function updateNationalPriceHistory(\PDO $pdo, string $fechaIso): void
 {
-    $rows = $pdo->query('
-        SELECT carburante, ROUND(AVG(precio), 4) AS media, COUNT(*) AS estaciones
-        FROM current_prices
-        GROUP BY carburante
-    ')->fetchAll();
+    // Solo cuentan las estaciones de la recogida de este dia: la que ya no sale en la fuente oficial conserva su
+    // ultimo precio en current_prices, pero no debe contar en la media nacional.
+    $stmtAverage = $pdo->prepare('
+        SELECT p.carburante, ROUND(AVG(p.precio), 4) AS media, COUNT(*) AS estaciones
+        FROM current_prices p JOIN stations s ON s.ideess = p.ideess
+        WHERE s.last_seen_date = ?
+        GROUP BY p.carburante
+    ');
+    $stmtAverage->execute([$fechaIso]);
+    $rows = $stmtAverage->fetchAll();
 
     $stmt = $pdo->prepare('
         INSERT INTO national_price_history (fecha, carburante, media, estaciones) VALUES (?, ?, ?, ?)
