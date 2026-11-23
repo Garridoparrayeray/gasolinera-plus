@@ -915,6 +915,9 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
                     <a class="pill" href="https://www.linkedin.com/in/yeray-garrido" target="_blank" rel="noopener noreferrer">LinkedIn</a>
                     <a class="pill" href="https://www.yeraygarrido.dev/" target="_blank" rel="noopener noreferrer">Portfolio</a>
                     <a class="pill" href="https://github.com/Garridoparrayeray" target="_blank" rel="noopener noreferrer">GitHub</a>
+<?php if (!$isNative): ?>
+                    <a class="pill" href="https://ko-fi.com/ygarrido" target="_blank" rel="noopener noreferrer">Invitar a un café</a>
+<?php endif; ?>
                 </div>
                 <div class="about-links">
                     <button id="legal-open" type="button" class="pill">Aviso legal y privacidad</button>
@@ -1025,6 +1028,7 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
                 <a href="https://www.linkedin.com/in/yeray-garrido" target="_blank" rel="noopener noreferrer">LinkedIn</a>
                 <a href="https://www.yeraygarrido.dev/" target="_blank" rel="noopener noreferrer">Portfolio</a>
                 <a href="https://github.com/Garridoparrayeray" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <a href="https://ko-fi.com/ygarrido" target="_blank" rel="noopener noreferrer">Invitar a un café</a>
                 <button type="button" data-legal>Aviso legal y privacidad</button>
             </nav>
         </div>

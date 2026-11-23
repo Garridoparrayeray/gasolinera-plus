@@ -623,7 +623,8 @@
   "el jueves": "jeudi",
   "el viernes": "vendredi",
   "el sábado": "samedi",
-  "el domingo": "dimanche"
+  "el domingo": "dimanche",
+  "Invitar a un café": "Offrir un café"
  },
  "patterns": {
   "(+{0} min, +{1} km por la parada)": "(+{0} min, +{1} km pour l'arrêt)",
