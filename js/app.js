@@ -99,6 +99,7 @@
         modalRotulo: document.getElementById('modal-rotulo'),
         modalDireccion: document.getElementById('modal-direccion'),
         modalMunicipio: document.getElementById('modal-municipio'),
+        modalInsight: document.getElementById('modal-insight'),
         modalHorario: document.getElementById('modal-horario'),
         modalHorarioWeek: document.getElementById('modal-horario-week'),
         modalFuels: document.getElementById('modal-fuels'),
@@ -2033,6 +2034,8 @@
             localidadPrefix = station.localidad + ', ';
         }
         el.modalMunicipio.textContent = `${localidadPrefix}${station.municipio} (${station.provincia})`;
+        // La frase de la ficha la pinta el servidor solo para la gasolinera de la dirección; con otra del listado, fuera.
+        el.modalInsight.hidden = el.modalInsight.textContent === '' || el.modalInsight.dataset.ideess !== String(ideess);
         el.modalHorario.textContent = station.horario.texto;
         renderWeekHours(station.horario.raw);
 

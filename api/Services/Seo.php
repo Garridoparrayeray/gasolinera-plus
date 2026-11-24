@@ -521,6 +521,57 @@ class Seo
         }
     }
 
+    /**
+     * Una o dos frases propias de la ficha, con los precios de hoy: contra la media de su provincia y contra las demás
+     * gasolineras de su municipio, en el primer carburante de portada que tenga. Cada ficha dice así algo distinto.
+     */
+    public static function stationInsight(\PDO $pdo, array $station, array $prices): string
+    {
+        $fuel = null;
+        foreach (self::profile()['headline'] as $key) {
+            if (isset($prices[$key])) {
+                $fuel = $key;
+                break;
+            }
+        }
+        if ($fuel === null) {
+            return '';
+        }
+        $price = $prices[$fuel];
+        $vars = array('fuel' => self::fuelLabel($fuel), 'price' => self::price($price), 'prov' => self::display($station['provincia']), 'town' => self::display($station['municipio']));
+
+        $stmt = $pdo->prepare('SELECT AVG(cp.precio) FROM current_prices cp JOIN stations s ON s.ideess = cp.ideess WHERE s.provincia = ? AND cp.carburante = ?');
+        $stmt->execute(array($station['provincia'], $fuel));
+        $average = (float)$stmt->fetchColumn();
+        $sentences = array();
+        if ($average > 0) {
+            $percent = round(($price - $average) / $average * 100, 1);
+            $kind = 'same';
+            if ($percent <= -0.1) {
+                $kind = 'below';
+            } elseif ($percent >= 0.1) {
+                $kind = 'above';
+            }
+            $sentences[] = self::t('seo.station.insight.' . $kind, $vars + array('pct' => number_format(abs($percent), 1, ',', '.'), 'avg' => self::price($average)));
+        }
+
+        $stmt = $pdo->prepare('SELECT COUNT(*) AS n, SUM(cp.precio < ? - 0.0005) AS cheaper FROM current_prices cp JOIN stations s ON s.ideess = cp.ideess WHERE s.provincia = ? AND s.municipio = ? AND cp.carburante = ?');
+        $stmt->execute(array($price, $station['provincia'], $station['municipio'], $fuel));
+        $town = $stmt->fetch();
+        $count = (int)$town['n'];
+        $cheaper = (int)$town['cheaper'];
+        if ($count >= 2) {
+            $kind = 'cheaper';
+            if ($cheaper === 0) {
+                $kind = 'cheapest';
+            } elseif ($cheaper === 1) {
+                $kind = 'cheaper.one';
+            }
+            $sentences[] = self::t('seo.station.insight.' . $kind, $vars + array('n' => $count, 'k' => $cheaper));
+        }
+        return implode(' ', $sentences);
+    }
+
     public static function stationJsonLd(array $station, array $prices, string $updated, string $provinceName): array
     {
         $base = self::siteUrl();
