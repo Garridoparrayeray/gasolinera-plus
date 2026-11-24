@@ -81,6 +81,8 @@ if (!$isNative) {
                     array($stationName, $ogUrl),
                 )));
             } else {
+                // Una ficha que no existe da 404 (como las provincias y los municipios), no 200 con noindex: en Search Console es un soft 404.
+                http_response_code(404);
                 $robotsContent = 'noindex, follow';
             }
         } elseif (preg_match('#^(/(pt|fr))?/?$#', (string)$path)) {
