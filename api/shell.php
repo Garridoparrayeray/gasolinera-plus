@@ -16,6 +16,8 @@ $structuredData = '';
 $provinceLinks = array();
 $reportMonths = array();
 $headline = array();
+$stationInsight = '';
+$stationInsightId = '';
 
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = parse_url($requestUri, PHP_URL_PATH);
@@ -70,6 +72,8 @@ if (!$isNative) {
                 )), 160);
                 $ogUrl = $siteUrl . \Services\Seo::stationPath($ideess);
                 $canonicalUrl = $ogUrl;
+                $stationInsight = \Services\Seo::stationInsight($pdo, $station, $prices);
+                $stationInsightId = (string)$ideess;
 
                 $updated = \Services\Seo::lastUpdate($pdo);
                 $provinceUrl = $siteUrl . \Services\Seo::sectionUrl() . '/' . \Services\Seo::slug($provinceName);
@@ -1076,6 +1080,7 @@ foreach (array('es', 'pt', 'fr') as $gpLang) {
         <span id="modal-rotulo" class="badge"></span>
         <p id="modal-direccion" class="modal-address"></p>
         <p id="modal-municipio"></p>
+        <p id="modal-insight" class="modal-insight" data-ideess="<?= htmlspecialchars($stationInsightId) ?>"<?php if ($stationInsight === ''): ?> hidden<?php endif; ?>><?= htmlspecialchars($stationInsight) ?></p>
         <p id="modal-horario"></p>
         <ul id="modal-horario-week" class="hours-week" hidden></ul>
         <ul id="modal-fuels"></ul>
