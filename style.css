@@ -95,6 +95,7 @@ header {
 }
 #update-banner > span { flex: 1; }
 #update-banner a { color: white; }
+#update-banner .update-links { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 4px; }
 #update-close {
     flex-shrink: 0;
     min-width: 32px;
